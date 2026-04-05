@@ -1,0 +1,588 @@
+{% from 'templates/components/input/wrapper.html' import wrapper %}
+{% macro select(
+    name,
+    options_url,
+    multiple=false,
+    label='',
+    placeholder='Select...',
+    hint=none,
+    required=false,
+    value=none,
+    class='',
+    reload_events=[],
+    disabled=false,
+    error_message='',
+    tooltip_content=none,
+    tooltip_axis='vertical',
+    extra_attributes={}
+  ) %}
+  {% set placeholder = (placeholder or '') | trim %}
+  {% call wrapper(
+    label=label,
+    hint=hint,
+    required=required,
+    disabled=disabled,
+    error_message=error_message,
+    tooltip_content=tooltip_content,
+    tooltip_axis=tooltip_axis,
+  ) %}
+  {% if value is not sequence or value is string %}
+  {% set value = [value] if value is not none else [] %}
+  {% endif %}
+  <div
+    class="h-full w-full min-w-0 {{ class }}"
+    :class="disabled ? 'cursor-not-allowed' : ''"
+    x-data="{
+      optionsUrl: '{{ options_url }}',
+      reloadEvents: {{ jsonify(reload_events or []) }},
+      // Params to include when (re)loading options (fed via reload events).
+      params: {},
+      multiple: {{ jsonify(multiple) }},
+      disabled: {{ jsonify(disabled) }},
+      open: false,
+      panelPlaced: false,
+      placement: 'bottom',
+      panelPlacement: 'bottom',
+      coords: { top: 0, left: 0, width: 0, minWidth: 0 },
+      margin: 12,
+      repositionListener: null,
+      outsideClickListener: null,
+      searchQuery: '',
+      isFiltering: false,
+      initialSelected: {{ jsonify(value) }},
+      selected: [],
+      options: [],
+      isLoading: false,
+      hasLoaded: false,
+      highlightedIndex: -1,
+      reloadListener: null,
+      fetchRequestId: 0,
+      buildOptionsUrl(params = {}) {
+        try {
+          const url = new URL(this.optionsUrl, window.location.origin);
+          Object.entries(params || {}).forEach(([key, value]) => {
+            if (value === null || value === undefined || value === '') return;
+
+            if (Array.isArray(value)) {
+              value.forEach(v => {
+                if (v === null || v === undefined || v === '') return;
+                url.searchParams.append(key, v);
+              });
+              return;
+            }
+
+            url.searchParams.set(key, value);
+          });
+          return url.toString();
+        } catch (e) {
+          // Fallback: if URL parsing fails, use optionsUrl as-is.
+          return this.optionsUrl;
+        }
+      },
+      normalizeSelected() {
+        if (Array.isArray(this.selected)) {
+          if (!this.multiple) {
+            // Single-select must keep only one value.
+            this.selected = this.selected.length ? [this.selected[0]] : [];
+          }
+          return;
+        }
+        if (this.selected === null || this.selected === undefined || this.selected === '') {
+          this.selected = [];
+          return;
+        }
+        this.selected = [this.selected];
+      },
+      isSelected(val) {
+        this.normalizeSelected();
+        return this.selected.includes(val);
+      },
+      optionFor(val) {
+        return this.options.find(option => option.value === val);
+      },
+      labelFor(val) {
+        const match = this.optionFor(val);
+        return match ? match.label : String(val);
+      },
+      klassFor(val) {
+        const match = this.optionFor(val);
+        return match?.klass || '';
+      },
+      pruneSelectedToOptions() {
+        this.normalizeSelected();
+        const prev = [...this.selected];
+        const opts = Array.isArray(this.options) ? this.options : [];
+        if (!opts.length) {
+          this.selected = [];
+        } else {
+          const valid = new Set(opts.map(o => o.value));
+          const kept = this.selected.filter(v => valid.has(v));
+          this.selected = this.multiple ? kept : (kept.length ? [kept[0]] : []);
+        }
+        const changed =
+          prev.length !== this.selected.length ||
+          prev.some((v, i) => v !== this.selected[i]);
+        if (changed) this.notifyInputChanged();
+      },
+      get selectedLabels() {
+        this.normalizeSelected();
+        return this.selected.map(val => ({ value: val, label: this.labelFor(val), klass: this.klassFor(val) }));
+      },
+      get filteredOptions() {
+        if (!this.isFiltering) return this.options;
+        const q = (this.searchQuery || '').trim();
+        if (!q) return this.options;
+        const normalizedQuery = unaccent(q).toLowerCase();
+        return this.options.filter(option => {
+          const label = unaccent(option.label || '').toLowerCase();
+          return label.includes(normalizedQuery);
+        });
+      },
+      selectedSearchLabel() {
+        this.normalizeSelected();
+        if (!this.selected.length) return '';
+        if (this.multiple) return this.selected.map(val => this.labelFor(val)).join('; ');
+        return this.labelFor(this.selected[0]);
+      },
+      fetchOptions(force = false, paramsOverride = null) {
+        if (this.isLoading && !force) return;
+        if (this.hasLoaded && !force) return;
+        this.isLoading = true;
+        const requestId = ++this.fetchRequestId;
+        const params = paramsOverride !== null ? paramsOverride : this.params;
+        const url = this.buildOptionsUrl(params);
+        fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+          .then(response => {
+            if (!response.ok) throw new Error('Failed to load options');
+            return response.json();
+          })
+          .then(data => {
+            if (requestId !== this.fetchRequestId) return; // Ignore stale responses
+            this.options = Array.isArray(data) ? data : [];
+            this.hasLoaded = true;
+            this.pruneSelectedToOptions();
+            if (this.open) this.$nextTick(() => this.reposition());
+          })
+          .catch(() => {
+            if (requestId !== this.fetchRequestId) return; // Ignore stale responses
+            this.options = [];
+            this.hasLoaded = true;
+            this.pruneSelectedToOptions();
+            if (this.open) this.$nextTick(() => this.reposition());
+          })
+          .finally(() => {
+            if (requestId === this.fetchRequestId) {
+              this.isLoading = false;
+            }
+          });
+      },
+      reposition() {
+        if (!this.$refs || !this.$refs.trigger || !this.$refs.panel) return;
+
+        const triggerRect = this.$refs.trigger.getBoundingClientRect();
+        const panelEl = this.$refs.panel;
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const margin = this.margin || 12;
+        const gap = 6;
+
+        const panelRect = panelEl.getBoundingClientRect();
+        const naturalWidth = panelRect.width || panelEl.scrollWidth || triggerRect.width;
+        const width = Math.max(0, Math.min(naturalWidth, viewportWidth - margin * 2));
+        const minLeft = margin;
+        const maxLeft = viewportWidth - width - margin;
+        let left = triggerRect.left;
+        if (left > maxLeft) {
+          left = triggerRect.right - width;
+        }
+        if (left < minLeft) left = minLeft;
+        if (left > maxLeft) left = maxLeft;
+
+        const spaceAbove = triggerRect.top - margin;
+        const spaceBelow = viewportHeight - triggerRect.bottom - margin;
+        let placement = this.panelPlacement;
+        if (placement === 'bottom' && spaceBelow < panelRect.height + gap && spaceAbove > spaceBelow) {
+          placement = 'top';
+        } else if (placement === 'top' && spaceAbove < panelRect.height + gap && spaceBelow > spaceAbove) {
+          placement = 'bottom';
+        }
+        let top;
+        if (placement === 'bottom') {
+          top = triggerRect.bottom + gap;
+        } else {
+          top = triggerRect.top - panelRect.height - gap;
+        }
+
+        this.panelPlacement = placement;
+        this.placement = placement;
+        this.coords = {
+          top: top + scrollY,
+          left: left + scrollX,
+          width,
+          minWidth: triggerRect.width,
+        };
+      },
+      openDropdown() {
+        if (this.disabled) return;
+        if (this.open) return;
+        this.panelPlaced = false;
+        this.coords = { top: 0, left: 0, width: 0, minWidth: 0 };
+        this.panelPlacement = 'bottom';
+        this.isFiltering = false;
+        this.searchQuery = this.multiple ? '' : this.selectedSearchLabel();
+        this.open = true;
+        this.highlightedIndex = -1;
+        this.fetchOptions();
+        this.$nextTick(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              this.reposition();
+              this.panelPlaced = true;
+              this.startOutsideClickListener();
+              this.$refs.searchInput?.focus();
+            });
+          });
+        });
+      },
+      closeDropdown() {
+        this.open = false;
+        this.panelPlaced = false;
+        this.isFiltering = false;
+        this.highlightedIndex = -1;
+        this.searchQuery = '';
+        this.stopOutsideClickListener();
+      },
+      onSearchKeydown(event) {
+        if (event.defaultPrevented || event.isComposing) return;
+        const isModifier = event.ctrlKey || event.altKey || event.metaKey;
+        const isCharacter = event.key && event.key.length === 1 && !isModifier;
+        const isBackspace = event.key === 'Backspace';
+        if ((!isCharacter && !isBackspace) || this.isFiltering) return;
+        this.isFiltering = true;
+      },
+      clear(e) {
+        if (this.disabled) return;
+        e.stopPropagation();
+        this.selected = [];
+        this.searchQuery = '';
+        this.highlightedIndex = -1;
+        this.notifyInputChanged();
+      },
+      toggle(val) {
+        if (this.disabled) return;
+        this.normalizeSelected();
+        if (this.multiple) {
+          const idx = this.selected.indexOf(val);
+          if (idx >= 0) {
+            this.selected.splice(idx, 1);
+          } else {
+            this.selected.push(val);
+          }
+          this.notifyInputChanged();
+          return;
+        }
+
+        // Single-select: replace selection and close dropdown.
+        const idx = this.selected.indexOf(val);
+        if (idx >= 0) {
+          this.closeDropdown();
+          return;
+        }
+        this.selected = [val];
+        this.notifyInputChanged();
+        this.closeDropdown();
+      },
+      remove(val) {
+        if (this.disabled) return;
+        this.normalizeSelected();
+        const idx = this.selected.indexOf(val);
+        if (idx >= 0) this.selected.splice(idx, 1);
+        this.notifyInputChanged();
+      },
+      notifyInputChanged() {
+        // Notify observers that the selected values changed.
+        this.$nextTick(() => {
+          this.$refs.input?.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      },
+      chooseByIndex(index) {
+        const option = this.filteredOptions[index];
+        if (!option) return;
+        this.toggle(option.value);
+      },
+      onArrowDown() {
+        if (this.disabled) return;
+        if (!this.open) {
+          this.openDropdown();
+          return;
+        }
+        const maxIndex = this.filteredOptions.length - 1;
+        if (maxIndex < 0) return;
+        if (this.highlightedIndex < maxIndex) {
+          this.highlightedIndex++;
+        } else {
+          this.highlightedIndex = 0;
+        }
+      },
+      onArrowUp() {
+        if (this.disabled) return;
+        if (!this.open) {
+          this.openDropdown();
+          return;
+        }
+        const maxIndex = this.filteredOptions.length - 1;
+        if (maxIndex < 0) return;
+        if (this.highlightedIndex > 0) {
+          this.highlightedIndex--;
+        } else {
+          this.highlightedIndex = maxIndex;
+        }
+      },
+      onEnter() {
+        if (this.disabled) return;
+        if (!this.open) {
+          this.openDropdown();
+          return;
+        }
+        if (this.highlightedIndex >= 0) {
+          this.chooseByIndex(this.highlightedIndex);
+        }
+      },
+      startOutsideClickListener() {
+        if (this.outsideClickListener) return;
+        this.outsideClickListener = (event) => {
+          if (!this.open) return;
+          const trigger = this.$refs?.trigger;
+          const panel = this.$refs?.panel;
+          if (!trigger || !panel) return;
+          const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+          const isInsideTrigger = path.includes(trigger) || trigger.contains(event.target);
+          const isInsidePanel = path.includes(panel) || panel.contains(event.target);
+          if (isInsideTrigger || isInsidePanel) return;
+          this.closeDropdown();
+        };
+        document.addEventListener('mousedown', this.outsideClickListener, true);
+        document.addEventListener('touchstart', this.outsideClickListener, true);
+
+        this.repositionListener = () => {
+          if (!this.open) return;
+          this.reposition();
+        };
+        window.addEventListener('scroll', this.repositionListener, { capture: true, passive: true });
+        window.addEventListener('resize', this.repositionListener, { passive: true });
+      },
+      stopOutsideClickListener() {
+        if (this.repositionListener) {
+          window.removeEventListener('scroll', this.repositionListener, { capture: true, passive: true });
+          window.removeEventListener('resize', this.repositionListener, { passive: true });
+          this.repositionListener = null;
+        }
+        if (!this.outsideClickListener) return;
+        document.removeEventListener('mousedown', this.outsideClickListener, true);
+        document.removeEventListener('touchstart', this.outsideClickListener, true);
+        this.outsideClickListener = null;
+      },
+      init() {
+        this.fetchOptions();
+        this.selected = this.initialSelected;
+        this.normalizeSelected();
+        if (Array.isArray(this.reloadEvents) && this.reloadEvents.length) {
+          this.reloadListener = (event) => {
+            // Flatter payload form (Alpine `$dispatch`):
+            //   $dispatch(eventName, { <paramName>: <paramValue> })
+            // Merge into existing params so multiple dependency inputs can patch different keys.
+            const payload = event?.detail ?? {};
+            if (payload && typeof payload === 'object') {
+              this.params = { ...(this.params || {}), ...payload };
+            }
+
+            this.hasLoaded = false;
+            this.searchQuery = '';
+            this.highlightedIndex = -1;
+            this.fetchOptions(true);
+          };
+          this.reloadEvents.forEach(eventName => {
+            window.addEventListener(eventName, this.reloadListener);
+          });
+        }
+      },
+      destroy() {
+        this.stopOutsideClickListener();
+        if (this.reloadListener) {
+          this.reloadEvents.forEach(eventName => {
+            window.removeEventListener(eventName, this.reloadListener);
+          });
+        }
+      },
+    }"
+    @keydown.escape.window="closeDropdown()"
+  >
+    <select
+      {% if multiple %}multiple{% endif %}
+      name="{{ name }}"
+      x-ref="input"
+      class="hidden"
+      {{ extra_attributes | xmlattr }}
+    >
+      <template x-for="val in selected" :key="val">
+        <option :value="val" :selected="true" x-text="val"></option>
+      </template>
+    </select>
+
+    <div
+      x-ref="trigger"
+      role="combobox"
+      :aria-expanded="open"
+      aria-haspopup="listbox"
+      :aria-disabled="disabled"
+      :aria-controls="$id('input') + '-listbox'"
+      :aria-activedescendant="open && highlightedIndex >= 0 ? `${$id('input')}-option-${highlightedIndex}` : null"
+      :id="$id('input')"
+      :tabindex="disabled ? -1 : 0"
+      @click="openDropdown()"
+      @keydown.down.prevent="onArrowDown()"
+      @keydown.up.prevent="onArrowUp()"
+      @keydown.enter.prevent="onEnter()"
+      class="relative h-full flex items-center transition"
+      :class="disabled ? 'pointer-events-none' : ''"
+    >
+    <div x-show="!open" class="flex px-2 pr-14 w-48 flex-1 items-center gap-1.5">
+        <template x-if="selectedLabels.length === 0">
+          <span class="truncate" :class="disabled ? 'text-slate-400' : 'text-slate-500'">{{ placeholder|trim }}</span>
+        </template>
+      
+        <template x-if="selectedLabels.length > 0">
+          {% if multiple %}
+            <div
+              data-selected-scroll="true"
+              class="flex flex-1 min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto overflow-y-hidden"
+              style="scrollbar-width: thin;"
+            >
+              <template x-for="item in selectedLabels.slice(0, 3)" :key="`chip-${item.value}`">
+                <span
+                  class="inline-flex flex-shrink max-w-80 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium"
+                  :class="disabled ? 'bg-slate-200 text-slate-400' : (item.klass || 'bg-slate-100 text-slate-800')"
+                >
+                  <span class="truncate" x-text="item.label"></span>
+                  <button
+                    type="button"
+                    x-show="!disabled"
+                    x-cloak
+                    style="display: none;"
+                    class="flex-shrink-0 ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded text-current opacity-70 hover:bg-black/10 hover:opacity-100"
+                    @click.stop="$data.remove(item.value)"
+                  >
+                    {% include 'close.svg' %}
+                  </button>
+                </span>
+              </template>
+        
+              <template x-if="selectedLabels.length > 3">
+                <span class="flex-shrink-0 text-xs" :class="disabled ? 'text-slate-400' : 'text-slate-500'" x-text="`+${selectedLabels.length - 3}`"></span>
+              </template>
+            </div>
+          {% else %}
+            <div class="flex-1 truncate" :class="disabled ? 'text-slate-400' : 'text-slate-900'">
+              <span x-text="selectedLabels[0].label"></span>
+            </div>
+          {% endif %}
+          </div>
+        </template>
+      </div>
+  
+      <input
+        x-ref="searchInput"
+        x-show="open"
+        x-model="searchQuery"
+        type="text"
+        class="w-48 flex-1 px-2 pr-14 outline-none"
+        :class="disabled ? 'text-slate-400 cursor-not-allowed' : 'text-slate-900'"
+        placeholder="{{ placeholder|trim }}"
+        @mousedown.stop
+        @click.stop
+        @keydown="onSearchKeydown($event)"
+        @keyup.stop
+        @input="$nextTick(() => reposition())"
+        @change.stop
+      />
+  
+      <span class="absolute inset-y-0 right-0 flex shrink-0 items-center px-3 gap-0.5">
+        <span x-show="isLoading" x-cloak style="display: none;" class="inline-flex text-slate-400 shrink-0 max-h-[1em] w-[1em] [&>svg]:max-h-full [&>svg]:w-full [&>svg]:max-w-none animate-spin">
+          {% include 'spinner.svg' %}
+        </span>
+        <button
+          type="button"
+          x-show="selected.length > 0 && !disabled"
+          x-cloak
+          style="display: none;"
+          @click="clear($event)"
+          class="h-4 w-4 shrink-0 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          aria-label="Clear"
+        >
+          {% include 'close.svg' %}
+        </button>
+        <span class="relative inline-flex h-4 w-4 items-center justify-center text-slate-400">
+          <span x-show="!open" x-cloak class="absolute inset-0 flex items-center justify-center">
+            {% include 'angle-down.svg' %}
+          </span>
+          <span x-show="open" x-cloak class="absolute inset-0 flex items-center justify-center rotate-180">
+            {% include 'angle-down.svg' %}
+          </span>
+        </span>
+      </span>
+    </div>
+  
+    <template x-teleport="body">
+      <div
+        x-show="open"
+        x-ref="panel"
+        x-cloak
+        :id="$id('input') + '-listbox'"
+        role="listbox"
+        :aria-labelledby="$id('input')"
+        class="absolute z-500 max-h-80 max-w-80 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg transition-opacity duration-150 ease-out"
+        :class="[
+          placement === 'top' ? 'origin-bottom' : 'origin-top',
+          (open && !panelPlaced ? 'invisible pointer-events-none ' : '') + (open && panelPlaced ? 'opacity-100' : 'opacity-0')
+        ]"
+        :style="
+          'inset:0 auto auto 0;min-width:' + coords.minWidth + 'px;'
+          + 'transform:translate(' + coords.left + 'px,' + coords.top + 'px);'
+          + (coords.width > 0 ? 'width:' + coords.width + 'px;' : '')
+        "
+      >
+        <template x-if="!isLoading && filteredOptions.length === 0">
+          <div class="px-3 py-2 text-xs text-slate-500">
+            Không tìm thấy kết quả phù hợp.
+          </div>
+        </template>
+        <template x-for="(option, index) in filteredOptions" :key="option.value">
+          <div
+            role="option"
+            :id="`${$id('input')}-option-${index}`"
+            :aria-selected="isSelected(option.value)"
+            @click="toggle(option.value);"
+            class="flex cursor-pointer items-center justify-between px-3 py-2 text-sm"
+            :class="[
+              index === highlightedIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900',
+              isSelected(option.value) ? 'font-medium' : ''
+            ]"
+          >
+            <span class="mr-2 break-words whitespace-normal" x-text="option.label"></span>
+            <span x-show="isSelected(option.value)" x-cloak class="shrink-0 text-red-600">
+              ✓
+            </span>
+          </div>
+        </template>
+      </div>
+    </template>
+  </div>
+  {% endcall %}
+  {% endmacro %}
+  

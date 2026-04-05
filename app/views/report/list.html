@@ -1,0 +1,43 @@
+{% extends 'templates/layouts/index.html' %}
+{% from 'templates/components/table/table.html' import table %}
+{% block title %}Danh sách báo cáo{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="space-y-4">
+        {% if deadline_alert and deadline_alert.show %}
+        <div class="rounded-[8px] border border-[#f3c98b] bg-[#fff7ed] px-4 py-3">
+            <div class="flex items-center gap-2 text-[14px] text-[#c2410c]">
+                <span class="text-[16px]">⏰</span>
+                <div>
+                    Hạn cập nhật báo cáo là
+                    <span class="font-semibold">{{ deadline_alert.deadline_text }}</span>
+                    {% if not deadline_alert.is_overdue %}
+                        <span>(còn lại {{ deadline_alert.remaining_text }})</span>
+                    {% else %}
+                        <span>(đã quá hạn)</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {{
+            table(
+                filters=filters,
+                columns=columns,
+                rows=rows,
+                partial_url=partial_url,
+                actions=actions,
+                row_actions=row_actions,
+                page_index=page_index,
+                page_size=page_size,
+                total_count=total_count,
+                reload_event=reload_event,
+                sort=sort,
+                sort_direction=sort_direction,
+            )
+        }}
+    </div>
+</div>
+{% endblock %}

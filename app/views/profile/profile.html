@@ -1,0 +1,542 @@
+{% extends 'templates/layouts/index.html' %}
+{% from 'templates/components/input/base/input.html' import input %}
+
+{% block title %}Thông tin cá nhân{% endblock %}
+
+{% block content %}
+<div class="h-[calc(100vh-64px)] bg-[#f5f5f5] p-3 ">
+  <div class="mx-auto max-w-5xl space-y-3">
+
+  <!-- THÔNG TIN CƠ BẢN -->
+  <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div class="mb-6 flex items-center gap-3">
+        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 1 1 14 0H5Z"></path>
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">Thông tin cơ bản</h2>
+      </div>
+
+      <form id="basic-profile-form" class="space-y-6">
+        {{ csrf_input }}
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">
+              Đơn vị
+            </label>
+            <div class="flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-500">
+              <span id="profile-department" class="truncate">-</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">
+              Vai trò
+            </label>
+            <div
+              id="profile-roles"
+              class="flex min-h-11 flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+            ></div>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">
+              Trạng thái
+            </label>
+            <div class="flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <span
+                id="profile-status"
+                class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+              ></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div>
+            {{ input(name='full_name', label='Họ và tên', value='', required=true) }}
+          </div>
+
+          <div>
+            {{ input(name='email', label='Email', value='', required=true) }}
+          </div>
+
+          <div>
+            {{ input(name='phone', label='Số điện thoại', value='', required=true) }}
+          </div>
+        </div>
+
+        <div id="basic-profile-actions" class="flex gap-3 border-t pt-4">
+          <button
+            id="basic-profile-save-btn"
+            type="button"
+            class="h-11 rounded-lg bg-red-700 px-6 text-white disabled:cursor-not-allowed disabled:opacity-50"
+            disabled
+          >
+            Lưu thay đổi
+          </button>
+
+          <button
+            id="basic-profile-cancel-btn"
+            type="button"
+            class="h-11 rounded-lg border border-red-300 px-6 text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled
+          >
+            Hủy
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ĐỔI MẬT KHẨU -->
+    <section class="rounded-2xl border bg-white p-4 shadow-sm">
+      <div class="mb-6 flex items-center gap-2">
+        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+          🔒
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">Đổi mật khẩu</h2>
+      </div>
+
+      <form
+        id="change-password-form"
+        hx-post="{{ url('profile_change_password') }}"
+        hx-swap="none"
+        x-data="passwordForm()"
+        x-init="init()"
+        @submit="handleSubmit"
+        @input="onInput"
+        class="max-w-xl space-y-5"
+      >
+        {{ csrf_input }}
+
+        {{ input(
+          name='current_password',
+          label='Mật khẩu hiện tại',
+          type='password',
+          required=true
+        ) }}
+
+        {{ input(
+          name='new_password',
+          label='Mật khẩu mới',
+          type='password',
+          required=true
+        ) }}
+
+        <div
+          x-show="showRules"
+          x-transition.opacity.duration.200ms
+          class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm"
+        >
+          <div class="space-y-2">
+            <div class="flex items-center gap-2" :class="checks.length ? 'text-green-600' : 'text-slate-700'">
+              <span x-text="checks.length ? '✔' : '•'" class="inline-block w-4 text-center"></span>
+              <span>Ít nhất 8 ký tự</span>
+            </div>
+
+            <div class="flex items-center gap-2" :class="checks.upper ? 'text-green-600' : 'text-slate-700'">
+              <span x-text="checks.upper ? '✔' : '•'" class="inline-block w-4 text-center"></span>
+              <span>Có chữ hoa</span>
+            </div>
+
+            <div class="flex items-center gap-2" :class="checks.number ? 'text-green-600' : 'text-slate-700'">
+              <span x-text="checks.number ? '✔' : '•'" class="inline-block w-4 text-center"></span>
+              <span>Có số</span>
+            </div>
+          </div>
+        </div>
+
+        {{ input(
+          name='confirm_password',
+          label='Xác nhận mật khẩu mới',
+          type='password',
+          required=true
+        ) }}
+
+        <div
+          x-show="newPassword.length > 0 && confirmPassword.length > 0"
+          x-transition.opacity.duration.200ms
+          class="text-sm"
+        >
+          <div
+            class="flex items-center gap-2"
+            :class="passwordsMatch ? 'text-green-600' : 'text-red-600'"
+          >
+            <span x-text="passwordsMatch ? '✔' : '✖'" class="inline-block w-4 text-center"></span>
+            <span x-text="passwordsMatch ? 'Xác nhận mật khẩu khớp' : 'Xác nhận mật khẩu chưa khớp'"></span>
+          </div>
+        </div>
+
+        <div class="flex gap-3 border-t pt-4">
+          <button
+            type="submit"
+            :disabled="!canSubmit"
+            class="h-11 rounded-lg bg-red-700 px-6 text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span x-show="!loading">Đổi mật khẩu</span>
+            <span x-show="loading">Đang xử lý...</span>
+          </button>
+
+          <button
+            type="button"
+            @click="resetForm"
+            :disabled="loading"
+            class="h-11 rounded-lg border border-red-300 px-6 text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Hủy
+          </button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block post_scripts %}
+<script>
+function passwordForm() {
+  return {
+    loading: false,
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+
+    init() { this.sync() },
+    form() { return document.getElementById('change-password-form') },
+    field(name) { return this.form()?.querySelector(`[name="${name}"]`) },
+
+    sync() {
+      this.currentPassword = this.field('current_password')?.value || '';
+      this.newPassword = this.field('new_password')?.value || '';
+      this.confirmPassword = this.field('confirm_password')?.value || '';
+    },
+
+    onInput() { this.sync() },
+
+    get checks() {
+      const v = this.newPassword;
+      return {
+        length: v.length >= 8,
+        upper: /[A-ZÀ-Ỹ]/.test(v),
+        number: /\d/.test(v),
+      };
+    },
+
+    get passwordRulesValid() {
+      return this.checks.length && this.checks.upper && this.checks.number;
+    },
+
+    get passwordsMatch() {
+      return !!this.newPassword &&
+             !!this.confirmPassword &&
+             this.newPassword === this.confirmPassword;
+    },
+
+    get showRules() {
+      return !this.newPassword || !this.passwordRulesValid;
+    },
+
+    get canSubmit() {
+      return !!this.currentPassword &&
+             !!this.newPassword &&
+             !!this.confirmPassword &&
+             this.passwordRulesValid &&
+             this.passwordsMatch &&
+             !this.loading;
+    },
+
+    handleSubmit(e) {
+      this.sync();
+      if (!this.canSubmit) {
+        e.preventDefault();
+        return;
+      }
+      this.loading = true;
+    },
+
+    resetForm() {
+      this.form()?.reset();
+      this.loading = false;
+      this.currentPassword = '';
+      this.newPassword = '';
+      this.confirmPassword = '';
+    }
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$name = (name) => $(`[name="${name}"]`);
+  const toast = (type, msg) => {
+    const levelMap = { success: 25, info: 20, warning: 30, danger: 40, error: 40 };
+    const level = levelMap[type] || 20;
+    document.body.dispatchEvent(
+      new CustomEvent('new-message', {
+        detail: {
+          value: [{ message: msg, level, id: Date.now() }],
+        },
+        bubbles: true,
+      })
+    );
+  };
+  const parseJson = async (res) => await res.json().catch(() => ({}));
+  const alpine = (el) => el?._x_dataStack?.[0] || el?.__x?.$data || null;
+  const errMsg = (d) => d?.error?.trim?.() || 'Có lỗi xảy ra';
+
+  const profile = {
+    form: $('#basic-profile-form'),
+    saveBtn: $('#basic-profile-save-btn'),
+    cancelBtn: $('#basic-profile-cancel-btn'),
+    state: {
+      full_name: '',
+      email: '',
+      phone: '',
+      department: '',
+      roles: [],
+      is_active: false,
+    },
+
+    fields: ['full_name', 'email', 'phone'],
+
+    getValues(source = 'dom') {
+      return this.fields.reduce((obj, key) => {
+        obj[key] = (
+          source === 'state'
+            ? this.state[key]
+            : $$name(key)?.value
+        )?.trim?.() || '';
+        return obj;
+      }, {});
+    },
+
+    isDirty() {
+      const a = this.getValues();
+      const b = this.getValues('state');
+      return this.fields.some((k) => a[k] !== b[k]);
+    },
+
+    setField(name, value, fire = false) {
+      const hidden = $$name(name);
+      if (!hidden) return;
+
+      // Component `input` dùng 2 input:
+      // - input ẩn (type="hidden") có `name` để submit
+      // - input hiển thị không có `name`, bind qua `x-model="displayValue"`
+      // => Vì vậy phải set vào input hiển thị để UI hiện giá trị.
+      const root = hidden.closest('[x-data]');
+      const visible = root?.querySelector('input[x-model="displayValue"]') || null;
+
+      const v = value || '';
+
+      if (visible) {
+        visible.value = v;
+        if (fire) {
+          visible.dispatchEvent(new Event('input', { bubbles: true }));
+          visible.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      // Đồng thời set luôn input ẩn để `getValues()` (đọc từ `name`) phản ánh đúng ngay lập tức.
+      hidden.value = v;
+      if (fire && !visible) {
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    },
+
+    setButtons(disabled) {
+      if (this.saveBtn) this.saveBtn.disabled = disabled;
+      if (this.cancelBtn) this.cancelBtn.disabled = disabled;
+    },
+
+    updateButtons() {
+      this.setButtons(!this.isDirty());
+    },
+
+    renderMeta() {
+      const dept = $('#profile-department');
+      const roles = $('#profile-roles');
+      const status = $('#profile-status');
+
+      if (dept) dept.textContent = this.state.department || '-';
+
+      if (roles) {
+        const items = this.state.roles?.length ? this.state.roles : ['Thành viên'];
+        roles.innerHTML = items.map((role, i) => `
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+            i === 0 ? 'bg-red-700 text-white' : 'bg-slate-200 text-slate-600'
+          }">${role}</span>
+        `).join('');
+      }
+
+      if (status) {
+        const active = !!this.state.is_active;
+        status.className = active
+          ? 'inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700'
+          : 'inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-600';
+
+        status.innerHTML = `
+          <span class="h-2 w-2 rounded-full ${active ? 'bg-green-500' : 'bg-slate-400'}"></span>
+          <span>${active ? 'Hoạt động' : 'Tạm khóa'}</span>
+        `;
+      }
+    },
+
+    render() {
+      this.renderMeta();
+      this.fields.forEach((key) => this.setField(key, this.state[key], true));
+      this.updateButtons();
+    },
+
+    restore() {
+      this.fields.forEach((key) => this.setField(key, this.state[key], true));
+      this.updateButtons();
+    },
+
+    csrf() {
+      return (
+        $('input[name="csrfmiddlewaretoken"]', this.form)?.value ||
+        decodeURIComponent(document.cookie.match(/(?:^|; )csrftoken=([^;]+)/)?.[1] || '')
+      );
+    },
+
+    async load() {
+      try {
+        const res = await fetch("{{ url('profile_api') }}", {
+          headers: { Accept: 'application/json' },
+          credentials: 'same-origin',
+        });
+        const json = await parseJson(res);
+
+        if (!res.ok || !json?.ok) {
+          toast('danger', json?.error || 'Không tải được thông tin cá nhân.');
+          return;
+        }
+
+        const d = json.data || {};
+        Object.assign(this.state, {
+          full_name: d.full_name || '',
+          email: d.email || '',
+          phone: d.phone || '',
+          department: d.department || '',
+          roles: Array.isArray(d.roles) ? d.roles : [],
+          is_active: !!d.is_active,
+        });
+
+        this.render();
+      } catch {
+        toast('danger', 'Không tải được thông tin cá nhân.');
+      }
+    },
+
+    async submit() {
+      if (!this.isDirty()) return;
+
+      this.setButtons(true);
+
+      try {
+        const payload = this.getValues();
+        const res = await fetch("{{ url('profile_api') }}", {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            ...(this.csrf() ? { 'X-CSRFToken': this.csrf() } : {}),
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify(payload),
+        });
+
+        const json = await parseJson(res);
+
+        if (!res.ok || !json?.ok) {
+          toast('danger', json?.error || 'Không thể cập nhập thông tin cá nhân.');
+          this.updateButtons();
+          return;
+        }
+
+        Object.assign(this.state, payload);
+        toast('success', 'Đã cập nhập thành công.');
+        this.updateButtons();
+      } catch {
+        toast('danger', 'Không thể kết nối tới máy chủ');
+        this.updateButtons();
+      }
+    },
+
+    bind() {
+      if (!this.form || this.form.dataset.bound) return;
+      this.form.dataset.bound = '1';
+
+      this.form.addEventListener('input', (e) => {
+        const t = e.target;
+        if (!t || !('closest' in t)) return;
+
+        const syncButtons = () => requestAnimationFrame(() => this.updateButtons());
+
+        // Input hiển thị của component `input` không có `name`.
+        // Khi người dùng gõ, event target là ô hiển thị => cần tìm hidden input
+        // trong cùng component để xác định field đang thay đổi.
+        const directName = t.name;
+        if (directName && this.fields.includes(directName)) {
+          syncButtons();
+          return;
+        }
+
+        const root = t.closest('[x-data]');
+        const hidden = root?.querySelector('input[type="hidden"][name]') || null;
+        if (hidden?.name && this.fields.includes(hidden.name)) {
+          syncButtons();
+        }
+      });
+
+      this.cancelBtn?.addEventListener('click', () => this.restore());
+      this.saveBtn?.addEventListener('click', () => this.submit());
+    }
+  };
+
+  const handlePasswordHtmx = (e, type) => {
+    if (e.detail.elt?.id !== 'change-password-form') return;
+
+    const form = e.detail.elt;
+    const x = alpine(form);
+
+    if (x) {
+      x.loading = false;
+      x.sync?.();
+    }
+
+    if (type === 'sendError') {
+      toast('danger', 'Không thể kết nối tới máy chủ');
+      return;
+    }
+
+    let data = {};
+    try {
+      data = JSON.parse(e.detail.xhr?.responseText || '{}');
+    } catch (_) {}
+
+    if (type === 'afterRequest') {
+      if (!e.detail.successful) return;
+      if (data.ok) {
+        form.reset();
+        x?.resetForm?.();
+        return;
+      }
+    }
+
+    toast('danger', errMsg(data));
+  };
+
+  profile.bind();
+  profile.load();
+
+  document.body.addEventListener('htmx:afterRequest', (e) => handlePasswordHtmx(e, 'afterRequest'));
+  document.body.addEventListener('htmx:responseError', (e) => handlePasswordHtmx(e, 'responseError'));
+  document.body.addEventListener('htmx:sendError', (e) => handlePasswordHtmx(e, 'sendError'));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% macro dropzone(
+  name='file',
+  upload_url='',
+  label='Nhấp để tải lên hoặc kéo và thả',
+  hint='PNG, JPG, PDF, DOCX, XLSX (tối đa 5MB)',
+  accept='.png,.jpg,.jpeg,.pdf,.docx,.xlsx',
+  multiple=true,
+  max_files=5,
+  disable_when_card_exists=true
+) %}
+<div
+  x-id="['file-input', 'file-cards', 'upload-indicator']"
+  x-data="{
+    isDragging: false,
+    progressLabel: 'Đang tải...',
+    disableWhenCardExists: {{ jsonify(disable_when_card_exists) }},
+    disabledByCard: false,
+    uploadInFlight: false,
+    uploadQueue: [],
+    init() {
+      const root = this.$el;
+
+      const hasUploadedCard = () => {
+        if (!this.$refs.fileCards) return false;
+        // Any uploaded-successful card should include a hidden input with a non-empty value.
+        return !!this.$refs.fileCards.querySelector('input[type={{ jsonify('hidden') }}][name={{ jsonify(name) }}]:not([value={{ jsonify('') }}])');
+      };
+
+      this.syncDisabledState = () => {
+        this.disabledByCard = this.disableWhenCardExists && hasUploadedCard();
+      };
+
+      this._onBeforeRequest = (e) => {
+        const elt = e?.detail?.elt;
+        if (!elt || elt !== this.$refs.uploadForm) return;
+        if (!root.contains(elt)) return;
+        this.progressLabel = 'Đang tải...';
+        if (this.$refs.uploadProgress) this.$refs.uploadProgress.value = 0;
+        this.uploadInFlight = true;
+      };
+
+      this._onProgress = (e) => {
+        const detail = e?.detail || {};
+        const elt = detail.elt;
+        if (!elt || elt !== this.$refs.uploadForm) return;
+        if (!root.contains(elt)) return;
+
+        const loaded = Number(detail.loaded ?? 0);
+        const total = Number(detail.total ?? 0);
+        if (!total) return;
+
+        const pct = Math.max(0, Math.min(100, Math.round((loaded / total) * 100)));
+        this.progressLabel = `${pct}%`;
+        if (this.$refs.uploadProgress) this.$refs.uploadProgress.value = pct;
+      };
+
+      this._onAfterRequest = (e) => {
+        const elt = e?.detail?.elt;
+        if (!elt || elt !== this.$refs.uploadForm) return;
+        if (!root.contains(elt)) return;
+        const status = e?.detail?.xhr?.status;
+        const ok = status >= 200 && status < 300;
+        // Clear the file input so selecting the same file again still triggers a change event.
+        if (this.$refs.fileInput) this.$refs.fileInput.value = '';
+
+        // If we disable after first successful upload, stop further queued uploads.
+        if (ok && this.disableWhenCardExists) {
+          this.disabledByCard = true;
+          this.uploadQueue = [];
+        }
+
+        this.uploadInFlight = false;
+
+        if (this.uploadQueue.length > 0 && !this.disabledByCard) {
+          this.uploadNext();
+        }
+      };
+
+      document.body.addEventListener('htmx:before-request', this._onBeforeRequest);
+      document.body.addEventListener('htmx:xhr:progress', this._onProgress);
+      document.body.addEventListener('htmx:after-request', this._onAfterRequest);
+
+      this.syncDisabledState();
+    },
+    destroy() {
+      if (this._onBeforeRequest) document.body.removeEventListener('htmx:before-request', this._onBeforeRequest);
+      if (this._onProgress) document.body.removeEventListener('htmx:xhr:progress', this._onProgress);
+      if (this._onAfterRequest) document.body.removeEventListener('htmx:after-request', this._onAfterRequest);
+    },
+    handleFiles(files) {
+      // Do not start uploads if we already have an uploaded-successful card.
+      this.syncDisabledState();
+      if (this.disabledByCard) return;
+
+      // Avoid overwriting the queue mid-flight.
+      if (this.uploadInFlight || (this.uploadQueue && this.uploadQueue.length)) return;
+
+      const dtFiles = Array.from(files || []);
+      if (!dtFiles.length) return;
+
+      // Split into single-file uploads by queueing each file separately.
+      this.uploadQueue = dtFiles.slice(0, {{ max_files | int }});
+      this.uploadNext();
+    },
+    uploadNext() {
+      if (!this.uploadQueue.length) return;
+
+      this.syncDisabledState();
+      if (this.disabledByCard) {
+        this.uploadQueue = [];
+        return;
+      }
+
+      const file = this.uploadQueue.shift();
+      if (!file) return;
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      this.$refs.fileInput.files = dt.files;
+
+      // Trigger a single HTMX request for this one file.
+      this.$refs.uploadForm.requestSubmit();
+    },
+    onDrop(evt) {
+      this.isDragging = false;
+      const files = Array.from(evt?.dataTransfer?.files || []);
+      this.handleFiles(files);
+    }
+  }"
+  class="space-y-3"
+  @dragover.prevent="if (!disabledByCard) isDragging = true"
+  @dragleave.prevent="if (!disabledByCard) isDragging = false"
+  @drop.prevent.stop="if (!disabledByCard) onDrop($event)"
+>
+  <div
+    class="rounded-lg border-2 border-dashed p-4 text-center transition-colors cursor-pointer bg-white"
+    :class="disabledByCard ? 'border-slate-200 bg-slate-50 cursor-not-allowed opacity-70' : (isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-slate-400')"
+    @click.prevent="if (!disabledByCard) $refs.fileInput.click()"
+    role="button"
+    tabindex="0"
+  >
+    <div class="flex flex-col items-center gap-2">
+      <div class="flex items-center gap-2 text-sm font-medium text-slate-700">
+        <span class="w-4 h-4 text-slate-500">
+          {% include 'upload.svg' %}
+        </span>
+        <span>{{ label }}</span>
+      </div>
+      <p class="text-xs text-slate-500">{{ hint }}</p>
+    </div>
+  </div>
+
+  <form
+    x-ref="uploadForm"
+    hx-post="{{ upload_url }}"
+    hx-encoding="multipart/form-data"
+    :hx-target="'#' + $id('file-cards')"
+    hx-swap="afterbegin"
+    :hx-indicator="'#' + $id('upload-indicator')"
+    hx-trigger="submit"
+  >
+    <input
+      x-ref="fileInput"
+      :id="$id('file-input')"
+      type="file"
+      name="{{ name }}"
+      accept="{{ accept }}"
+      class="hidden"
+      {% if multiple %}multiple{% endif %}
+      :disabled="disabledByCard"
+      @change="
+        if ($event.target.files && $event.target.files.length) {
+          handleFiles($event.target.files);
+        }
+      "
+    />
+  </form>
+
+  <div
+    :id="$id('upload-indicator')"
+    class="htmx-indicator transition-opacity flex items-center gap-3 text-sm text-slate-700 p-3 bg-white/80 rounded-lg border border-slate-200"
+    aria-live="polite"
+  >
+    <progress
+      x-ref="uploadProgress"
+      class="w-40"
+      value="0"
+      max="100"
+    ></progress>
+    <span x-text="progressLabel"></span>
+  </div>
+
+  <div x-ref="fileCards" :id="$id('file-cards')" class="space-y-3"></div>
+</div>
+{% endmacro %}

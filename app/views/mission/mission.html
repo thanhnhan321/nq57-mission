@@ -1,0 +1,109 @@
+{% extends 'templates/layouts/index.html' %}
+{% from 'templates/components/table/table.html' import table %}
+{% from 'mission/mission_create_modal.html' import mission_create_modal %}
+{% from 'mission/mission_create_excel_modal.html' import mission_excel_modal %}
+
+{% block title %}Danh sách nhiệm vụ{% endblock %}
+
+{% block content %}
+<div class="space-y-4 p-4">
+  {{ table(
+    header=title,
+    filters=filters,
+    columns=columns,
+    rows=rows,
+    partial_url=url('mission_list_partial'),
+    actions=actions,
+    bulk_actions=bulk_actions,
+    row_actions=row_actions,
+    page_index=page_index,
+    page_size=page_size,
+    total_count=total_count,
+    reload_event='table:reload'
+  ) }}
+
+  <div
+    class="contents"
+    x-data="{
+      modalOpen: false,
+      excelModalOpen: false,
+      submitting: false,
+      excelStep: 1,
+      excelFile: null,
+      excelDirectiveLevel: '',
+      excelDirectiveDocument: '',
+      excelValidated: false,
+      excelHasErrors: true,
+
+      resetExcelModal() {
+        this.excelStep = 1;
+        this.excelFile = null;
+        this.excelValidated = false;
+        this.excelHasErrors = true;
+        this.excelDirectiveLevel = '';
+        this.excelDirectiveDocument = '';
+        const validationEl = document.getElementById('task-excel-validation-result');
+        if (validationEl) validationEl.innerHTML = '';
+        window.dispatchEvent(new Event('task-excel:reset'));
+        if (this.$refs.excelFileInput) {
+          this.$refs.excelFileInput.value = '';
+        }
+      },
+
+      syncExcelValidationState() {
+        const validationEl = document.getElementById('task-excel-validation-result');
+        if (!validationEl) return;
+
+        const tableEl = validationEl.querySelector('table');
+        const hasTable = !!tableEl;
+        const metaEl = validationEl.querySelector('#task-excel-has-errors');
+        const metaValue = metaEl ? metaEl.value : null;
+
+        this.excelValidated = hasTable;
+        if (!hasTable) {
+          this.excelHasErrors = true;
+          return;
+        }
+
+        if (metaValue !== null) {
+          this.excelHasErrors = metaValue === '1';
+          return;
+        }
+
+        this.excelHasErrors = !!validationEl.querySelector('.text-red-700');
+      }
+    }"
+    @open-mission-create-modal.window="modalOpen = true"
+    @close-mission-create-modal.window="modalOpen = false"
+    @open-mission-create-excel-modal.window="
+      excelModalOpen = true;
+      resetExcelModal();
+    "
+    @close-mission-create-excel-modal.window="
+      excelModalOpen = false;
+      resetExcelModal();
+    "
+    @htmx:afterSwap.window="syncExcelValidationState()"
+  >
+    {{ mission_create_modal() }}
+    {{ mission_excel_modal() }}
+  </div>
+
+  <script>
+    document.addEventListener('click', (e) => {
+      const optionEl = e.target.closest('[role="option"]');
+      const clearEl = e.target.closest('button[aria-label="Clear"]');
+      const removeEl = e.target.closest('button[aria-label^="Remove"]');
+
+      if (!optionEl && !clearEl && !removeEl) return;
+
+      const form = e.target.closest('form');
+      if (!form) return;
+
+      setTimeout(() => {
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }, 0);
+    });
+  </script>
+</div>
+{% endblock %}

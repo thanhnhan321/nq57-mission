@@ -1,0 +1,14 @@
+[
+  {"model": "app.reportperiodmonth", "pk": 1, "fields": {"month": 1, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 2, "fields": {"month": 2, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 3, "fields": {"month": 3, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 4, "fields": {"month": 4, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 5, "fields": {"month": 5, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 6, "fields": {"month": 6, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 7, "fields": {"month": 7, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 8, "fields": {"month": 8, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 9, "fields": {"month": 9, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 10, "fields": {"month": 10, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 11, "fields": {"month": 11, "report_type": "MONTH"}},
+  {"model": "app.reportperiodmonth", "pk": 12, "fields": {"month": 12, "report_type": "MONTH"}}
+]

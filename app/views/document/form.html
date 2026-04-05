@@ -1,0 +1,211 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/input/datetimepicker/datetimepicker.html' import datetimepicker %}
+
+<form
+    id="document-form"
+    x-data="{
+        code: {{ jsonify(code) }},
+        title: {{ jsonify(title) }},
+        type_code: {{ jsonify(type_code) }},
+        issued_at: {{ jsonify(issued_at) }},
+        issued_by: {{ jsonify(issued_by) }},
+        expired_at: {{ jsonify(expired_at) }},
+        object: null,
+        errors: {{ jsonify(errors) }},
+        dateResetTick: 0,
+        startDateMin: (() => {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            return `${y}-${m}-01`;
+        })(),
+        documentCreateStartDate: {{ jsonify(issued_at or '') }},
+        documentCreateDueDate: (() => {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const lastDay = String(new Date(y, now.getMonth() + 1, 0).getDate()).padStart(2, '0');
+            return `${y}-${m}-${lastDay}`;
+        })(),
+    }"
+    class="min-w-lg grid grid-cols-2 gap-3"
+    @submit.prevent
+    @change="
+        if ($event.target.name === 'issued_at') {
+            documentCreateStartDate = $event.target.value || '';
+            issued_at = documentCreateStartDate;
+
+            if (
+                expired_at &&
+                documentCreateStartDate &&
+                expired_at < documentCreateStartDate
+            ) {
+                expired_at = '';
+            }
+        }
+
+        if ($event.target.name === 'expired_at') {
+            expired_at = $event.target.value || '';
+        }
+    "
+>
+    {{ csrf_input }}
+
+    {{ input(
+        name='code',
+        label='Số hiệu văn bản',
+        placeholder='Nhập số hiệu văn bản',
+        value=code,
+        required=true,
+        disabled=true if request.path == url('document_update') else false,
+        error_message=errors.get('code', ''),
+    ) }}
+
+    {{ select(
+        name='type_code',
+        label='Loại văn bản',
+        placeholder='Chọn loại văn bản',
+        options_url=url('document_type_options'),
+        value=type_code,
+        required=true,
+        error_message=errors.get('type_code', ''),
+    ) }}
+
+    {{ select(
+        name='issued_by',
+        label='Đơn vị ban hành',
+        placeholder='Chọn đơn vị ban hành',
+        options_url=url('department_report_department_options'),
+        value=issued_by,
+        required=true,
+        error_message=errors.get('issued_by', ''),
+    ) }}
+
+    <template x-for="t in [dateResetTick]" :key="'document-issued-at-' + t">
+        <div class="w-full min-w-0">
+            {{ datetimepicker(
+                name='issued_at',
+                label='Ngày ban hành',
+                variant='date',
+                placeholder='Chọn ngày ban hành',
+                value=issued_at,
+                required=true,
+                error_message=errors.get('issued_at', ''),
+                extra_attributes={
+                    'clearable': false,
+                    'max': 'documentCreateDueDate',
+                    'min': 'startDateMin'
+                }
+            ) }}
+        </div>
+    </template>
+
+    {{ input(
+        name='title',
+        label='Tên văn bản / Trích yếu',
+        placeholder='Nhập tên văn bản hoặc trích yếu nội dung',
+        value=title,
+        required=true,
+        error_message=errors.get('title', ''),
+        class='col-span-2',
+    ) }}
+
+    <template x-for="t in [dateResetTick]" :key="'document-expired-at-' + t">
+        <div class="w-full min-w-0">
+            {{ datetimepicker(
+                name='expired_at',
+                label='Ngày hết hiệu lực',
+                variant='date',
+                placeholder='Chọn ngày hết hiệu lực',
+                value=expired_at,
+                required=false,
+                error_message=errors.get('expired_at', ''),
+                extra_attributes={
+                    'min': 'documentCreateStartDate',
+                }
+            ) }}
+        </div>
+    </template>
+
+    {% if request.path == url('document_create') %}
+    <div
+        class="col-span-2 w-full rounded-2xl border border-dashed border-[#d8caca] bg-white px-6 py-8 transition-colors"
+        x-data="{ isDragging: false, dragDepth: 0 }"
+        :class="isDragging ? 'border-red-500 bg-red-50' : ''"
+        @dragenter.prevent="dragDepth++; isDragging = true"
+        @dragleave.prevent="
+            dragDepth = Math.max(0, dragDepth - 1);
+            if (dragDepth === 0) isDragging = false;
+        "
+        @dragover.prevent
+        @drop.prevent="
+            dragDepth = 0;
+            isDragging = false;
+            const file = $event.dataTransfer?.files?.[0];
+            if (!file) return;
+
+            const name = (file.name || '').toLowerCase();
+            const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
+            if (!isPdf) {
+                if ($refs.documentObjectInput) $refs.documentObjectInput.value = '';
+                object = null;
+                return;
+            }
+
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            $refs.documentObjectInput.files = dt.files;
+            object = file;
+        "
+    >
+        <label class="block cursor-pointer text-center">
+            <input
+                x-ref="documentObjectInput"
+                name="object"
+                type="file"
+                class="hidden"
+                accept=".pdf,application/pdf"
+                @change="
+                    const file = $event.target.files?.[0] || null;
+                    const name = (file?.name || '').toLowerCase();
+                    const isPdf = file && (name.endsWith('.pdf') || file.type === 'application/pdf');
+                    if (!isPdf) {
+                        $event.target.value = '';
+                        object = null;
+                        return;
+                    }
+                    object = file;
+                "
+            >
+
+            <div x-show="!object" class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+                {% include 'upload.svg' %}
+            </div>
+
+            <div x-show="!object" class="mt-4 text-base font-medium text-blue-600">
+                Kéo thả file vào đây hoặc chọn file
+            </div>
+
+            <div x-show="!object" class="mt-2 text-sm text-slate-500">
+                Chỉ hỗ trợ định dạng PDF
+            </div>
+
+            <div
+                x-show="object"
+                class="mx-auto flex w-full max-w-md items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left"
+            >
+                <div class="flex min-w-0 items-center gap-3">
+                    <span class="h-6 w-6 shrink-0 text-red-600">{% include 'pdf.svg' %}</span>
+                    <span class="truncate text-sm font-medium text-slate-700" x-text="object ? object.name : ''"></span>
+                </div>
+                <span class="ml-3 shrink-0 text-xs font-semibold text-blue-600">Bấm để đổi file</span>
+            </div>
+        </label>
+
+        {% if errors.get('object') %}
+        <div class="mt-2 text-sm font-medium text-red-600">{{ errors.get('object', '') }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+</form>

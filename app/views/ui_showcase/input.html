@@ -1,0 +1,370 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/datetimepicker/datetimepicker.html' import datetimepicker %}
+{% from 'templates/components/input/textarea/textarea.html' import textarea %}
+
+
+<section class="py-16 space-y-12">
+  <header class="mb-10">
+    <h2 class="text-2xl font-semibold text-slate-900">Input</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Base input with labels, hints/errors, disabled state, and optional masks (number, currency, date).
+    </p>
+  </header>
+
+  <div class="grid gap-10 lg:grid-cols-2">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Text</h3>
+      <p class="mt-1 text-xs text-slate-600">Default text field with a hint and tooltip.</p>
+      <div class="mt-4">
+        {{ input(
+          name='demo_text',
+          label='Full name',
+          placeholder='Jane Doe',
+          hint='Use your legal name as it appears on documents.',
+          tooltip_content='This is used for contracts and invoices.',
+          type='text'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Textarea</h3>
+      <p class="mt-1 text-xs text-slate-600">Multiline input for longer descriptions.</p>
+      <div class="mt-4">
+        {{ textarea(
+          name='demo_textarea',
+          label='Message',
+          placeholder='Write your message...',
+          hint='Tip: you can resize the textarea vertically.',
+          tooltip_content='This is a multiline field using the shared input wrapper.'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Textarea (disabled)</h3>
+      <p class="mt-1 text-xs text-slate-600">Disabled styling with prefilled text.</p>
+      <div class="mt-4">
+        {{ textarea(
+          name='demo_textarea_disabled',
+          label='Read-only message',
+          placeholder='Write your message...',
+          hint='This textarea is not editable in this state.',
+          disabled=true,
+          value='Locked: you can still read the message.'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Number (masked)</h3>
+      <p class="mt-1 text-xs text-slate-600">Allows only numeric input and formats with grouping spaces.</p>
+      <div class="mt-4">
+        {{ input(
+          name='demo_number',
+          label='Units',
+          placeholder='0',
+          hint='Example: 12000',
+          type='number',
+          value=12000
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Currency (masked)</h3>
+      <p class="mt-1 text-xs text-slate-600">Useful when you want a visually grouped amount.</p>
+      <div class="mt-4">
+        {{ input(
+          name='demo_currency',
+          label='Budget',
+          placeholder='0',
+          hint='Grouping is visual; submitted value matches what you typed.',
+          type='currency',
+          value='2500000'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Password</h3>
+      <p class="mt-1 text-xs text-slate-600">Includes a visibility toggle button.</p>
+      <div class="mt-4">
+        {{ input(
+          name='demo_password',
+          label='Password',
+          placeholder='••••••••',
+          hint='At least 8 characters.',
+          type='password'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Date (masked)</h3>
+      <p class="mt-1 text-xs text-slate-600">Simple dd/mm/yyyy mask (for display only).</p>
+      <div class="mt-4">
+        {{ input(
+          name='demo_date',
+          label='Date',
+          placeholder='dd/mm/yyyy',
+          hint='Example: 18/03/2026',
+          type='date',
+          value='18/03/2026'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Disabled + error</h3>
+      <p class="mt-1 text-xs text-slate-600">Shows disabled styling and error state.</p>
+      <div class="mt-4 space-y-6">
+        {{ input(
+          name='demo_disabled',
+          label='Disabled field',
+          placeholder='Can’t edit',
+          hint='This field is read-only in this state.',
+          disabled=true,
+          type='text',
+          value='Locked'
+        ) }}
+        {{ input(
+          name='demo_error',
+          label='Email',
+          placeholder='name@company.com',
+          error_message='Please enter a valid email address.',
+          type='text',
+          value='not-an-email'
+        ) }}
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="py-16 space-y-12 border-t border-slate-200">
+  <header class="mb-10">
+    <h2 class="text-2xl font-semibold text-slate-900">Date / Time Picker</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Three variants returning ISO8601 values: date (`YYYY-MM-DD`), time (`HH:mm:00`), and datetime (`YYYY-MM-DDTHH:mm:00`).
+      Optional bounds: pass `min` and `max` in `extra_attributes` as the <em>names</em> of string properties on an ancestor
+      Alpine `x-data` (ISO date values). The picker exposes getters <code class="text-xs">min</code> / <code class="text-xs">max</code>
+      (<code class="text-xs">Date | null</code>; <code class="text-xs">null</code> = unbounded). Sibling pickers resync when a hidden input
+      dispatches a bubbling <code class="text-xs">change</code> to the outermost <code class="text-xs">x-data</code> root.
+    </p>
+  </header>
+
+  <div class="grid gap-10 lg:grid-cols-3">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Date picker</h3>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_date_picker',
+          variant='date',
+          label='Ngày',
+          hint='ISO: YYYY-MM-DD',
+          value='2026-03-23'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Time picker</h3>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_time_picker',
+          variant='time',
+          label='Giờ',
+          hint='ISO: HH:mm:00',
+          value='10:01:00'
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Date time picker</h3>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_datetime_picker',
+          variant='datetime',
+          label='Ngày giờ',
+          hint='ISO: YYYY-MM-DDTHH:mm:00',
+          value='2026-03-23T10:01:00'
+        ) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-10 lg:grid-cols-2">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Date picker (month + year only)</h3>
+      <p class="mt-1 text-xs text-slate-600">Fix `day=1`, let users choose only month and year.</p>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_date_picker_month_year_only',
+          variant='date',
+          label='Tháng áp dụng',
+          hint='Selectable: year + month. ISO output is still full date.',
+          value='2026-03-01',
+          extra_attributes={
+            'day': 1,
+            'format': 'Tháng MM/YYYY'
+          }
+        ) }}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">Date picker (year only)</h3>
+      <p class="mt-1 text-xs text-slate-600">Fix `month=1` and `day=1`, let users choose only year.</p>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_date_picker_year_only',
+          variant='date',
+          label='Năm',
+          hint='Selectable: year only. ISO output stays YYYY-01-01.',
+          value='2026-01-01',
+          extra_attributes={
+            'month': 1,
+            'day': 1
+          }
+        ) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-10 lg:grid-cols-2">
+    <div
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      x-data="{ feb_min_iso: '2026-02-01', feb_max_iso: '2026-02-28' }"
+    >
+      <h3 class="text-sm font-semibold text-slate-900">Date bounds via parent keys (<code class="text-xs">min</code> / <code class="text-xs">max</code>)</h3>
+      <p class="mt-1 text-xs text-slate-600">Parent holds ISO strings; <code class="text-xs">extra_attributes</code> passes property names <code class="text-xs">feb_min_iso</code> / <code class="text-xs">feb_max_iso</code>.</p>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_date_picker_bounded_static',
+          variant='date',
+          label='Trong tháng 2/2026',
+          hint='đọc min/max từ parent',
+          value='2026-02-15',
+          extra_attributes={
+            'min': 'feb_min_iso',
+            'max': 'feb_max_iso',
+          }
+        ) }}
+      </div>
+    </div>
+
+    <div
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      x-data="{
+        demo_range_start: '2026-01-10',
+        demo_range_end: '2026-06-20',
+      }"
+      @change="
+        const t = $event.target;
+        if (!t || !t.name) return;
+        if (t.name === 'demo_date_range_start') demo_range_start = t.value;
+        if (t.name === 'demo_date_range_end') demo_range_end = t.value;
+      "
+    >
+      <h3 class="text-sm font-semibold text-slate-900">Date bounds from parent <code class="text-xs">x-data</code></h3>
+      <p class="mt-1 text-xs text-slate-600">
+        End date cannot be before start; start cannot be after end. Parent keys
+        <code class="text-xs">demo_range_start</code> / <code class="text-xs">demo_range_end</code> update on each picker’s hidden input
+        <code class="text-xs">change</code>.
+      </p>
+      <p class="mt-2 text-xs font-mono text-slate-500" x-text="'Parent: ' + demo_range_start + ' → ' + demo_range_end"></p>
+      <div class="mt-4 grid gap-6 sm:grid-cols-2">
+        {{ datetimepicker(
+          name='demo_date_range_start',
+          variant='date',
+          label='Từ ngày',
+          hint='max = demo_range_end',
+          value='2026-01-10',
+          extra_attributes={
+            'max': 'demo_range_end',
+          }
+        ) }}
+        {{ datetimepicker(
+          name='demo_date_range_end',
+          variant='date',
+          label='Đến ngày',
+          hint='min = demo_range_start',
+          value='2026-06-20',
+          extra_attributes={
+            'min': 'demo_range_start',
+          }
+        ) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-10 lg:grid-cols-2">
+    <div
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      x-data="{ demo_time_min: '09:30:00', demo_time_max: '17:00:00' }"
+    >
+      <h3 class="text-sm font-semibold text-slate-900">Time bounds via parent keys</h3>
+      <p class="mt-1 text-xs text-slate-600">
+        Only times between <code class="text-xs">09:30</code> and <code class="text-xs">17:00</code> are selectable.
+      </p>
+      <p class="mt-2 text-xs font-mono text-slate-500" x-text="'Parent: ' + demo_time_min + ' → ' + demo_time_max"></p>
+      <div class="mt-4">
+        {{ datetimepicker(
+          name='demo_time_picker_bounded',
+          variant='time',
+          label='Giờ làm việc',
+          hint='min/max đọc từ parent',
+          value='10:01:00',
+          extra_attributes={
+            'min': 'demo_time_min',
+            'max': 'demo_time_max',
+          }
+        ) }}
+      </div>
+    </div>
+
+    <div
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      x-data="{
+        demo_dt_start: '2026-03-23T09:00:00',
+        demo_dt_end: '2026-03-23T17:00:00',
+      }"
+      @change="
+        const t = $event.target;
+        if (!t || !t.name) return;
+        if (t.name === 'demo_datetime_range_start') demo_dt_start = t.value;
+        if (t.name === 'demo_datetime_range_end') demo_dt_end = t.value;
+      "
+    >
+      <h3 class="text-sm font-semibold text-slate-900">Datetime range (same day)</h3>
+      <p class="mt-1 text-xs text-slate-600">
+        End cannot be before start; bounds include time. Try changing start/end to see the time list disable.
+      </p>
+      <p class="mt-2 text-xs font-mono text-slate-500" x-text="'Parent: ' + demo_dt_start + ' → ' + demo_dt_end"></p>
+      <div class="mt-4 grid gap-6 sm:grid-cols-2">
+        {{ datetimepicker(
+          name='demo_datetime_range_start',
+          variant='datetime',
+          label='Từ (ngày giờ)',
+          hint='max = demo_dt_end',
+          value='2026-03-23T09:00:00',
+          extra_attributes={
+            'max': 'demo_dt_end',
+          }
+        ) }}
+        {{ datetimepicker(
+          name='demo_datetime_range_end',
+          variant='datetime',
+          label='Đến (ngày giờ)',
+          hint='min = demo_dt_start',
+          value='2026-03-23T17:00:00',
+          extra_attributes={
+            'min': 'demo_dt_start',
+          }
+        ) }}
+      </div>
+    </div>
+  </div>
+</section>

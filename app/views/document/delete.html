@@ -1,0 +1,25 @@
+{% from 'templates/components/button/button.html' import button %}
+
+<div class="min-w-[420px] space-y-4">
+    <div class="text-sm text-slate-700">
+        Bạn có chắc chắn muốn xóa văn bản <strong>{{ code }}</strong> không?
+    </div>
+
+    <div class="rounded-lg bg-slate-50 p-3 text-sm">
+        <span class="font-semibold text-slate-900">
+            {{ title }}
+        </span>
+    </div>
+
+    <div class="flex justify-end gap-2">
+        {{ button(
+            text='Xóa',
+            variant='filled',
+            htmx_event_prefix='document',
+            extra_attributes={
+                'hx-get': url('document_delete', query={'code': code}),
+                'hx-swap': 'none',
+            }
+        ) }}
+    </div>
+</div>

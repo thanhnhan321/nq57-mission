@@ -1,0 +1,63 @@
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+{% macro wrapper(
+  label='',
+  hint='',
+  required=false,
+  disabled=false,
+  error_message='',
+  tooltip_content=none,
+  tooltip_axis='vertical'
+) %}
+{% set label = (label or '') | trim %}
+{% set hint = (hint or '') | trim %}
+{% set error_message = (error_message or '') | trim %}
+{% set tooltip_content = (tooltip_content or '') | trim %}
+<div
+  x-id="['input']"
+  x-data="{
+    disabled: {{ jsonify(disabled) }},
+    focused: false,
+    errorMessage: '{{ error_message }}',
+    hint: '{{ hint }}',
+  }"
+  class="group"
+>
+  {% if label %}
+  <label
+    :for="$id('input')"
+    class="mb-1 flex items-center gap-1.5 text-sm font-bold transition-colors"
+    :class="disabled ? 'text-slate-400' : (errorMessage ? 'text-red-500' : 'text-slate-700')"
+  >
+    <span>{{ label }}{% if required %} <span class="text-red-600">*</span>{% endif %}</span>
+
+    {% if tooltip_content %}
+      {% call tooltip(tooltip_content, tooltip_axis) %}
+        <button
+          type="button"
+          class="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[10px] font-semibold text-slate-500 bg-white hover:bg-slate-50"
+          tabindex="-1"
+        >
+          ?
+        </button>
+      {% endcall %}
+    {% endif %}
+  </label>
+  {% endif %}
+  <div 
+    class="min-h-10 ring-1 ring-solid rounded-md flex items-stretch" 
+    :class="disabled ? 
+    'bg-slate-200 text-slate-400 ring-slate-200' : (
+        errorMessage ? 'ring-red-600' : 'ring-slate-300')"
+  >
+    <div class="flex-1">
+      {{
+          caller()
+      }}
+    </div>
+  </div>
+  
+  <template x-if="errorMessage || hint">
+    <p class="mt-2 text-xs" :class="errorMessage ? 'text-red-600' : 'text-slate-400'" x-text="errorMessage ? errorMessage : hint"></p>
+  </template>
+</div>
+{% endmacro %}

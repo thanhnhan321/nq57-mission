@@ -1,0 +1,122 @@
+{% from 'templates/components/button/button.html' import button %}
+{% from 'templates/components/input/checkbox/checkbox.html' import checkbox %}
+{% from 'templates/components/table/table.html' import table %}
+
+{% set partial_url = url('configuration_partial', query={'tab': active_tab}) %}
+
+<div class="space-y-6">
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <div class="space-y-1">
+        <h2 class="text-2xl font-semibold text-slate-900">{{ tab_title }}</h2>
+      </div>
+    </div>
+
+    <form
+      id="configuration-form"
+      class="mt-6 space-y-6"
+      x-data="{ editing: {{ jsonify(is_editing) }} }"
+      hx-post="{{ partial_url }}"
+      hx-target="#configuration-content"
+      hx-swap="innerHTML"
+    >
+      {{ csrf_input }}
+      <input type="hidden" name="tab" value="{{ active_tab }}">
+      <input type="hidden" name="page_index" value="{{ page_index }}">
+      <input type="hidden" name="page_size" value="{{ page_size }}">
+
+      {% for row in field_rows %}
+      <div class="grid gap-4 lg:grid-cols-2">
+        {% for field in row %}
+          {% if field.kind == 'checkbox' %}
+          <div class="flex h-full flex-col justify-center gap-2 {% if row|length == 1 %}lg:col-span-2{% endif %}">
+            <label class="flex items-center gap-3">
+              <input
+                type="checkbox"
+                name="{{ field.name }}"
+                value="true"
+                {% if field.value %}checked{% endif %}
+                :disabled="!editing"
+                class="h-4 w-4 rounded border-slate-300 text-red-700 focus:ring-red-500"
+              >
+              <span class="block text-sm font-medium text-slate-700">{{ field.label }}</span>
+            </label>
+            {% if field.error_message %}
+            <p class="text-xs text-red-600">{{ field.error_message }}</p>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="space-y-2 {% if row|length == 1 %}lg:col-span-2{% endif %}">
+            <label class="block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+            <div class="rounded-md ring-1 ring-slate-300 transition" :class="editing ? 'bg-white' : 'bg-slate-100'">
+              <input
+                type="{{ 'time' if field.kind == 'time' else 'number' }}"
+                name="{{ field.name }}"
+                value="{{ field.value }}"
+                placeholder="{{ field.placeholder }}"
+                {% if field.minimum is not none %}min="{{ field.minimum }}"{% endif %}
+                {% if field.maximum is not none %}max="{{ field.maximum }}"{% endif %}
+                {% if not is_editing %}disabled{% endif %}
+                :disabled="!editing"
+                class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0"
+                :class="editing ? 'text-slate-900' : 'text-slate-500'"
+              >
+            </div>
+            {% if field.error_message %}
+            <p class="text-xs text-red-600">{{ field.error_message }}</p>
+            {% endif %}
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+
+      <div class="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          x-show="!editing"
+          @click="editing = true"
+          class="inline-flex items-center justify-center rounded-lg border border-transparent bg-red-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-800"
+        >
+          Chỉnh cấu hình
+        </button>
+
+        <button
+          type="submit"
+          x-show="editing"
+          class="inline-flex items-center justify-center rounded-lg border border-transparent bg-red-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-800"
+        >
+          Lưu cấu hình
+        </button>
+
+        <button
+          type="button"
+          x-show="editing"
+          @click="editing = false"
+          hx-get="{{ partial_url }}"
+          hx-include="#configuration-form"
+          hx-target="#configuration-content"
+          hx-swap="innerHTML"
+          hx-push-url="false"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          Hủy
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h3 class="mb-4 text-2xl font-semibold text-slate-900">{{ history_title }}</h3>
+    {{ table(
+      header='',
+      filters=[],
+      columns=history_columns,
+      rows=history_rows,
+      partial_url=partial_url,
+      page_index=page_index,
+      page_size=page_size,
+      total_count=total_count,
+    ) }}
+  </section>
+</div>

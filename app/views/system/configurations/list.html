@@ -1,0 +1,38 @@
+{% extends "templates/layouts/index.html" %}
+{% from 'templates/components/button/button.html' import button %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-full p-4 md:p-6 space-y-4">
+  <div class="flex justify-start gap-2" x-data="{ activeTab: '{{ active_tab }}' }">
+    {% for tab in tabs %}
+      {{ button(
+        text=tab.label,
+        variant='filled',
+        class='rounded-full px-5',
+        extra_attributes={
+          'hx-get': tab.url,
+          'hx-target': '#configuration-content',
+          'hx-swap': 'innerHTML',
+          'hx-push-url': 'false',
+          '@click': "activeTab = '" ~ tab.slug ~ "'",
+          ':class': "activeTab === '" ~ tab.slug ~ "' ? 'text-white' : 'bg-slate-200 text-slate-700! hover:text-white! border border-slate-200'",
+        }
+      ) }}
+    {% endfor %}
+  </div>
+
+  <div
+    id="configuration-content"
+    hx-get="{{ partial_url }}"
+    hx-trigger="load once"
+    hx-swap="innerHTML"
+  >
+    <div class="flex flex-col items-center justify-center gap-2 py-16 text-slate-500">
+      <span class="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-[#8B0000]" aria-hidden="true"></span>
+      <span class="text-sm">Đang tải…</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

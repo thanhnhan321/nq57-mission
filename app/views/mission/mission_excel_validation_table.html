@@ -1,0 +1,20 @@
+{% from 'templates/components/table/table.html' import table %}
+
+<input type="hidden" id="mission-excel-has-errors" value="{{ 1 if has_errors else 0 }}">
+
+{{ table(
+  header='',
+  filters=[],
+  columns=columns,
+  rows=rows,
+  sort=sort,
+  sort_direction=sort_direction,
+  partial_url=partial_url,
+  actions=actions,
+  bulk_actions=bulk_actions,
+  row_actions=row_actions,
+  page_index=page_index,
+  page_size=page_size,
+  total_count=total_count,
+) }}
+

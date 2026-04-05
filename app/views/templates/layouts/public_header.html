@@ -1,0 +1,81 @@
+{% from 'templates/components/button/button.html' import button %}
+{# Public sticky header (2 rows) #}
+<header class="w-full sticky top-0 z-10 shadow-sm border-b border-gray-200">
+  {# Row 1: System title bar #}
+  <div class="h-12 bg-white flex items-center px-4 gap-2 text-red-700 font-semibold text-lg">
+    <div class="w-5 h-5 flex-shrink-0 overflow-hidden">
+      <img src="{{ static('images/logo.png') }}" alt="Logo" class="w-full h-full">
+    </div>
+    <span>Hệ thống giám sát Nghị quyết 57 Công an Thành phố Hồ Chí Minh</span>
+  </div>
+
+  {# Row 2: Navigation bar #}
+  {% set current_path = request.path if request and request.path else '' %}
+  {% set dashboard_url = url('public_dashboard') %}
+  {% set mission_url = url('public_mission_list') %}
+  {% set quota_url = url('public_quota_list') %}
+  {% set document_url = url('public_document_list') %}
+  {% set nav_item_class = "h-full flex-1 min-w-0 px-3 flex items-center justify-center gap-2 whitespace-nowrap overflow-hidden hover:bg-red-900 transition-colors font-semibold text-sm" %}
+  {% set nav_icon_class = "w-4 h-4 flex items-center justify-center" %}
+  <nav class="h-12 bg-red-800 text-white flex items-center justify-between px-3 border-t border-white/20" hx-boost="true">
+    <div class="h-full flex flex-nowrap items-center">
+      <a
+        href="{{ url('public_dashboard') }}"
+        hx-boost="true"
+        class="{{ nav_item_class }}"
+        {% if current_path.startswith(dashboard_url) %}style="border-bottom:3px solid #ffffff;"{% endif %}
+      >
+        <span class="{{ nav_icon_class }}">
+          {% include 'dashboard.svg' %}
+        </span>
+        <span>Dashboard</span>
+      </a>
+
+      <a
+        href="{{ mission_url }}"
+        hx-boost="true"
+        class="{{ nav_item_class }}"
+        {% if current_path.startswith(mission_url) %}style="border-bottom:2px solid #ffffff;"{% endif %}
+      >
+        <span class="{{ nav_icon_class }}">
+          {% include 'task.svg' %}
+        </span>
+        <span>Nhiệm vụ</span>
+      </a>
+
+      <a
+        href="{{ quota_url }}"
+        hx-boost="true"
+        class="{{ nav_item_class }}"
+        {% if current_path.startswith(quota_url) %}style="border-bottom:2px solid #ffffff;"{% endif %}
+      >
+        <span class="{{ nav_icon_class }}">
+          {% include 'target.svg' %}
+        </span>
+        <span>Chỉ tiêu</span>
+      </a>
+
+      <a
+        href="{{ document_url }}"
+        hx-boost="true"
+        class="{{ nav_item_class }}"
+        {% if current_path.startswith(document_url) %}style="border-bottom:2px solid #ffffff;"{% endif %}
+      >
+        <span class="{{ nav_icon_class }}">
+          {% include 'document.svg' %}
+        </span>
+        <span>Văn bản</span>
+      </a>
+    </div>
+    {{ 
+      button(
+        text='Đăng nhập',
+        icon='sign-out.svg',
+        variant='transparent',
+        href=url('login'),
+        class='text-white hover:bg-transparent active:bg-transparent'
+      )
+    }}
+  </nav>
+</header>
+

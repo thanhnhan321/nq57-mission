@@ -1,0 +1,60 @@
+[
+  {
+    "model": "app.documenttype",
+    "pk": "VBCD-CHIDAO",
+    "fields": {
+      "code": "VBCD-CHIDAO",
+      "name": "Văn bản chỉ đạo (mẫu)",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.storage",
+    "pk": "c2d2e2f2-1111-2222-3333-444444444444",
+    "fields": {
+      "file_name": "chi-dao-mau-dinh-kem.pdf",
+      "size": 204800,
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.directivedocument",
+    "pk": "VBCD-2025-UB-01",
+    "fields": {
+      "title": "Chỉ thị của UBND tỉnh về bảo đảm ANTT dịp lễ, Tết",
+      "type": "VBCD-CHIDAO",
+      "directive_level": 1,
+      "issued_at": "2025-11-20",
+      "valid_from": "2025-11-20",
+      "valid_to": "2026-11-20",
+      "object": "c2d2e2f2-1111-2222-3333-444444444444",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.directivedocument",
+    "pk": "VBCD-2025-CAT-01",
+    "fields": {
+      "title": "Kế hoạch triển khai của Công an tỉnh theo chỉ đạo cấp trên",
+      "type": "VBCD-CHIDAO",
+      "directive_level": 2,
+      "issued_at": "2025-12-01",
+      "valid_from": "2025-12-01",
+      "valid_to": "2026-12-01",
+      "object": "c2d2e2f2-1111-2222-3333-444444444444",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  }
+]

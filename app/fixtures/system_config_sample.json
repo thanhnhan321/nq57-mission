@@ -1,0 +1,25 @@
+[
+  {"model": "app.systemconfig", "pk": "mission_cutoff_day", "fields": {"value": "10"}},
+  {"model": "app.systemconfig", "pk": "mission_cutoff_time", "fields": {"value": "23:30"}},
+  {"model": "app.systemconfig", "pk": "mission_lock_after_deadline", "fields": {"value": "true"}},
+  {"model": "app.systemconfig", "pk": "mission_remind_before_days", "fields": {"value": "3"}},
+  {"model": "app.systemconfig", "pk": "quota_cutoff_day", "fields": {"value": "10"}},
+  {"model": "app.systemconfig", "pk": "quota_cutoff_time", "fields": {"value": "23:30"}},
+  {"model": "app.systemconfig", "pk": "quota_lock_after_deadline", "fields": {"value": "true"}},
+  {"model": "app.systemconfig", "pk": "quota_remind_before_days", "fields": {"value": "3"}},
+  {"model": "app.systemconfig", "pk": "report_cutoff_day", "fields": {"value": "10"}},
+  {"model": "app.systemconfig", "pk": "report_cutoff_time", "fields": {"value": "23:30"}},
+  {"model": "app.systemconfig", "pk": "report_remind_before_days", "fields": {"value": "3"}},
+
+  {"model": "app.systemconfighistory", "pk": 1, "fields": {"key": "mission_cutoff_day", "value": "10", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 2, "fields": {"key": "mission_cutoff_time", "value": "23:30", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 3, "fields": {"key": "mission_lock_after_deadline", "value": "true", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 4, "fields": {"key": "mission_remind_before_days", "value": "3", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 5, "fields": {"key": "quota_cutoff_day", "value": "10", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 6, "fields": {"key": "quota_cutoff_time", "value": "23:30", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 7, "fields": {"key": "quota_lock_after_deadline", "value": "true", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 8, "fields": {"key": "quota_remind_before_days", "value": "3", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 9, "fields": {"key": "report_cutoff_day", "value": "10", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 10, "fields": {"key": "report_cutoff_time", "value": "23:30", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}},
+  {"model": "app.systemconfighistory", "pk": 11, "fields": {"key": "report_remind_before_days", "value": "3", "created_at": "2026-04-01T00:00:00Z", "created_by": "admin", "updated_at": "2026-04-01T00:00:00Z", "updated_by": "admin"}}
+]

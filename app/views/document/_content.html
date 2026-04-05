@@ -1,0 +1,39 @@
+{% from 'templates/components/table/table.html' import table %}
+
+<div id="document-list-content" class="space-y-4">
+  <div id="document-summary-cards" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    {% for item in summary_cards %}
+      <div class="rounded-xl border border-slate-200 bg-white px-5 py-6 shadow-sm">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 items-center justify-center text-3xl">
+            {{ item.icon }}
+          </div>
+          <div>
+            <div class="text-4xl font-bold leading-none text-slate-800">
+              {{ item.value }}
+            </div>
+            <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {{ item.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {{
+      table(
+          header='',
+          filters=filters,
+          columns=columns,
+          rows=rows,
+          partial_url=partial_url,
+          actions=actions,
+          row_actions=row_actions,
+          page_index=page_index,
+          page_size=page_size,
+          total_count=total_count,
+          reload_event=reload_event,
+      )
+  }}
+</div>

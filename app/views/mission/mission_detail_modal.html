@@ -1,0 +1,1609 @@
+{% from 'templates/components/input/select/select.html' import select %} {% from
+'templates/components/input/datetimepicker/datetimepicker.html' import
+datetimepicker %} {% set directive_document_options_url =
+url('mission_directive_document_options') %} {% if mission.directive_document
+and mission.directive_document.directive_level %} {% set
+directive_document_options_url = directive_document_options_url ~
+'?directive_level=' ~ (mission.directive_document.directive_level.id | string) ~
+'&include_code=' ~ (mission.directive_document.pk | string) %} {% endif %}
+{% from 'templates/components/input/base/input.html' import input %}
+<div
+  class="relative z-[91] flex w-full 2xl:min-w-[1300px] max-h-[85vh] flex-col rounded-2xl bg-white shadow-2xl"
+>
+  <div
+    class="grid grid-cols-1 gap-6 2xl:grid-cols-12 2xl:items-start"
+    x-data="{
+    editMode: false,
+    submitting: false,
+    deleteSubmitting: false,
+    showDeleteConfirm: false,
+    completeSubmitting: false,
+    showCompleteConfirm: false,
+    missionFinished: {{ 'true' if mission.completed_date else 'false' }},
+    completedDateDisplay: '{% if mission.completed_date %}{{ mission.completed_date.strftime('%d/%m/%Y') }}{% endif %}',
+    saveError: '',
+    initialDirectiveLevel: '{{ mission.directive_document.directive_level.id if mission.directive_document and mission.directive_document.directive_level else '' }}',
+    initialDirectiveDocument: '{{ mission.directive_document.pk if mission.directive_document else '' }}',
+    initialDepartment: '{{ mission.department.id if mission.department else '' }}',
+
+    reportUpdateUrlTpl: {{ jsonify(url('mission_report_update', kwargs={'report_id': 2147483646})) }},
+
+    reportPreviewModalOpen: false,
+    reportPreviewTitle: '',
+    reportPreviewContent: '',
+
+    reportEditModalOpen: false,
+    reportEditSubmitting: false,
+    reportEditError: '',
+    reportEditId: null,
+    reportEditTitle: '',
+    reportEditContent: '',
+
+    reportSubmitSubmitting: false,
+    reportSubmitError: '',
+    reportDeadlineIso: '{{ current_report_deadline_iso }}',
+    reportDeadlineLabel: '{{ current_report_deadline_display }}',
+    reportCountdownText: '{{ current_report_remaining }}',
+
+    reportResultFilterValue: '',
+
+    startReportCountdown() {
+      if (!this.reportDeadlineIso) return;
+
+      const tick = () => {
+        const deadline = new Date(this.reportDeadlineIso);
+        const now = new Date();
+        const diff = deadline.getTime() - now.getTime();
+
+        if (Number.isNaN(deadline.getTime())) {
+          this.reportCountdownText = '';
+          return;
+        }
+
+        if (diff <= 0) {
+          this.reportCountdownText = 'đã hết hạn';
+          return;
+        }
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        this.reportCountdownText = `còn lại ${days} ngày ${hours} giờ ${minutes} phút`;
+      };
+
+      tick();
+
+      if (this._reportCountdownTimer) {
+        clearInterval(this._reportCountdownTimer);
+      }
+
+      this._reportCountdownTimer = setInterval(tick, 30000);
+    },
+
+    handleReportPeriodFilterChange(event) {
+      const el = event.target;
+      if (!el || el.name !== 'report_result_period_filter') return;
+      const raw = (el.value || '').trim();
+      this.reportResultFilterValue = !raw || raw === 'all' ? '' : raw;
+    },
+
+    reportMatchesResultFilter(year, month) {
+      const v = this.reportResultFilterValue;
+      if (!v || v === 'all') return true;
+      const y = Number(year);
+      const m = Number(month);
+      const parts = String(v).split('-');
+      if (parts.length !== 2) return true;
+      return Number(parts[0]) === y && Number(parts[1]) === m;
+    },
+
+    handleReportSubmitBeforeRequest() {
+      this.reportSubmitSubmitting = true;
+      this.reportSubmitError = '';
+    },
+
+    handleReportSubmitAfterRequest(event) {
+      this.reportSubmitSubmitting = false;
+
+      const parsed = this.parseResponse(event.detail.xhr, event.detail.successful);
+      const data = parsed.data || {};
+      const ok = event.detail.successful && data.success === true;
+
+      if (!ok) {
+        const msg = this.extractErrorMessage(parsed);
+        this.reportSubmitError = msg;
+        this.pushToast(msg, 40);
+        return;
+      }
+
+      this.reportSubmitError = '';
+      this.pushToast(
+        (typeof data.message === 'string' && data.message.trim())
+          ? data.message.trim()
+          : 'Gửi báo cáo thành công.',
+        25
+      );
+
+      window.dispatchEvent(new CustomEvent('modal:close-top'));
+      setTimeout(() => {
+        document.body.dispatchEvent(new CustomEvent('table:reload', { bubbles: true }));
+      }, 250);
+    },
+
+    handleReportSubmitSendError() {
+      this.reportSubmitSubmitting = false;
+      this.reportSubmitError = 'Không gửi được yêu cầu báo cáo tới máy chủ.';
+      this.pushToast(this.reportSubmitError, 40);
+    },
+
+    pushToast(message, level = 40) {
+      if (!message) return;
+
+      // Phải bắn trên DOM (và bubble) — htmx.on('new-message') trong toast-manager
+      // không nhận sự kiện từ window.dispatchEvent.
+      document.body.dispatchEvent(
+        new CustomEvent('new-message', {
+          bubbles: true,
+          detail: {
+            value: [
+              {
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                message,
+                level,
+              },
+            ],
+          },
+        }),
+      );
+    },
+
+    openReportPreview(title, content) {
+      this.reportPreviewTitle = title || 'Chi tiết báo cáo';
+      this.reportPreviewContent = content || '';
+      this.reportPreviewModalOpen = true;
+    },
+
+    closeReportPreview() {
+      this.reportPreviewModalOpen = false;
+      this.reportPreviewTitle = '';
+      this.reportPreviewContent = '';
+    },
+
+    openReportEdit(reportId, title, content) {
+      const rid = Number(reportId);
+      this.reportEditId = Number.isFinite(rid) && rid > 0 ? rid : null;
+      this.reportEditTitle = title || 'Chỉnh sửa báo cáo';
+      this.reportEditContent = content || '';
+      this.reportEditError = '';
+      this.reportEditSubmitting = false;
+      this.reportEditModalOpen = true;
+    },
+
+    closeReportEdit(force = false) {
+      if (!force && this.reportEditSubmitting) return;
+      this.reportEditModalOpen = false;
+      this.reportEditId = null;
+      this.reportEditTitle = '';
+      this.reportEditContent = '';
+      this.reportEditError = '';
+    },
+
+    async submitReportEdit() {
+      if (this.reportEditSubmitting) return;
+
+      const content = (this.reportEditContent || '').trim();
+      if (!content) {
+        this.reportEditError = 'Nội dung báo cáo không được để trống.';
+        return;
+      }
+
+      const rid = Number(this.reportEditId);
+      if (!Number.isFinite(rid) || rid <= 0) {
+        this.reportEditError = 'Không xác định được báo cáo cần cập nhật.';
+        return;
+      }
+
+      this.reportEditSubmitting = true;
+      this.reportEditError = '';
+
+      try {
+        const csrfInput = this.$root.querySelector('input[name=csrfmiddlewaretoken]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+
+        const formData = new FormData();
+        formData.append('content', content);
+
+        const updateUrl = (this.reportUpdateUrlTpl || '').replace('2147483646', String(rid));
+
+        const response = await fetch(
+          updateUrl,
+          {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'X-CSRFToken': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData,
+          }
+        );
+
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (e) {
+          data = {};
+        }
+
+        if (!response.ok || data.success !== true) {
+          const msg = (data && data.message) ? data.message : 'Không thể cập nhật báo cáo.';
+          this.reportEditError = msg;
+          this.pushToast(msg, 40);
+          return;
+        }
+
+        this.pushToast(data.message || 'Cập nhật báo cáo thành công.', 25);
+        this.closeReportEdit(true);
+
+        window.dispatchEvent(new CustomEvent('modal:close-top'));
+        setTimeout(() => {
+          document.body.dispatchEvent(new CustomEvent('table:reload', { bubbles: true }));
+        }, 250);
+      } catch (e) {
+        this.reportEditError = 'Không gửi được yêu cầu cập nhật báo cáo.';
+        this.pushToast(this.reportEditError, 40);
+      } finally {
+        this.reportEditSubmitting = false;
+      }
+    },
+
+    copyReport(content) {
+      const text = (content || '').trim();
+      if (!text) {
+        this.pushToast('Không có nội dung để sao chép.', 40);
+        return;
+      }
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+          .then(() => this.pushToast('Đã sao chép toàn bộ báo cáo.', 25))
+          .catch(() => this.fallbackCopy(text));
+        return;
+      }
+
+      this.fallbackCopy(text);
+    },
+
+    fallbackCopy(text) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        this.pushToast('Đã sao chép toàn bộ báo cáo.', 25);
+      } catch (e) {
+        this.pushToast('Không thể sao chép nội dung báo cáo.', 40);
+      }
+    },
+
+    parseResponse(xhr, successful) {
+      let raw = '';
+      let data = {};
+
+      try {
+        raw = xhr?.responseText || '';
+      } catch (e) {
+        raw = '';
+      }
+
+      try {
+        data = JSON.parse(raw || '{}');
+      } catch (e) {
+        data = {};
+      }
+
+      return { raw, data, successful };
+    },
+
+    extractErrorMessage(parsed) {
+      const { raw, data, successful } = parsed;
+
+      if (typeof data.message === 'string' && data.message.trim()) {
+        return data.message.trim();
+      }
+
+      if (data.errors && typeof data.errors === 'object') {
+        const parts = [];
+
+        Object.values(data.errors).forEach((value) => {
+          if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (item) parts.push(String(item));
+            });
+          } else if (value) {
+            parts.push(String(value));
+          }
+        });
+
+        if (parts.length) {
+          return parts.join(' ');
+        }
+      }
+
+      if (raw && raw.trim().startsWith('<!DOCTYPE')) {
+        return 'Có lỗi từ máy chủ, chưa thể xử lý dữ liệu.';
+      }
+
+      if (!successful) {
+        return 'Không thể thực hiện thao tác. Vui lòng thử lại.';
+      }
+
+      return 'Có lỗi xảy ra.';
+    },
+
+    cancelEdit() {
+      this.editMode = false;
+      this.submitting = false;
+      this.saveError = '';
+
+      if (this.$refs.missionDetailForm) {
+        this.$refs.missionDetailForm.reset();
+      }
+
+      window.dispatchEvent(new CustomEvent('mission-detail:reset'));
+    },
+
+    openDeleteConfirm() {
+      this.showDeleteConfirm = true;
+    },
+
+    closeDeleteConfirm() {
+      if (this.deleteSubmitting) return;
+      this.showDeleteConfirm = false;
+    },
+
+    confirmDelete() {
+      if (this.deleteSubmitting) return;
+      if (!this.$refs.deleteMissionForm) return;
+      this.$refs.deleteMissionForm.requestSubmit();
+    },
+
+    handleAfterRequest(event) {
+      this.submitting = false;
+
+      const parsed = this.parseResponse(event.detail.xhr, event.detail.successful);
+      const data = parsed.data || {};
+      const ok = event.detail.successful && data.success === true;
+
+      if (!ok) return;
+
+      this.saveError = '';
+      this.editMode = false;
+
+      this.pushToast(
+        (typeof data.message === 'string' && data.message.trim())
+          ? data.message.trim()
+          : 'Cập nhật nhiệm vụ thành công.',
+        25
+      );
+
+      window.dispatchEvent(new CustomEvent('modal:close-top'));
+      setTimeout(() => {
+        document.body.dispatchEvent(new CustomEvent('table:reload', { bubbles: true }));
+      }, 250);
+    },
+
+    handleResponseError(event) {
+      this.submitting = false;
+
+      const parsed = this.parseResponse(event.detail.xhr, false);
+      const msg = this.extractErrorMessage(parsed);
+
+      this.saveError = msg;
+      this.pushToast(msg, 40);
+    },
+
+    handleSendError() {
+      this.submitting = false;
+      this.saveError = 'Không gửi được yêu cầu tới máy chủ.';
+      this.pushToast('Không gửi được yêu cầu tới máy chủ.', 40);
+    },
+
+    handleDeleteBeforeRequest() {
+      this.deleteSubmitting = true;
+    },
+
+    handleAfterDelete(event) {
+      this.deleteSubmitting = false;
+
+      const parsed = this.parseResponse(event.detail.xhr, event.detail.successful);
+      const data = parsed.data || {};
+      const ok = event.detail.successful && data.success === true;
+
+      if (ok) {
+        this.showDeleteConfirm = false;
+
+        window.dispatchEvent(new CustomEvent('modal:close-top'));
+        setTimeout(() => {
+          document.body.dispatchEvent(new CustomEvent('table:reload', { bubbles: true }));
+        }, 250);
+        return;
+      }
+
+      const msg = this.extractErrorMessage(parsed);
+      if (msg) {
+        this.pushToast(msg, 40);
+      }
+    },
+
+    handleDeleteSendError() {
+      this.deleteSubmitting = false;
+      this.pushToast('Không gửi được yêu cầu xóa tới máy chủ.', 40);
+    },
+
+    openCompleteConfirm() {
+      this.showCompleteConfirm = true;
+    },
+
+    closeCompleteConfirm() {
+      if (this.completeSubmitting) return;
+      this.showCompleteConfirm = false;
+    },
+
+    confirmComplete() {
+      if (this.completeSubmitting) return;
+      if (!this.$refs.completeMissionForm) return;
+      this.$refs.completeMissionForm.requestSubmit();
+    },
+
+    handleCompleteBeforeRequest() {
+      this.completeSubmitting = true;
+    },
+
+    handleAfterComplete(event) {
+      this.completeSubmitting = false;
+
+      const parsed = this.parseResponse(event.detail.xhr, event.detail.successful);
+      const data = parsed.data || {};
+      const ok = event.detail.successful && data.success === true;
+
+      if (ok) {
+        this.showCompleteConfirm = false;
+        this.missionFinished = true;
+        if (typeof data.completed_date_display === 'string' && data.completed_date_display.trim()) {
+          this.completedDateDisplay = data.completed_date_display.trim();
+        }
+        setTimeout(() => {
+          document.body.dispatchEvent(new CustomEvent('table:reload', { bubbles: true }));
+        }, 250);
+        return;
+      }
+
+      const msg = this.extractErrorMessage(parsed);
+      if (msg) {
+        this.pushToast(msg, 40);
+      }
+    },
+
+    handleCompleteSendError() {
+      this.completeSubmitting = false;
+      this.pushToast('Không gửi được yêu cầu hoàn thành tới máy chủ.', 40);
+    }
+  }"
+    x-init="startReportCountdown()"
+    @keydown.escape.window="
+    if (reportEditModalOpen) {
+      closeReportEdit();
+    } else if (reportPreviewModalOpen) {
+      closeReportPreview();
+    } else if (showDeleteConfirm) {
+      closeDeleteConfirm();
+    } else if (showCompleteConfirm) {
+      closeCompleteConfirm();
+    }
+  "
+  >
+    <!-- LEFT -->
+    <div class="space-y-6 2xl:col-span-8" x-cloak>
+      <!-- THÔNG TIN NHIỆM VỤ -->
+      <section
+        class="overflow-hidden rounded-xl border border-slate-200 bg-white"
+      >
+        <div class="px-5 py-5">
+          <div class="mb-4 flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-5 w-1 rounded bg-red-700"></span>
+              <h4 class="text-base font-bold uppercase text-slate-800">
+                Thông tin nhiệm vụ
+              </h4>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <span
+                x-show="missionFinished"
+                x-cloak
+                class="inline-flex items-center rounded bg-green-600 px-3 py-1 text-sm font-medium text-white"
+              >
+                ✓ Hoàn thành
+              </span>
+
+              {% if can_complete %}
+              <div
+                x-show="!missionFinished && !editMode"
+                x-cloak
+                class="inline"
+                style="display: none"
+              >
+                <form
+                  id="mission-complete-form-{{ mission.pk }}"
+                  x-ref="completeMissionForm"
+                  class="inline"
+                  method="post"
+                  hx-post="{{ url('mission_complete', kwargs={'mission_id': mission.pk}) }}"
+                  hx-swap="none"
+                  @htmx:before-request="handleCompleteBeforeRequest()"
+                  @htmx:after-request="handleAfterComplete($event)"
+                  @htmx:send-error="handleCompleteSendError()"
+                >
+                  {{ csrf_input }}
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50"
+                    title="Hoàn thành nhiệm vụ"
+                    @click="openCompleteConfirm()"
+                  >
+                    <span
+                      class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                    >
+                      {% include 'check.svg' %}
+                    </span>
+                  </button>
+                </form>
+              </div>
+              {% endif %} {% if can_edit %}
+              <template x-if="!editMode">
+                <button
+                  type="button"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-md text-blue-600 hover:bg-blue-50"
+                  title="Chỉnh sửa"
+                  @click="
+                    saveError = '';
+                    editMode = true;
+                    $nextTick(() => {
+                      if (initialDirectiveLevel) {
+                        window.dispatchEvent(new CustomEvent('mission-detail:directive-level-changed', {
+                          detail: { directive_level: String(initialDirectiveLevel) }
+                        }));
+                      }
+                    });
+                  "
+                >
+                  <span
+                    class="inline-flex h-4 w-4 shrink-0 text-blue-600 hover:text-blue-800 [&>svg]:h-full [&>svg]:w-full"
+                  >
+                    {% include 'edit.svg' %}
+                  </span>
+                </button>
+              </template>
+              {% endif %} {% if can_delete %}
+              <div
+                x-show="!editMode"
+                x-cloak
+                class="inline"
+                style="display: none"
+              >
+                <form
+                  x-ref="deleteMissionForm"
+                  class="inline"
+                  method="post"
+                  hx-post="{{ url('mission_delete', kwargs={'mission_id': mission.pk}) }}"
+                  hx-swap="none"
+                  @htmx:before-request="handleDeleteBeforeRequest()"
+                  @htmx:after-request="handleAfterDelete($event)"
+                  @htmx:send-error="handleDeleteSendError()"
+                >
+                  {{ csrf_input }}
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50"
+                    title="Xóa"
+                    @click="openDeleteConfirm()"
+                  >
+                    <span
+                      class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                      >{% include 'trash.svg' %}</span
+                    >
+                  </button>
+                </form>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <form
+            x-ref="missionDetailForm"
+            class="space-y-5"
+            method="post"
+            hx-post="{{ url('mission_update', kwargs={'mission_id': mission.pk}) }}"
+            hx-swap="none"
+            @change="
+            if ($event.target.name === 'directive_level') {
+              const directiveLevel = $event.target.value || '';
+              window.dispatchEvent(new CustomEvent('mission-detail:directive-level-changed', {
+                detail: { directive_level: directiveLevel }
+              }));
+            }
+          "
+            @htmx:before-request="
+            submitting = true;
+            saveError = '';
+          "
+            @htmx:after-request="handleAfterRequest($event)"
+            @htmx:response-error="handleResponseError($event)"
+            @htmx:send-error="handleSendError()"
+          >
+            {{ csrf_input }}
+
+            <div
+              x-show="saveError"
+              x-cloak
+              class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              role="alert"
+            >
+              <span x-text="saveError"></span>
+            </div>
+
+            <!-- VIEW MODE -->
+            <div
+              x-show="!editMode"
+              class="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-3"
+            >
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Mã nhiệm vụ
+                </div>
+                <div class="text-base font-semibold text-slate-900">
+                  {{ mission.code }}
+                </div>
+              </div>
+
+              <div class="md:col-span-2">
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Tên nhiệm vụ
+                </div>
+                <div class="text-base font-medium leading-6 text-slate-900">
+                  {{ mission.name }}
+                </div>
+              </div>
+
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Cấp chỉ đạo
+                </div>
+                <div class="text-base text-slate-900">
+                  {{ mission.directive_document.directive_level.name if
+                  mission.directive_document and
+                  mission.directive_document.directive_level else '--' }}
+                </div>
+              </div>
+
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Văn bản chỉ đạo
+                </div>
+                <div class="text-base text-slate-900">
+                  {{ mission.directive_document.code if
+                  mission.directive_document else '--' }}
+                </div>
+              </div>
+
+              <div></div>
+
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Ngày bắt đầu
+                </div>
+                <div class="text-base text-slate-900">
+                  {{ mission.start_date.strftime('%d/%m/%Y') if
+                  mission.start_date else '--/--/----' }}
+                </div>
+              </div>
+
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Hạn xử lý
+                </div>
+                <div class="text-base font-semibold text-red-600">
+                  {{ mission.due_date.strftime('%d/%m/%Y') if mission.due_date
+                  else '--/--/----' }}
+                </div>
+              </div>
+
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Ngày hoàn thành
+                </div>
+                <div
+                  class="text-base text-slate-900"
+                  x-text="completedDateDisplay || '--/--/----'"
+                ></div>
+              </div>
+
+              <div>
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Đơn vị chủ trì
+                </div>
+                <div class="text-base text-slate-900">
+                  {{ mission.department.get_short_label() if mission.department
+                  else '--' }}
+                </div>
+              </div>
+
+              <div class="md:col-span-2">
+                <div
+                  class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Đơn vị thực hiện
+                </div>
+                <div class="text-base text-slate-900">
+                  {% if assignee_departments %} {% for d in assignee_departments
+                  %} {{ d.get_short_label() }}{% if not loop.last %}, {% endif
+                  %} {% endfor %} {% else %} -- {% endif %}
+                </div>
+              </div>
+            </div>
+
+            {% if can_edit %}
+            <!-- EDIT MODE -->
+            <div
+              x-show="editMode"
+              x-cloak
+              style="display: none"
+              class="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2"
+            >
+              <div>
+                {{ input(
+                  name='code',
+                  label='Mã nhiệm vụ',
+                  value=mission.code,
+                  disabled=true,
+                  class='w-full'
+                ) }}
+              </div>
+
+              <div>
+                <template x-for="t in [0]" :key="'mission-completed-date-edit-' + t">
+                  <div class="w-full min-w-0">
+                    {{ datetimepicker(
+                      name='completed_date',
+                      label='Ngày hoàn thành',
+                      variant='date',
+                      placeholder='dd/mm/yyyy',
+                      disabled=mission.completed_date is none,
+                      value=mission.completed_date if mission.completed_date else '',
+                      class='w-full',
+                      extra_attributes={
+                        'clearable': true
+                      }
+                    ) }}
+                  </div>
+                </template>
+              </div>
+
+              <div>
+                {{ select( name='directive_level',
+                options_url=url('directive_level_options'), label='Cấp chỉ đạo',
+                placeholder='Chọn', required=true,
+                value=mission.directive_document.directive_level.id if
+                mission.directive_document and
+                mission.directive_document.directive_level else none,
+                reload_events=['mission-detail:reset'] ) }}
+              </div>
+
+              <div>
+                {{ select( name='directive_document',
+                options_url=directive_document_options_url, label='Văn bản chỉ
+                đạo', placeholder='Chọn', required=true,
+                value=(mission.directive_document.pk | string) if
+                mission.directive_document else '', reload_events=[
+                'mission-detail:reset', 'mission-detail:directive-level-changed'
+                ] ) }}
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="mb-2 block text-sm font-medium text-slate-700">
+                  Nhiệm vụ <span class="text-red-600">*</span>
+                </label>
+                <textarea
+                  name="name"
+                  rows="4"
+                  placeholder="Nhập nội dung nhiệm vụ..."
+                  class="min-h-[120px] w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-red-600 focus:ring-2 focus:ring-red-100"
+                  required
+                >
+{{ mission.name }}</textarea
+                >
+              </div>
+
+              <div>
+                <template
+                  x-for="t in [0]"
+                  :key="'mission-start-date-edit-' + t"
+                >
+                  <div class="w-full min-w-0">
+                    {{ datetimepicker( name='start_date', label='Ngày bắt đầu',
+                    variant='date', placeholder='dd/mm/yyyy', required=true,
+                    value=mission.start_date, class='w-full', extra_attributes={
+                    'clearable': false } ) }}
+                  </div>
+                </template>
+              </div>
+
+              <div>
+                <template x-for="t in [0]" :key="'mission-due-date-edit-' + t">
+                  <div class="w-full min-w-0">
+                    {{ datetimepicker( name='due_date', label='Hạn xử lý',
+                    variant='date', placeholder='dd/mm/yyyy', required=false,
+                    value=mission.due_date if mission.due_date else '',
+                    hint='Nhiệm vụ thường xuyên không có Hạn xử lý',
+                    class='w-full', ) }}
+                  </div>
+                </template>
+              </div>
+
+              <div>
+                {{ select( name='department',
+                options_url=url('department_options', query={'scope': 'lead'}),
+                label='Đơn vị chủ trì', placeholder='Chọn', required=true,
+                value=mission.department.id if mission.department else none,
+                reload_events=['mission-detail:reset'] ) }}
+              </div>
+
+              <div>
+                {{ select( name='assignee_departments',
+                options_url=url('department_options', query={'scope':
+                'assignee'}), label='Đơn vị thực hiện', placeholder='Chọn',
+                multiple=true, value=assignee_department_value_ids,
+                reload_events=['mission-detail:reset'] ) }}
+              </div>
+            </div>
+
+            <div
+              x-show="editMode"
+              x-cloak
+              style="display: none"
+              class="flex items-center justify-end gap-2 pt-2"
+            >
+              <button
+                type="button"
+                class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                @click="cancelEdit()"
+                :disabled="submitting"
+              >
+                Hủy
+              </button>
+
+              <button
+                type="submit"
+                class="inline-flex h-10 min-w-[88px] items-center justify-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="submitting"
+              >
+                <span x-show="!submitting">Lưu</span>
+                <span x-show="submitting" x-cloak style="display: none"
+                  >Đang lưu...</span
+                >
+              </button>
+            </div>
+            {% endif %}
+          </form>
+        </div>
+      </section>
+
+      <!-- CẬP NHẬT BÁO CÁO -->
+      <section
+        class="overflow-hidden rounded-xl border border-slate-200 bg-white"
+        x-show="!missionFinished"
+        x-cloak
+        style="display: none"
+      >
+        <div class="border-b border-slate-200 px-5 py-4">
+          <div
+            class="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between"
+          >
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-block h-5 w-1 rounded bg-orange-500"></span>
+              <h4 class="text-base font-bold uppercase text-slate-800">
+                Cập nhật báo cáo
+              </h4>
+              <span class="text-sm text-orange-600">
+                🔔 Hạn cập nhật báo cáo là
+                <strong x-text="reportDeadlineLabel"></strong>
+                <span
+                  class="text-orange-500"
+                  x-text="`(${reportCountdownText})`"
+                ></span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-5 py-5">
+          <form
+            method="post"
+            hx-post="{{ url('mission_report_submit', kwargs={'mission_id': mission.pk}) }}"
+            hx-swap="none"
+            class="space-y-4"
+            @htmx:before-request="handleReportSubmitBeforeRequest()"
+            @htmx:after-request="handleReportSubmitAfterRequest($event)"
+            @htmx:response-error="handleReportSubmitAfterRequest($event)"
+            @htmx:send-error="handleReportSubmitSendError()"
+          >
+            {{ csrf_input }}
+
+            <div
+              x-show="reportSubmitError"
+              x-cloak
+              class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            >
+              <span x-text="reportSubmitError"></span>
+            </div>
+
+            <div class="rounded-lg border border-slate-200">
+              <div
+                class="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 xl:flex-row xl:items-center xl:justify-between"
+              >
+                <div class="flex flex-wrap items-center gap-3">
+                  <span class="text-sm font-medium text-slate-700"
+                    >Kỳ báo cáo:</span
+                  >
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 text-sm font-medium text-red-700"
+                  >
+                    <span
+                      class="inline-flex h-4 w-4 shrink-0 text-red-600 [&>svg]:h-full [&>svg]:w-full"
+                    >
+                      {% include 'calendar.svg' %}
+                    </span>
+                    {{ current_report_label }}
+                  </button>
+                </div>
+
+                <label
+                  class="inline-flex items-center gap-2 text-sm text-slate-700 {% if can_submit_current_report and current_period_report_submitted %}cursor-not-allowed opacity-60{% endif %}"
+                >
+                  <input
+                    type="checkbox"
+                    name="no_report"
+                    value="1"
+                    class="h-4 w-4 rounded border-slate-300 text-red-700 focus:ring-red-700"
+                    {%
+                    if
+                    current_report_no_report
+                    %}checked{%
+                    endif
+                    %}
+                    {%
+                    if
+                    can_submit_current_report
+                    and
+                    current_period_report_submitted
+                    %}disabled{%
+                    endif
+                    %}
+                  />
+                  Không có phát sinh báo cáo trong tháng
+                </label>
+              </div>
+
+              <div class="px-4 py-4">
+                {% if can_submit_current_report and
+                current_period_report_submitted %}
+                <div
+                  class="mb-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-950"
+                  role="status"
+                >
+                  <p class="font-semibold text-sky-900">
+                    Đã gửi báo cáo cho kỳ này.
+                  </p>
+                  <p class="mt-2 text-sky-900/90">
+                    Nếu cần chỉnh sửa, hãy chọn đúng
+                    <span class="font-medium">kỳ báo cáo</span> trong mục
+                    <span class="font-semibold">Kết quả thực hiện</span> ở cột
+                    bên phải, rồi bấm biểu tượng chỉnh sửa
+                    <span class="whitespace-nowrap text-sky-800"
+                      >(nếu còn trong hạn)</span
+                    >.
+                  </p>
+                </div>
+                {% endif %}
+                <textarea
+                  name="content"
+                  rows="8"
+                  placeholder="Nhập nội dung báo cáo tiến độ thực hiện nhiệm vụ..."
+                  class="w-full resize-none rounded-md border border-slate-200 px-3 py-3 text-sm outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100 {% if can_submit_current_report and current_period_report_submitted %}cursor-default bg-slate-50 text-slate-700{% endif %}"
+                  {%
+                  if
+                  can_submit_current_report
+                  and
+                  current_period_report_submitted
+                  %}readonly{%
+                  endif
+                  %}
+                >
+{{ current_report_content }}</textarea
+                >
+              </div>
+
+              <div
+                class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 px-4 py-3"
+              >
+                {% if can_submit_current_report and not
+                current_period_report_submitted %}
+                <button
+                  type="submit"
+                  class="inline-flex items-center gap-2 rounded-md bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="reportSubmitSubmitting"
+                >
+                  <span
+                    class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                    >{% include 'send.svg' %}</span
+                  >
+                  <span x-show="!reportSubmitSubmitting">Gửi báo cáo</span>
+                  <span
+                    x-show="reportSubmitSubmitting"
+                    x-cloak
+                    style="display: none"
+                    >Đang gửi...</span
+                  >
+                </button>
+                {% elif can_submit_current_report and
+                current_period_report_submitted %}
+                <button
+                  type="button"
+                  disabled
+                  class="inline-flex cursor-not-allowed items-center gap-2 rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400"
+                  title="Kỳ này đã gửi báo cáo — chỉnh sửa qua Kết quả thực hiện bên phải nếu còn hạn"
+                >
+                  <span
+                    class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                    >{% include 'send.svg' %}</span
+                  >
+                  Gửi báo cáo
+                </button>
+                {% else %}
+                <div class="text-sm text-slate-500">
+                  Đã hết hạn cập nhật hoặc bạn không có quyền gửi báo cáo kỳ
+                  này.
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT -->
+    <aside class="2xl:col-span-4" x-cloak>
+      <div class="space-y-4 lg:sticky lg:top-4">
+        <section
+          class="overflow-hidden rounded-xl border border-slate-200 bg-white"
+        >
+          <div
+            class="flex items-center justify-between border-b border-slate-200 px-4 py-4"
+          >
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-5 w-1 rounded bg-sky-600"></span>
+              <h4
+                class="text-sm font-bold uppercase tracking-wide text-slate-800"
+              >
+                Kết quả thực hiện
+              </h4>
+            </div>
+
+            {% if mission_reports %}
+            <div
+              class="min-w-[11rem] max-w-[18rem] shrink-0"
+              @change="handleReportPeriodFilterChange($event)"
+            >
+              {{ select( name='report_result_period_filter',
+              options_url=url('mission_result_report_period_filter_options',
+              kwargs={'pk': mission.pk}), label='', placeholder='Tìm tháng...',
+              value=['all'], ) }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="max-h-[72vh] overflow-y-auto">
+            {% if mission_reports %}
+            <div class="divide-y divide-slate-100">
+              {% for report in mission_reports %}
+              <article
+                x-show="reportMatchesResultFilter({{ report.year }}, {{ report.month }})"
+                class="p-4 transition hover:bg-slate-50 {% if report.is_current or report.is_latest %}border-l-2 border-red-600 bg-red-50/40{% endif %}"
+              >
+                <div class="mb-2 flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      {% if report.show_no_submit_badge %}
+                      <span
+                        class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-400"
+                        aria-hidden="true"
+                      >
+                        <span
+                          class="inline-flex h-3 w-3 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                          >{% include 'minus.svg' %}</span
+                        >
+                      </span>
+                      {% elif report.has_content %}
+                      <span
+                        class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-600 text-white"
+                        aria-hidden="true"
+                      >
+                        <span
+                          class="inline-flex h-3 w-3 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                          >{% include 'check.svg' %}</span
+                        >
+                      </span>
+                      {% else %}
+                      <span
+                        class="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-slate-300 bg-white"
+                        aria-hidden="true"
+                      ></span>
+                      {% endif %}
+
+                      <h5
+                        class="truncate text-sm font-semibold {% if report.show_no_submit_badge and not report.content %}text-slate-400{% else %}text-slate-800{% endif %}"
+                      >
+                        Tháng {{ '%02d'|format(report.month) }}/{{ report.year
+                        }}
+                      </h5>
+                    </div>
+                  </div>
+
+                  <div
+                    class="flex shrink-0 flex-wrap items-center justify-end gap-1"
+                  >
+                    {% if report.show_no_submit_badge %}
+                    <span
+                      class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                    >
+                      Không gửi báo cáo
+                    </span>
+                    {% endif %} {% if report.is_latest %}
+                    <span
+                      class="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700"
+                    >
+                      Mới nhất
+                    </span>
+                    {% endif %} {% if report.can_view_detail %}
+                    <button
+                      type="button"
+                      class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      title="Xem toàn bộ báo cáo"
+                      @click="openReportPreview('Báo cáo tháng {{ '%02d'|format(report.month) }}/{{ report.year }}', `{{ (report.content if report.content else 'Không có phát sinh báo cáo trong tháng.')|replace('\\', '\\\\')|replace('`', '\\`')|replace('${', '\\${') }}`)"
+                    >
+                      <span
+                        class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                        >{% include 'eye.svg' %}</span
+                      >
+                    </button>
+                    {% endif %} {% if report.can_copy %}
+                    <button
+                      type="button"
+                      class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      title="Sao chép toàn bộ báo cáo"
+                      @click="copyReport(`{{ (report.content if report.content else 'Không có phát sinh báo cáo trong tháng.')|replace('\\', '\\\\')|replace('`', '\\`')|replace('${', '\\${') }}`)"
+                    >
+                      <span
+                        class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                        >{% include 'copy.svg' %}</span
+                      >
+                    </button>
+                    {% endif %} {% if report.can_edit %}
+                    <button
+                      type="button"
+                      class="inline-flex h-7 w-7 items-center justify-center rounded-md text-blue-500 hover:bg-blue-50 hover:text-blue-700"
+                      title="Chỉnh sửa báo cáo{% if report.edit_deadline_display %} (hạn đến {{ report.edit_deadline_display }}){% endif %}"
+                      data-mission-report-id="{{ report.mission_report_id }}"
+                      @click="openReportEdit(
+                            $event.currentTarget.getAttribute('data-mission-report-id'),
+                            'Chỉnh sửa báo cáo tháng {{ '%02d'|format(report.month) }}/{{ report.year }}',
+                            `{{ (report.content if report.content else '')|replace('\\', '\\\\')|replace('`', '\\`')|replace('${', '\\${') }}`
+                          )"
+                    >
+                      <span
+                        class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                        >{% include 'edit.svg' %}</span
+                      >
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+
+                {% if report.content %}
+                <p
+                  class="text-sm leading-6 text-slate-600 whitespace-pre-line break-words"
+                >
+                  {{ report.content_preview }}
+                </p>
+                {% elif report.show_no_activity_message %}
+                <p class="text-sm leading-6 text-slate-600">
+                  Không có phát sinh báo cáo trong tháng.
+                </p>
+                {% endif %}
+
+                <div
+                  class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400"
+                >
+                  {% if report.created_by %}
+                  <span>{{ report.created_by }}</span>
+                  {% endif %} {% if report.created_at_display %}
+                  <span>•</span>
+                  <span>{{ report.created_at_display }}</span>
+                  {% endif %}
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div
+              class="flex min-h-[240px] flex-col items-center justify-center px-6 py-10 text-center"
+            >
+              <div
+                class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+              >
+                <span
+                  class="inline-flex h-6 w-6 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                  >{% include 'report.svg' %}</span
+                >
+              </div>
+              <p class="text-sm font-medium text-slate-600">
+                Chưa có kết quả thực hiện
+              </p>
+              <p class="mt-1 text-xs text-slate-400">
+                Các báo cáo theo tháng sẽ hiển thị tại đây.
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- MODAL XEM FULL BÁO CÁO -->
+    <div
+      x-show="reportPreviewModalOpen"
+      x-cloak
+      class="fixed inset-0 z-[90] flex items-center justify-center p-4"
+      style="display: none"
+    >
+      <div
+        class="absolute inset-0 bg-slate-900/50"
+        @click="closeReportPreview()"
+      ></div>
+
+      <div
+        class="relative z-[91] flex w-full max-w-3xl max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+      >
+        <div
+          class="flex items-center justify-between border-b border-slate-200 px-5 py-4"
+        >
+          <div class="min-w-0">
+            <h3
+              class="truncate text-lg font-semibold text-slate-900"
+              x-text="reportPreviewTitle"
+            ></h3>
+            <p class="mt-1 text-sm text-slate-500">Toàn bộ nội dung báo cáo</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              @click="copyReport(reportPreviewContent)"
+            >
+              Sao chép
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              @click="closeReportPreview()"
+            >
+              <span
+                class="inline-flex h-5 w-5 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                >{% include 'close.svg' %}</span
+              >
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto px-5 py-5">
+          <div
+            class="whitespace-pre-line break-words text-sm leading-7 text-slate-700"
+            x-text="reportPreviewContent"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL EDIT BÁO CÁO -->
+    <div
+      x-show="reportEditModalOpen"
+      x-cloak
+      class="fixed inset-0 z-[95] flex items-center justify-center p-4"
+      style="display: none"
+    >
+      <div
+        class="absolute inset-0 bg-slate-900/55"
+        @click="closeReportEdit()"
+      ></div>
+
+      <div
+        class="relative z-[96] flex w-full max-w-3xl max-h-[88vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+      >
+        <div
+          class="flex items-center justify-between border-b border-slate-200 px-5 py-4"
+        >
+          <div class="min-w-0">
+            <h3
+              class="truncate text-lg font-semibold text-slate-900"
+              x-text="reportEditTitle"
+            ></h3>
+            <p class="mt-1 text-sm text-slate-500">
+              Chỉnh sửa toàn bộ nội dung báo cáo
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            @click="closeReportEdit()"
+            :disabled="reportEditSubmitting"
+          >
+            <span
+              class="inline-flex h-5 w-5 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+              >{% include 'close.svg' %}</span
+            >
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-5 py-5">
+          <div
+            x-show="reportEditError"
+            x-cloak
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
+            <span x-text="reportEditError"></span>
+          </div>
+
+          <textarea
+            x-model="reportEditContent"
+            rows="16"
+            class="min-h-[360px] w-full rounded-xl border border-slate-300 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100"
+            placeholder="Nhập nội dung báo cáo..."
+          ></textarea>
+        </div>
+
+        <div
+          class="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4"
+        >
+          <button
+            type="button"
+            class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            @click="closeReportEdit()"
+            :disabled="reportEditSubmitting"
+          >
+            Hủy
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex h-10 min-w-[120px] items-center justify-center rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+            @click="submitReportEdit()"
+            :disabled="reportEditSubmitting"
+          >
+            <span x-show="!reportEditSubmitting">Cập nhật</span>
+            <span x-show="reportEditSubmitting" x-cloak style="display: none"
+              >Đang lưu...</span
+            >
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOÀN THÀNH — XÁC NHẬN -->
+    {% if can_complete %}
+    <div
+      x-show="showCompleteConfirm"
+      x-cloak
+      class="fixed inset-0 z-[80] flex items-center justify-center p-4"
+      style="display: none"
+    >
+      <div
+        class="absolute inset-0 bg-slate-900/50"
+        @click="closeCompleteConfirm()"
+      ></div>
+
+      <div
+        class="relative z-[81] w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+      >
+        <div
+          class="flex items-start justify-between border-b border-slate-200 px-5 py-4"
+        >
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">
+              Xác nhận hoàn thành
+            </h3>
+            <p class="mt-1 text-sm text-slate-500">
+              Ngày hoàn thành được ghi nhận là
+              <span class="font-medium text-slate-700">hôm nay</span>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            @click="closeCompleteConfirm()"
+            :disabled="completeSubmitting"
+          >
+            <span
+              class="inline-flex h-5 w-5 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+              >{% include 'close.svg' %}</span
+            >
+          </button>
+        </div>
+
+        <div class="space-y-4 px-5 py-5">
+          <p class="text-sm leading-6 text-slate-600">
+            Sau khi hoàn thành, phần
+            <span class="font-medium text-slate-800">Cập nhật báo cáo</span> sẽ
+            không còn hiển thị cho nhiệm vụ này.
+          </p>
+        </div>
+
+        <div
+          class="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4"
+        >
+          <button
+            type="button"
+            class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            @click="closeCompleteConfirm()"
+            :disabled="completeSubmitting"
+          >
+            Hủy
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex h-10 min-w-[120px] items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+            @click="confirmComplete()"
+            :disabled="completeSubmitting"
+          >
+            <span x-show="!completeSubmitting">Hoàn thành</span>
+            <span x-show="completeSubmitting" x-cloak style="display: none"
+              >Đang xử lý...</span
+            >
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- DELETE CONFIRM MODAL -->
+    {% if can_delete %}
+    <div
+      x-show="showDeleteConfirm"
+      x-cloak
+      class="fixed inset-0 z-[80] flex items-center justify-center p-4"
+      style="display: none"
+    >
+      <div
+        class="absolute inset-0 bg-slate-900/50"
+        @click.stop="closeDeleteConfirm()"
+      ></div>
+
+      <div
+        class="relative z-[81] w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+      >
+        <div
+          class="flex items-start justify-between border-b border-slate-200 px-5 py-4"
+        >
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">
+              Xác nhận xóa nhiệm vụ
+            </h3>
+            <p class="mt-1 text-sm text-slate-500">
+              Thao tác này không thể hoàn tác.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            @click.stop="closeDeleteConfirm()"
+            :disabled="deleteSubmitting"
+          >
+            <span
+              class="inline-flex h-5 w-5 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+              >{% include 'close.svg' %}</span
+            >
+          </button>
+        </div>
+
+        <div class="px-5 py-5">
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600"
+            >
+              <span
+                class="inline-flex h-5 w-5 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                >{% include 'trash.svg' %}</span
+              >
+            </div>
+
+            <div class="min-w-0">
+              <p class="text-sm leading-6 text-slate-700">
+                Bạn có chắc chắn muốn xóa không?
+                <span class="font-semibold text-slate-900"
+                  >"{{ mission.code }} - {{ mission.name }}"</span
+                >.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4"
+        >
+          <button
+            type="button"
+            class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            @click.stop="closeDeleteConfirm()"
+            :disabled="deleteSubmitting"
+          >
+            Hủy
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex h-10 min-w-[96px] items-center justify-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+            @click="confirmDelete()"
+            :disabled="deleteSubmitting"
+          >
+            <span x-show="!deleteSubmitting">Xóa</span>
+            <span x-show="deleteSubmitting" x-cloak style="display: none"
+              >Đang xóa...</span
+            >
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,238 @@
+{% from 'templates/components/input/select/select.html' import select %}
+
+{% macro mission_excel_modal() %}
+<div
+  id="mission-excel-modal"
+  x-show="excelModalOpen"
+  x-cloak
+  class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+  x-transition.opacity
+  style="display:none;"
+>
+  <div
+    class="w-full max-w-7xl rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Thêm mới từ Excel"
+    @click.away="
+      if ($event.target.closest('[role=listbox], [role=option]')) return;
+      excelModalOpen = false;
+      resetExcelModal();
+    "
+  >
+    <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
+      <h2 class="text-xl font-semibold text-slate-900">Thêm mới từ Excel</h2>
+
+      <button
+        type="button"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+        @click="
+          excelModalOpen = false;
+          resetExcelModal();
+        "
+        aria-label="Đóng"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <div class="px-6 py-6 flex-1 overflow-y-auto">
+      <div class="mb-8 flex items-center">
+        <div class="flex items-center gap-3">
+          <span
+            class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold"
+            :class="excelStep >= 1 ? 'bg-red-700 text-white' : 'bg-slate-200 text-slate-500'"
+          >1</span>
+          <span class="text-sm font-medium text-slate-800">Upload file</span>
+        </div>
+
+        <div class="mx-4 h-px flex-1 bg-slate-200"></div>
+
+        <div class="flex items-center gap-3">
+          <span
+            class="inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm font-semibold"
+            :class="excelStep >= 2 ? 'border-red-700 bg-red-700 text-white' : 'border-slate-300 bg-white text-slate-400'"
+          >2</span>
+          <span
+            class="text-sm font-medium"
+            :class="excelStep >= 2 ? 'text-slate-800' : 'text-slate-400'"
+          >Xác nhận</span>
+        </div>
+      </div>
+
+      <div x-show="excelStep === 1" x-cloak class="space-y-2">
+        <form
+          method="post"
+          enctype="multipart/form-data"
+          class="space-y-2"
+          @change="
+            const form = $event.currentTarget;
+            excelDirectiveLevel = form.querySelector('select[name=directive_level]')?.value || '';
+            excelDirectiveDocument = form.querySelector('select[name=directive_document]')?.value || '';
+
+            if ($event.target.name === 'directive_level') {
+              excelDirectiveDocument = '';
+              window.dispatchEvent(new CustomEvent('mission-excel:directive-level-changed', {
+                detail: { directive_level: excelDirectiveLevel }
+              }));
+            }
+          "
+        >
+          <div class="grid grid-cols-1 gap-x-2 gap-y-2 md:grid-cols-2">
+            <div>
+              {{ select(
+                name='directive_level',
+                options_url=url('directive_level_options'),
+                label='Cấp chỉ đạo',
+                placeholder='Chọn',
+                required=true,
+                reload_events=['mission-excel:reset']
+              ) }}
+            </div>
+
+            <div>
+              {{ select(
+                name='directive_document',
+                options_url=url('mission_directive_document_options'),
+                label='Văn bản chỉ đạo',
+                placeholder='Chọn',
+                required=true,
+                reload_events=[
+                  'mission-excel:reset',
+                  'mission-excel:directive-level-changed'
+                ]
+              ) }}
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="flex flex-wrap items-center gap-4">
+                <a
+                  href="{{ url('mission_template_download') }}"
+                  class="inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800"
+                >
+                  <span class="h-4 w-4 shrink-0">{% include 'download.svg' %}</span>
+                  <span>Tải mẫu</span>
+                </a>
+
+                <label
+                  class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700 hover:text-slate-900"
+                >
+                  <span class="h-4 w-4 shrink-0 text-slate-500">{% include 'paperclip.svg' %}</span>
+
+                  <span x-text="excelFile ? excelFile.name : 'Chọn file'"></span>
+
+                  <input
+                    x-ref="excelFileInput"
+                    id="mission-excel-file-input"
+                    name="excel_file"
+                    type="file"
+                    accept=".xlsx,.xls"
+                    class="hidden"
+                    hx-post="{{ url('mission_excel_validate') }}"
+                    hx-trigger="change"
+                    hx-target="#mission-excel-validation-result"
+                    hx-swap="innerHTML"
+                    hx-encoding="multipart/form-data"
+                    hx-include="#mission-excel-modal select[name='directive_level'], #mission-excel-modal select[name='directive_document']"
+                    @change="excelFile = $event.target.files?.[0] || null"
+                  >
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div id="mission-excel-validation-result" class="pt-2 text-sm text-slate-700"></div>
+      </div>
+
+      <div x-show="excelStep === 2" x-cloak class="space-y-4">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <div>
+            <span class="font-medium">File đã chọn:</span>
+            <span x-text="excelFile ? excelFile.name : 'Chưa có file'"></span>
+          </div>
+        </div>
+
+        <p class="text-sm text-slate-600">
+          Xác nhận import dữ liệu từ file Excel đã chọn.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
+      <button
+        type="button"
+        class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        @click="
+          excelModalOpen = false;
+          resetExcelModal();
+        "
+      >
+        Hủy bỏ
+      </button>
+
+      <template x-if="excelStep === 1">
+        <button
+          type="button"
+          class="inline-flex h-10 items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+          :disabled="!excelFile || !excelDirectiveLevel || !excelDirectiveDocument"
+          @click="
+            syncExcelValidationState();
+            const validationEl = document.getElementById('mission-excel-validation-result');
+            const hasTable = !!validationEl?.querySelector('table');
+            const metaEl = validationEl?.querySelector('#mission-excel-has-errors');
+            const hasErrors = metaEl ? metaEl.value === '1' : !!validationEl?.querySelector('.text-red-700');
+            if (hasTable && !hasErrors && excelFile && excelDirectiveLevel && excelDirectiveDocument) excelStep = 2
+          "
+        >
+          Tiếp theo
+        </button>
+      </template>
+
+      <template x-if="excelStep === 2">
+        <form
+          method="post"
+          hx-post="{{ url('mission_excel_create') }}"
+          x-init="htmx.process($el)"
+          hx-swap="none"
+          hx-include="#mission-excel-modal select[name='directive_level'], #mission-excel-modal select[name='directive_document']"
+          @htmx:before-request="submitting = true"
+          @htmx:after-request="
+            submitting = false;
+
+            let data = {};
+            try { data = JSON.parse($event.detail.xhr.responseText || '{}'); } catch (e) {}
+
+            const ok = $event.detail.successful && data.success;
+            if (!ok) return;
+
+            excelModalOpen = false;
+            resetExcelModal();
+            document.body.dispatchEvent(new CustomEvent('table:reload', { bubbles: true }));
+          "
+          @htmx:response-error="submitting = false"
+        >
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              @click="excelStep = 1"
+            >
+              Quay lại
+            </button>
+
+            <button
+              type="submit"
+              class="inline-flex h-10 items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="submitting"
+            >
+              <span x-show="!submitting">Xác nhận</span>
+              <span x-show="submitting" x-cloak style="display:none;">Đang tạo...</span>
+            </button>
+          </div>
+        </form>
+      </template>
+    </div>
+  </div>
+</div>
+{% endmacro %}

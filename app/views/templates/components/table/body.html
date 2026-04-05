@@ -1,0 +1,264 @@
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+{% from 'templates/components/button/button.html' import button %}
+{% macro table_body(
+columns=[],
+rows=[],
+sort='',
+sort_direction='',
+partial_url='',
+bulk_actions=[],
+row_actions=[],
+page_index=0,
+page_size=10,
+total_count=0,
+statistics_block=''
+) %}
+<div 
+    :id="$id('table')"
+    data-el-description="table"
+    x-data="{
+      tick: 0,
+      get allChecked() {
+        this.tick;
+        const checkboxes = $el.querySelectorAll('tbody input[name={{ jsonify('selected') }}]');
+        if (checkboxes.length === 0) return false;
+        return Array.from(checkboxes).every(el => el.checked);
+      },
+      get anyChecked() {
+        return this.allChecked || $el.querySelectorAll('tbody input[name={{ jsonify('selected') }}]:checked').length > 0;
+      },
+      set allChecked(value) {
+        $el.querySelectorAll('tbody input[name={{ jsonify('selected') }}]').forEach(el => {
+          el.checked = value;
+        });
+        $data.tick++;
+      }
+    }"
+    x-init="$watch('anyChecked', (value) => $dispatch('bulk-actions', value)); $dispatch('bulk-actions', anyChecked);"
+    @htmx:after-swap.document="if ($event.target.id === $id('table')) { $data.allChecked = false; $data.tick = 0;}"
+>
+  <div class="overflow-auto max-h-130">
+    {% if statistics_block %}
+    {{ statistics_block | safe}}
+    {% endif %}
+    <table class="w-full"
+      >
+      <thead
+        class="sticky top-0 z-5 h-12 text-sm tracking-wider cursor-pointer break-words"
+        style="background-color: #F1F3F9; color: #1F2937;">
+        <tr>
+          {% if bulk_actions %}
+          <th class="py-3 px-3">
+            <input type="checkbox" name="selected" value="*" x-model="allChecked">
+          </th>
+          {% endif %}
+
+          {% for column in columns %}
+          <th scope="col" class="h-1 py-3 px-3 max-w-fit whitespace-nowrap">
+            {% if column.sortable %}
+            {% set sort_direction_icon = 'arrow-up-down.svg' if sort != column.name else 'arrow-up.svg' if sort_direction == 'asc' else 'arrow-down.svg' %}
+            {{ button(
+              text=column.label or column.name,
+              icon=sort_direction_icon,
+              icon_position='right',
+              variant='transparent',
+              class='font-bold! text-sm',
+              extra_attributes={
+                'hx-get': partial_url,
+                'hx-include': 'inherit, [name="page_size"]',
+                ':hx-target': "'#' + $id('table')",
+                'hx-push-url': 'false',
+                'hx-vals': jsonify(
+                  {
+                    'page_index':  page_index,
+                    'sort':  column.name,
+                    'sort_direction': "desc" if sort == column.name and sort_direction == "asc" else "asc"
+                  }
+                ),
+              }
+            ) }}
+            {% if sort == column.name %}
+            <input type="hidden" name="sort" value="{{ column.name }}" :form="$id('filter')">
+            <input type="hidden" name="sort_direction" :form="$id('filter')" value='{{ sort_direction }}'>
+            {% endif %}
+            {% else %}
+            <span>{{ column.label or column.name }}</span>
+            {% endif %}
+          </th>
+          {% endfor %}
+
+          {% if row_actions %}
+          <th scope="col" class="sticky right-0 py-3 px-6 text-start w-px whitespace-nowrap" style="background-color: #F1F3F9;">Thao tác</th>
+          {% endif %}
+        </tr>
+      </thead>
+
+      <tbody class="bg-white divide-y divide-gray-200" @change="tick++">
+        {% if rows %}
+        {% for row in rows %}
+        {% set row_bg_color = 'bg-white' if loop.index0 % 2 == 0 else 'bg-gray-100' %}
+        <tr
+          class="transition-colors duration-150 group  divide-x divide-gray-200 {{ row_bg_color }}">
+          {% if bulk_actions %}
+          <td class="text-center group-has-hover:bg-gray-200">
+            <input type="checkbox" name="selected" value="{{ row.id }}">
+          </td>
+          {% endif %}
+
+          {% for column in columns %}
+          {% set need_tooltip= get_attribute(column,'need_tooltip') %}
+          {% set wrap_class = 'whitespace-nowrap' if need_tooltip is sameas False else 'break-words min-w-80 max-w-120' %}
+          <td class="px-4 py-4 {{ wrap_class }} text-sm text-gray-900 text-{{ column.align or 'center' }} group-has-hover:bg-gray-200">
+            {% set value = get_attribute(row, column.name) %}
+            {% set formatter = get_attribute(column, 'format') %}
+            {% if column.is_hypertext %}
+            {% set formatted_value = formatter(row) %}
+            {% else %}
+            {% set formatted_value = formatter(value) %}
+            {% endif %}
+            {% if need_tooltip %}
+            {% call tooltip(value) %}
+            {{ formatted_value|safe }}
+            {% endcall %}
+            {% else %}
+            {{ formatted_value|safe }}
+            {% endif %}
+          </td>
+          {% endfor %}
+
+          {% if row_actions %}
+          <td class="px-6 py-4 sticky right-0 {{ row_bg_color }} group-has-hover:bg-gray-200">
+            <div class="flex items-center justify-start gap-2">
+              {% for action in row_actions %}
+              {% set render = true %}
+              {% if action.render_predicate %}
+              {% set render = action.render_predicate(row) %}
+              {% endif %}
+              {% if render %}
+              {{
+                button(
+                  text=action.label,
+                  icon=action.icon,
+                  icon_position=action.icon_position,
+                  variant=action.variant,
+                  disabled=action.disabled,
+                  loading_text=action.loading_text,
+                  href=action.href|substitute_row_attrs(row, action.key),
+                  htmx_event_prefix=action.htmx_event_prefix,
+                  class=action.klass,
+                  extra_attributes=action.extra_attributes|substitute_row_attrs(row, action.key)
+                )
+              }}
+              {% endif %}
+              {% endfor %}
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="{{ columns|length + (1 if bulk_actions else 0) + (1 if row_actions else 0) }}"
+            class="px-6 py-12 text-center text-gray-500">Không có dữ liệu</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+    <div class="flex items-center space-x-2">
+      <p class="text-sm text-red-700">
+        Hiển thị
+        <span class="font-medium">{{ (page_index * page_size + 1) if rows else 0 }}</span> -
+        <span class="font-medium">{{ page_index * page_size + [page_size, rows|length]|min }}</span> trong tổng số
+        <span class="font-medium">{{ total_count }}</span> kết quả
+      </p>
+      <div>
+        <select 
+          name="page_size" 
+          :form="$id('filter')"
+          hx-get="{{ partial_url }}"
+          hx-include="inherit",
+          :hx-target="'#' + $id('table')"
+          hx-push-url="false"
+          class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm">
+          <option value="5" {% if page_size|int==5 %}selected{% endif %}>5 dòng/trang</option>
+          <option value="10" {% if page_size|int==10 %}selected{% endif %}>10 dòng/trang</option>
+          <option value="25" {% if page_size|int==25 %}selected{% endif %}>25 dòng/trang</option>
+          <option value="50" {% if page_size|int==50 %}selected{% endif %}>50 dòng/trang</option>
+        </select>
+      </div>
+    </div>
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-end">
+      <div>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          {{ button(
+            text='',
+            icon='angle-left.svg',
+            icon_position='left',
+            variant='outlined',
+            class='rounded-none rounded-l-md',
+            disabled=page_index <= 0,
+            extra_attributes={
+              'hx-get': partial_url,
+              'hx-include': 'inherit, [name="page_size"]',
+              ':hx-target': "'#' + $id('table')",
+              'hx-push-url': 'false',
+              'hx-vals': jsonify(
+                {
+                  'page_index': page_index - 1,
+                  'sort': sort,
+                  'sort_direction': sort_direction,
+                }
+              ),
+            }
+          ) }}
+          {% set total_pages = [1, (total_count + page_size - 1) // page_size]|max %}
+          {% for page in range([1, page_index|int -1]|max, [total_pages|int + 1, page_index|int + 4]|min) %}
+            {{ button(
+              text=page,
+              variant='outlined' if page - 1 != page_index else 'filled',
+              class='rounded-none',
+              extra_attributes={
+                'hx-get': partial_url,
+                'hx-include': "inherit, [name='page_size']",
+                ':hx-target': "'#' + $id('table')",
+                'hx-push-url': 'false',
+                'hx-vals': jsonify(
+                  {
+                    'page_index': page - 1,
+                    'sort': sort,
+                    'sort_direction': sort_direction,
+                  }
+                ),
+              }
+            ) }}
+          {% endfor %}
+          {{ button(
+            text='',
+            icon='angle-right.svg',
+            icon_position='right',
+            variant='outlined',
+            class='rounded-none rounded-r-md',
+            disabled=page_index >= total_pages|int - 1,
+            extra_attributes={
+              'hx-get': partial_url,
+              'hx-include': "inherit, [name='page_size']",
+              ':hx-target': "'#' + $id('table')",
+              'hx-push-url': 'false',
+              'hx-vals': jsonify(
+                {
+                  'page_index':  page_index + 1 if page_index < total_pages|int else total_pages,
+                  'sort': sort,
+                  'sort_direction': sort_direction,
+                }
+              ),
+            }
+          ) }}
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}

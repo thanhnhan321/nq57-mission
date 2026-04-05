@@ -1,0 +1,85 @@
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+{% macro button(
+  text='',
+  icon=none,
+  icon_position='left',
+  tooltip_content=none,
+  tooltip_axis='vertical',
+  variant='filled',
+  disabled=false,
+  loading_text='Submitting...',
+  href=none,
+  htmx_event_prefix=none,
+  class='',
+  extra_attributes={}
+) %}
+{% set tag = 'a' if href else 'button' %}
+{% set base_classes = 'inline-flex items-center justify-center rounded-lg h-9 transition shrink-0 cursor-pointer' %}
+{% set text = (text or '')|trim %}
+{% if text %}
+{% set title_classes = 'gap-2 px-4 text-sm font-medium' %}
+{% else %}
+{% set title_classes = 'w-9' %}
+{% endif %}
+{% if variant == 'filled' %}
+{% set variant_classes = 'border border-transparent bg-red-700 text-white hover:bg-red-800 active:bg-red-800' %}
+{% elif variant == 'transparent' %}
+{% set variant_classes = 'border border-transparent bg-transparent text-gray-800 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-100 active:text-gray-900' %}
+{% else %}
+{% set variant_classes = 'border border-gray-400 bg-white text-red-700 hover:bg-gray-100 hover:text-red-800 active:bg-gray-100 active:text-red-800' %}
+{% endif %}
+{% set disabled_classes = 'disabled:bg-gray-200! disabled:text-gray-400! disabled:cursor-not-allowed! disabled:border-transparent!' %}
+{% set icon_loading = 'spinner.svg' %}
+{% set icon_wrapper_classes = 'shrink-0 max-h-[1em] w-[1em] [&>svg]:max-h-full [&>svg]:w-full [&>svg]:max-w-none' %}
+{% set icon_loading_classes = 'shrink-0 max-h-[1em] w-[1em] [&>svg]:max-h-full [&>svg]:w-full [&>svg]:max-w-none animate-spin' %}
+{% call tooltip(tooltip_content, tooltip_axis) %}
+  <{{ tag }}
+    {% if href %}href="{{ href }}"{% else %}type="button"{% endif %}
+    class="{{ base_classes }} {{ title_classes }} {{ variant_classes }} {{ disabled_classes }} {{ class }}"
+    
+    x-data="{ 
+      loading: false,
+      beforeHTMX: null,
+      afterHTMX: null,
+      disabled: false,
+      init() {
+        this.beforeHTMX = (e) => { 
+          if (e.detail && $el.contains(e.detail.elt)) this.loading = true 
+        };
+        this.afterHTMX = (e) => {
+          if (!e.detail || !$el.contains(e.detail.elt)) return;
+          this.loading = false;
+          {% if htmx_event_prefix is not none and htmx_event_prefix|trim %}
+          const status = e.detail.xhr.status;
+          const outcome = status >= 200 && status < 300 ? 'success' : 'failed';
+          this.$dispatch('{{ htmx_event_prefix }}:' + outcome, { status, xhr: e.detail.xhr });
+          {% endif %}
+        };
+        document.body.addEventListener('htmx:before-request', this.beforeHTMX);
+        document.body.addEventListener('htmx:after-request', this.afterHTMX);
+      },
+      destroy() {
+        document.body.removeEventListener('htmx:before-request', this.beforeHTMX);
+        document.body.removeEventListener('htmx:after-request', this.afterHTMX);
+      },
+    }"
+    {% if not href %}:disabled="{{ 'true' if disabled else 'false' }} || loading || disabled"{% endif %}
+    :aria-busy="loading"
+    {{ extra_attributes | xmlattr }}
+  >
+    {% if icon and icon_position == 'left' %}
+    <span class="{{ icon_wrapper_classes }}" x-show="!loading">{% include icon %}</span>
+    {% endif %}
+    {% if text %}
+    <span x-show="!loading">{{ text }}</span>
+    {% endif %}
+    {% if text|length >= loading_text|length %}
+    <span x-show="loading" x-cloak style="display: none;">{{ loading_text }}</span>
+    {% endif %}
+    {% if icon and icon_position == 'right' %}
+    <span class="{{ icon_wrapper_classes }}" x-show="!loading">{% include icon %}</span>
+    {% endif %}
+    <span class="{{ icon_loading_classes }}" x-show="loading" x-cloak style="display: none;">{% include icon_loading %}</span>
+  </{{ tag }}>
+{% endcall %}
+{% endmacro %}

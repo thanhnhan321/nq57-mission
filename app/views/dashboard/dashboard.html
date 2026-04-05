@@ -1,0 +1,102 @@
+{% extends "templates/layouts/index.html" %}
+{% from 'templates/components/button/button.html' import button %}
+{% from 'templates/components/input/select/select.html' import select %}
+
+{% block title %}Bảng điều khiển chỉ tiêu{% endblock %}
+
+{% block pre_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@6.0.0/dist/echarts.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div 
+  x-data="{ 
+    active: 'mission'
+  }"
+  class="min-h-full p-4 md:p-6 space-y-6 font-sans text-slate-800"
+>
+  {# Top: mode pills + filters #}
+  <div class="flex justify-between gap-4">
+    <div
+      class="flex flex-wrap items-end gap-2"
+    >
+      {{
+        button(
+          text='Nhiệm vụ',
+          variant='filled',
+          extra_attributes={
+            'hx-get': url('dashboard_panel', query={'panel': 'mission'}),
+            'hx-target': '#dashboard-panel',
+            'hx-include': '[name="year"], [name="department_id"]',
+            '@click': 'active = "mission"',
+            ':class': 'active === "mission" ? "text-white" : "bg-slate-200 text-slate-700! hover:text-white! border border-slate-200"',
+          }
+        )
+      }}
+      {{
+        button(
+          text='Chỉ tiêu',
+          variant='filled',
+          extra_attributes={
+            'hx-get': url('dashboard_panel', query={'panel': 'quota'}),
+            'hx-target': '#dashboard-panel',
+            'hx-include': '[name="year"], [name="department_id"]',
+            '@click': 'active = "quota"',
+            ':class': 'active === "quota" ? "text-white" : "bg-slate-200 text-slate-700! hover:text-white! border border-slate-200"',
+          }
+        )
+      }}
+    </div>
+    <div class="flex flex-wrap items-center gap-3" id="dashboard-filters">
+      <input type="hidden" name="panel" :value="active">
+      {{
+        select(
+          name='year',
+          options_url=url('year_options'),
+          multiple=false,
+          label='Năm',
+          value=latest_year,
+          placeholder='Tất cả',
+          extra_attributes={
+            'hx-get': url('dashboard_panel'),
+            'hx-target': '#dashboard-panel',
+            'hx-include': '[name="department_id"], [name="panel"]',
+          }
+        )
+      }}
+      {{
+        select(
+          name='department_id',
+          options_url=url('department_options'),
+          multiple=false,
+          label='Đơn vị',
+          placeholder='Tất cả',
+          extra_attributes={
+            'hx-get': url('dashboard_panel'),
+            'hx-target': '#dashboard-panel',
+            'hx-include': '[name="year"], [name="panel"]',
+          }
+        )
+      }}
+    </div>
+  </div>
+
+  <div
+    id="dashboard-panel"
+    hx-get="{{ url('dashboard_panel') }}"
+    hx-trigger="load once"
+    hx-include="[name='panel']"
+  >
+    <div class="flex flex-col items-center justify-center gap-2 py-16 text-slate-500">
+      <span
+        class="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-[#8B0000]"
+        aria-hidden="true"
+      ></span>
+      <span class="text-sm">Đang tải…</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block post_scripts %}
+{% endblock %}

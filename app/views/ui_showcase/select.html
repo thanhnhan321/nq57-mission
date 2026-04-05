@@ -1,0 +1,123 @@
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/button/button.html' import button %}
+
+<section class="py-16 space-y-12">
+  <header class="mb-10">
+    <h2 class="text-2xl font-semibold text-slate-900">Single select</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Options loaded via HTMX. Local search with unaccent support. Clear and arrow buttons; selected option shows a check. Open in modal to test stacking and long labels.
+    </p>
+  </header>
+
+  <div class="space-y-4" x-data="{ modalOpen: false }" @open-select-modal.window="modalOpen = true">
+    <h3 class="text-sm font-semibold text-slate-900">In modal (clear, arrow, tick, long text)</h3>
+    <p class="text-xs text-slate-600">
+      Click to open a modal containing the select. Use clear (×) and arrow (▼); pick an option to see the tick. Some options have long text to test truncation.
+    </p>
+    {{ button('Open select in modal', icon='circle.svg', variant='filled', extra_attributes={ '@click': '$dispatch("open-select-modal")' }) }}
+
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-transition.opacity style="display: none;">
+      <div class="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl" @click.away="modalOpen = false">
+        <h4 class="text-lg font-semibold text-slate-900">Select demo</h4>
+        <p class="mt-1 text-sm text-slate-600">Default and prefilled select. Long-text options included.</p>
+        <div class="mt-6 space-y-6">
+          <div>
+            <h5 class="mb-2 text-xs font-medium text-slate-500">Default</h5>
+            {{ select(
+              name='asset_type_modal',
+              options_url=url('ui_showcase_select_options'),
+              label='Kiểu tài sản',
+              placeholder='Chọn kiểu tài sản',
+              required=true
+            ) }}
+          </div>
+          <div>
+            <h5 class="mb-2 text-xs font-medium text-slate-500">With initial value (Thiết bị máy móc)</h5>
+            {{ select(
+              name='asset_type_modal_prefilled',
+              options_url=url('ui_showcase_select_options'),
+              label='Kiểu tài sản',
+              placeholder='Chọn kiểu tài sản',
+              value='machinery',
+              hint='Đây là một văn bản gợi ý để giúp người dùng.'
+            ) }}
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end">
+          {{ button('Close', variant='outlined', extra_attributes={ '@click': '$dispatch("close-select-modal")' }) }}
+        </div>
+      </div>
+    </div>
+    <div @close-select-modal.window="modalOpen = false"></div>
+  </div>
+
+  <div class="space-y-4">
+    <h3 class="text-sm font-semibold text-slate-900">Reload options with `max` (custom event)</h3>
+    <p class="text-xs text-slate-600">
+      The “property type” select refetches options when the dependency select fires
+      <code class="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px]">select:reload:property-type</code>.
+      The event payload sets <code class="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px]">max</code>, limiting how many options the API returns.
+    </p>
+
+    <div
+      class="flex flex-wrap items-end gap-3"
+    >
+      {{ select(
+        name='property_type_reload_demo',
+        options_url=url('ui_showcase_select_options'),
+        label='Kiểu tài sản (max-limited)',
+        placeholder='Chọn kiểu tài sản',
+        reload_events=['select:reload:property-type'],
+      ) }}
+
+      {{ select(
+        name='dependency',
+        options_url=url('ui_showcase_dependency_max_options'),
+        label='Max options',
+        placeholder='Chọn max',
+        value=none,
+        extra_attributes={
+          '@change': "$dispatch('select:reload:property-type', { max: Array.from($event.target.selectedOptions).map(option => option.value) });",
+        }
+      ) }}
+    </div>
+  </div>
+</section>
+
+<section class="py-16 space-y-12 border-t border-slate-200">
+  <header class="mb-10 pt-10">
+    <h2 class="text-2xl font-semibold text-slate-900">Multi select</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Same async options + local search, but supports selecting multiple values. Selected items render as removable chips and submit as multiple hidden inputs (same name).
+    </p>
+  </header>
+
+  <div class="grid gap-8 md:grid-cols-2">
+    <div class="space-y-2">
+      <h3 class="text-sm font-semibold text-slate-900">Default</h3>
+      <p class="text-xs text-slate-600">Pick multiple items. Re-open and toggle to add/remove. Use the chips to remove without opening.</p>
+      {{ select(
+        name='asset_types',
+        options_url=url('ui_showcase_select_options'),
+        multiple=true,
+        label='Kiểu tài sản',
+        placeholder='Chọn nhiều kiểu tài sản',
+        required=true,
+        hint='Gợi ý: bạn có thể chọn nhiều lựa chọn.'
+      ) }}
+    </div>
+
+    <div class="space-y-2">
+      <h3 class="text-sm font-semibold text-slate-900">With initial values</h3>
+      <p class="text-xs text-slate-600">Prefilled with 2 values to demo chips and “+N” overflow when selecting more.</p>
+      {{ select(
+        name='asset_types_prefilled',
+        options_url=url('ui_showcase_select_options'),
+        multiple=true,
+        label='Kiểu tài sản',
+        placeholder='Chọn nhiều kiểu tài sản',
+        value=['machinery', 'house'],
+      ) }}
+    </div>
+  </div>
+</section>

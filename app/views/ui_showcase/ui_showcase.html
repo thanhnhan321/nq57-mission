@@ -1,0 +1,93 @@
+{% extends 'templates/layouts/index.html' %}
+
+{% block title %}UI Showcase{% endblock %}
+
+{% block content %}
+<div class="container mx-auto space-y-16">
+  <header>
+    <h1 class="text-3xl font-semibold mb-2">UI Showcase</h1>
+    <p class="text-sm">
+      A collection of isolated UI components rendered in one place.
+    </p>
+  </header>
+
+  <section
+    class="space-y-6"
+    x-data="{ active: 'tooltip' }"
+  >
+    <div class="inline-flex rounded-full bg-slate-900/80 p-1 text-xs text-slate-300">
+      <button
+        type="button"
+        class="rounded-full px-4 py-1.5 font-medium"
+        :class="active === 'tooltip' ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-white'"
+        @click="active = 'tooltip'"
+        hx-get="{{ url('ui_showcase_component', kwargs={'component': 'tooltip'}) }}"
+        hx-target="#ui-showcase-content"
+        hx-swap="innerHTML"
+      >
+        Tooltip
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-4 py-1.5 font-medium"
+        :class="active === 'button' ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-white'"
+        @click="active = 'button'"
+        hx-get="{{ url('ui_showcase_component', kwargs={'component': 'button'}) }}"
+        hx-target="#ui-showcase-content"
+        hx-swap="innerHTML"
+      >
+        Button
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-4 py-1.5 font-medium"
+        :class="active === 'select' ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-white'"
+        @click="active = 'select'"
+        hx-get="{{ url('ui_showcase_component', kwargs={'component': 'select'}) }}"
+        hx-target="#ui-showcase-content"
+        hx-swap="innerHTML"
+      >
+        Select
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-4 py-1.5 font-medium"
+        :class="active === 'input' ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-white'"
+        @click="active = 'input'"
+        hx-get="{{ url('ui_showcase_component', kwargs={'component': 'input'}) }}"
+        hx-target="#ui-showcase-content"
+        hx-swap="innerHTML"
+      >
+        Input
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-4 py-1.5 font-medium"
+        :class="active === 'table' ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-white'"
+        @click="active = 'table'"
+        hx-get="{{ url('ui_showcase_component', kwargs={'component': 'table'}) }}"
+        hx-target="#ui-showcase-content"
+        hx-swap="innerHTML"
+      >
+        Table
+      </button>
+      <button
+        type="button"
+        class="rounded-full px-4 py-1.5 font-medium"
+        :class="active === 'dropzone' ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-white'"
+        @click="active = 'dropzone'"
+        hx-get="{{ url('ui_showcase_component', kwargs={'component': 'dropzone'}) }}"
+        hx-target="#ui-showcase-content"
+        hx-swap="innerHTML"
+      >
+        Dropzone
+      </button>
+    </div>
+
+    <div id="ui-showcase-content">
+      {% include 'ui_showcase/tooltip.html' %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+

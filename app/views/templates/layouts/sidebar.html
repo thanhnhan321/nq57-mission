@@ -1,0 +1,49 @@
+{% from 'templates/components/sidebar/sidebar.html' import sidebar %}
+{% set nav_items = request.session.get('nav_items',  [
+    {
+        'label': 'Tổng quan',
+        'url': '#',
+        'icon': 'home.svg',
+    },
+    {
+        'label': 'Nhiệm vụ',
+        'url': '#',
+        'icon': 'task.svg',
+    },
+    {
+        'label': 'Báo cáo', 
+        'url': '#',
+        'icon': 'report.svg',
+    }, 
+    {
+        'label': 'Danh mục',
+        'icon': 'category.svg',
+        'children': [
+            {
+                'label': 'Cấp chỉ đạo',
+                'url': '#',
+            },
+            {
+                'label': 'Loại văn bản',
+                'url': '#',
+            },
+            {
+                'label': 'Văn bản chỉ đạo',
+                'url': '#',
+            },
+        ],
+    },
+    {
+        'label': 'UI Showcase', 
+        'url': url('ui_showcase'),
+        'icon': 'play.svg',
+    }, 
+]) %}
+{% set logo_src = static('images/logo.png') %}
+{% set footer_html = '<a href="#" class="text-red-100/80 hover:text-white">Logout</a>' %}
+{{ sidebar(
+    items=nav_items,
+    title='Giám sát Nghị quyết 57',
+    logo_src=logo_src,
+    footer_html=footer_html,
+) }}

@@ -1,0 +1,128 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/input/datetimepicker/datetimepicker.html' import datetimepicker %}
+<form
+    id="directive-document-form"
+    x-data="{
+        code: {{ jsonify(code) }},
+        title: {{ jsonify(title) }},
+        type_code: {{ jsonify(type_code) }},
+        level_id: {{ jsonify(level_id) }},
+        issued_at: {{ jsonify(issued_at) }},
+        valid_from: {{ jsonify(valid_from) }},
+        valid_to: {{ jsonify(valid_to) }},
+        object: null,
+        errors: {{ jsonify(errors) }},
+    }" 
+    @change="
+        const t = $event.target;
+        if (!t || !t.name) return;
+        if (t.name === 'issued_at') issued_at = t.value;
+        if (t.name === 'valid_from') valid_from = t.value;
+        if (t.name === 'valid_to') valid_to = t.value;
+    "
+    class="w-lg grid grid-cols-2 gap-3"
+    @submit.prevent>
+    {{ csrf_input }}
+    {{ input(
+        name='code',
+        label='Số văn bản chỉ đạo',
+        placeholder='Nhập số văn bản chỉ đạo',
+        value=code,
+        required=true,
+        disabled=true if request.path == url('directive_document_update') else false,
+        error_message=errors.get('code', "")
+    ) }}
+    {{ input(
+        name='title',
+        label='Tên văn bản chỉ đạo',
+        placeholder='Nhập tên văn bản chỉ đạo',
+        value=title,
+        required=true,
+        error_message=errors.get('title', "")
+    ) }}
+    {{ select(
+        name='type_code',
+        label='Loại văn bản',
+        placeholder='Chọn loại văn bản',
+        options_url=url('document_type_options'),
+        value=type_code,
+        required=true,
+        error_message=errors.get('type_code', "")
+    ) }}
+    {{ select(
+        name='level_id',
+        label='Cấp chỉ đạo',
+        placeholder='Chọn cấp chỉ đạo',
+        options_url=url('directive_level_options'),
+        value=level_id,
+        required=true,
+        error_message=errors.get('level_id', "")
+    ) }}
+    {{ datetimepicker(
+        name='issued_at',
+        label='Ngày ban hành',
+        variant='date',
+        placeholder='Chọn ngày ban hành',
+        value=issued_at,
+        required=true,
+        error_message=errors.get('issued_at', ""),
+        extra_attributes={
+            'max': 'valid_from',
+        }
+    ) }}
+    {{ datetimepicker(
+        name='valid_from',
+        label='Ngày bắt đầu',
+        variant='date',
+        placeholder='Chọn ngày bắt đầu',
+        value=valid_from,
+        required=true,
+        error_message=errors.get('valid_from', ""),
+        extra_attributes={
+            'min': 'issued_at',
+        }
+    ) }}
+    {{ datetimepicker(
+        name='valid_to',
+        label='Ngày kết thúc',
+        variant='date',
+        placeholder='Chọn ngày kết thúc',
+        value=valid_to,
+        required=false,
+        error_message=errors.get('valid_to', ""),
+        extra_attributes={
+            'min': 'valid_from',
+        }
+    ) }}
+    {% if request.path == url('directive_document_create') %}
+    <div>
+        <label
+            class="mb-1 flex items-center gap-1.5 text-sm font-bold transition-colors"
+            :class="errors.object ? 'text-red-500' : 'text-slate-700'"
+            for="file-input"
+        >
+        File đính kèm
+        <span class="text-red-600">*</span>
+        </label>
+        <input
+            id="file-input"
+            name="object"
+            type="file"
+            class="hidden"
+            accept=".pdf"
+            @change="object = $event.target.files?.[0] || null;"
+        >
+        <label 
+            class="min-h-10 flex items-center gap-2 text-slate-500 px-2"
+            :class="errors.object ? 'rounded-md ring-1 ring-solid ring-red-600' : ''"
+            for="file-input"
+        >
+            <span class="h-4 w-4 shrink-0">{% include 'paperclip.svg' %}</span>
+            <div class="cursor-default truncate" x-text="object ? object.name : 'Chọn file'"></div>
+        </label>
+        <div class="mt-2 text-xs text-red-600">{{ errors.get('object', '')}}</div>
+    </div>
+    
+    {% endif %}
+</form>

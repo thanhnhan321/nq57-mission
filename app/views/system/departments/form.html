@@ -1,0 +1,259 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/tree/tree.html' import tree %}
+{% from 'system/departments/tree_picker_node.html' import department_parent_tree_node %}
+<form
+    id="department-form"
+    x-data="{
+        parentOpen: false,
+        parentId: {{ jsonify(values.parent_id) }},
+        parentName: {{ jsonify(values.parent_name) }},
+        parentSearchQuery: {{ jsonify(values.parent_name if values.parent_id else '') }},
+        parentHasMatches: true,
+        parentPanelPlaced: false,
+        parentPlacement: 'bottom',
+        parentCoords: { top: 0, left: 0, width: 0, minWidth: 0 },
+        parentMargin: 12,
+        parentRepositionListener: null,
+        parentOutsideClickListener: null,
+        get normalizedParentSearchQuery() {
+            return unaccent((this.parentSearchQuery || '').trim()).toLowerCase();
+        },
+        openParentDropdown() {
+            if (this.parentOpen) return;
+            this.parentOpen = true;
+            this.parentPanelPlaced = false;
+            this.parentPlacement = 'bottom';
+            this.parentCoords = { top: 0, left: 0, width: 0, minWidth: 0 };
+            this.parentSearchQuery = this.parentId ? this.parentName : (this.parentSearchQuery || '');
+            this.parentHasMatches = true;
+            this.$nextTick(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        this.repositionParentDropdown();
+                        this.parentPanelPlaced = true;
+                        this.startParentOutsideClickListener();
+                        this.$refs.parentSearchInput?.focus();
+                        this.refreshParentTreeState();
+                    });
+                });
+            });
+        },
+        closeParentDropdown() {
+            this.parentOpen = false;
+            this.parentPanelPlaced = false;
+            this.parentSearchQuery = this.parentId ? this.parentName : '';
+            this.parentHasMatches = true;
+            this.stopParentOutsideClickListener();
+        },
+        clearParentSelection() {
+            this.parentId = '';
+            this.parentName = {{ jsonify(parent_tree_placeholder) }};
+            this.parentSearchQuery = '';
+        },
+        repositionParentDropdown() {
+            if (!this.$refs || !this.$refs.parentTrigger || !this.$refs.parentPanel) return;
+
+            const triggerRect = this.$refs.parentTrigger.getBoundingClientRect();
+            const panelEl = this.$refs.parentPanel;
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const margin = this.parentMargin || 12;
+            const gap = 6;
+            const panelRect = panelEl.getBoundingClientRect();
+            const naturalWidth = panelRect.width || panelEl.scrollWidth || triggerRect.width;
+            const width = Math.max(0, Math.min(naturalWidth, viewportWidth - margin * 2));
+            const minLeft = margin;
+            const maxLeft = viewportWidth - width - margin;
+            let left = triggerRect.left;
+            if (left > maxLeft) {
+                left = triggerRect.right - width;
+            }
+            if (left < minLeft) left = minLeft;
+            if (left > maxLeft) left = maxLeft;
+
+            const spaceAbove = triggerRect.top - margin;
+            const spaceBelow = viewportHeight - triggerRect.bottom - margin;
+            let placement = this.parentPlacement;
+            if (placement === 'bottom' && spaceBelow < panelRect.height + gap && spaceAbove > spaceBelow) {
+                placement = 'top';
+            } else if (placement === 'top' && spaceAbove < panelRect.height + gap && spaceBelow > spaceAbove) {
+                placement = 'bottom';
+            }
+
+            const top = placement === 'bottom'
+                ? triggerRect.bottom + gap
+                : triggerRect.top - panelRect.height - gap;
+
+            this.parentPlacement = placement;
+            this.parentCoords = {
+                top: top + scrollY,
+                left: left + scrollX,
+                width,
+                minWidth: triggerRect.width,
+            };
+        },
+        refreshParentTreeState() {
+            if (!this.parentOpen) return;
+            if (!this.normalizedParentSearchQuery) {
+                this.parentHasMatches = true;
+                return;
+            }
+
+            const nodes = this.$refs.parentPanel?.querySelectorAll('[data-tree-node]') || [];
+            this.parentHasMatches = Array.from(nodes).some(node => node.offsetParent !== null);
+        },
+        startParentOutsideClickListener() {
+            if (this.parentOutsideClickListener) return;
+
+            this.parentOutsideClickListener = (event) => {
+                if (!this.parentOpen) return;
+                const trigger = this.$refs?.parentTrigger;
+                const panel = this.$refs?.parentPanel;
+                if (!trigger || !panel) return;
+                const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+                const isInsideTrigger = path.includes(trigger) || trigger.contains(event.target);
+                const isInsidePanel = path.includes(panel) || panel.contains(event.target);
+                if (isInsideTrigger || isInsidePanel) return;
+                this.closeParentDropdown();
+            };
+
+            document.addEventListener('mousedown', this.parentOutsideClickListener, true);
+            document.addEventListener('touchstart', this.parentOutsideClickListener, true);
+
+            this.parentRepositionListener = () => {
+                if (!this.parentOpen) return;
+                this.repositionParentDropdown();
+            };
+            window.addEventListener('scroll', this.parentRepositionListener, { capture: true, passive: true });
+            window.addEventListener('resize', this.parentRepositionListener, { passive: true });
+        },
+        stopParentOutsideClickListener() {
+            if (this.parentRepositionListener) {
+                window.removeEventListener('scroll', this.parentRepositionListener, { capture: true, passive: true });
+                window.removeEventListener('resize', this.parentRepositionListener, { passive: true });
+                this.parentRepositionListener = null;
+            }
+            if (!this.parentOutsideClickListener) return;
+            document.removeEventListener('mousedown', this.parentOutsideClickListener, true);
+            document.removeEventListener('touchstart', this.parentOutsideClickListener, true);
+            this.parentOutsideClickListener = null;
+        },
+    }"
+    class="min-w-3xl grid grid-cols-2 gap-3"
+    @submit.prevent
+    @keydown.escape.window="closeParentDropdown()">
+    {{ csrf_input }}
+
+    <input type="hidden" name="parent_id" :value="parentId" />
+
+    {{ input(
+        name='short_name',
+        label='Mã đơn vị',
+        placeholder='Nhập mã đơn vị',
+        value=values.short_name,
+        required=false,
+        error_message=errors.get('short_name', ''),
+    ) }}
+    {{ input(
+        name='name',
+        label='Tên đơn vị',
+        placeholder='Nhập tên đơn vị',
+        value=values.name,
+        required=true,
+        error_message=errors.get('name', ''),
+    ) }}
+    {{ select(
+        name='type',
+        label='Loại đơn vị',
+        placeholder='Chọn loại đơn vị',
+        options_url=url('department_type_options'),
+        value=values.type,
+        required=true,
+        error_message=errors.get('type', ''),
+    ) }}
+
+    <div>
+      <label class="mb-1 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+        <span>Đơn vị cha</span>
+      </label>
+      <div class="relative">
+        <div
+          x-ref="parentTrigger"
+          role="combobox"
+          tabindex="0"
+          class="flex h-10 w-full items-center rounded-md border border-slate-300 bg-white px-3 pr-10 text-sm text-slate-700 transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          @click="openParentDropdown()"
+          @keydown.down.prevent="openParentDropdown()"
+        >
+          <span x-show="!parentOpen" x-cloak class="w-full truncate text-slate-900" x-text="parentName || {{ jsonify(parent_tree_placeholder) }}"></span>
+          <input
+            x-ref="parentSearchInput"
+            x-show="parentOpen"
+            x-cloak
+            x-model="parentSearchQuery"
+            type="text"
+            class="w-full border-0 bg-transparent p-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+            placeholder="Chọn đơn vị cha"
+            @focus="openParentDropdown()"
+            @click.stop="openParentDropdown()"
+            @input="parentOpen || openParentDropdown(); parentHasMatches = true; $nextTick(() => { refreshParentTreeState(); repositionParentDropdown(); })"
+            @keydown.escape.stop.prevent="closeParentDropdown()"
+          />
+          <span class="ml-2 text-slate-400 transition-transform shrink-0" :class="parentOpen ? 'rotate-180' : ''">{% include 'angle-down.svg' %}</span>
+        </div>
+
+        <button
+          type="button"
+          x-show="parentId"
+          x-cloak
+          class="absolute right-10 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          @click.stop="clearParentSelection()"
+          aria-label="Xóa đơn vị cha"
+        >
+          {% include 'close.svg' %}
+        </button>
+
+        <template x-teleport="body">
+          <div
+            x-show="parentOpen"
+            x-ref="parentPanel"
+            x-cloak
+            class="fixed z-[510] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+            :class="[
+              parentPlacement === 'top' ? 'origin-bottom' : 'origin-top',
+              (parentOpen && !parentPanelPlaced ? 'invisible pointer-events-none ' : '') + (parentOpen && parentPanelPlaced ? 'opacity-100' : 'opacity-0')
+            ]"
+            :style="
+              'inset:0 auto auto 0;min-width:' + parentCoords.minWidth + 'px;'
+              + 'transform:translate(' + parentCoords.left + 'px,' + parentCoords.top + 'px);'
+              + (parentCoords.width > 0 ? 'width:' + parentCoords.width + 'px;' : '')
+            "
+            @click.stop
+          >
+            <div class="max-h-80 overflow-auto p-2">
+              <div x-show="normalizedParentSearchQuery && !parentHasMatches" x-cloak class="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
+                Không tìm thấy đơn vị phù hợp.
+              </div>
+              <div x-show="!normalizedParentSearchQuery || parentHasMatches">
+                {{ tree(
+                  parent_tree_nodes,
+                  department_parent_tree_node,
+                  empty_message=parent_tree_empty_message,
+                  search_active=true,
+                  search_enabled=true,
+                  show_leaf_placeholder=false,
+                   children_wrapper_class='',
+                ) }}
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+      {% if errors.get('parent_id') %}
+      <p class="mt-2 text-xs text-red-600">{{ errors.get('parent_id') }}</p>
+      {% endif %}
+    </div>
+</form>

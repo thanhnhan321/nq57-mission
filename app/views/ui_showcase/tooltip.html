@@ -1,0 +1,193 @@
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+
+<section class="py-16 space-y-12">
+  <header class="mb-10">
+    <h2 class="text-2xl font-semibold text-slate-900">Tooltip</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Viewport-aware tooltip with automatic placement and a single description line.
+    </p>
+  </header>
+
+  <div class="grid grid-cols-1 gap-10 md:grid-cols-2">
+    <div class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">
+        Default usage
+      </h3>
+      <p class="text-xs text-slate-600">
+        Use when you need a concise description for an element. The tooltip chooses top/bottom placement based on
+        available viewport space.
+      </p>
+
+      <div class="mt-4 flex items-center gap-4">
+        {% call tooltip('Các tooltip được sử dụng để mô tả hoặc xác định một phần tử. Trong hầu hết các tình huống, tooltip giúp người dùng hiểu ý nghĩa, chức năng hoặc văn bản thay thế.') %}
+          <button class="rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700">
+            Hover me
+          </button>
+        {% endcall %}
+      </div>
+    </div>
+
+    <div class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="text-sm font-semibold text-slate-900">
+        Compact triggers
+      </h3>
+      <p class="text-xs text-slate-600">
+        Works well with icon-sized triggers and elements near the viewport edge. The description remains visible to keep
+        the tooltip predictable.
+      </p>
+
+      <div class="mt-4 space-y-6">
+        <div class="flex items-center gap-4">
+          {% call tooltip('Mô tả ngắn gọn.') %}
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white">
+              i
+            </span>
+          {% endcall %}
+        </div>
+
+        <div class="flex justify-end">
+          {% call tooltip('Tooltip sẽ tự động chuyển vị trí dựa trên viewport khi nằm gần mép màn hình.') %}
+            <button class="rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700">
+              Corner trigger
+            </button>
+          {% endcall %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <h3 class="text-sm font-semibold text-slate-50">
+      Inside layered modal and sidebar
+    </h3>
+    <p class="mt-1 text-xs text-slate-200">
+      Demonstrates tooltip behavior inside a modal with an internal sidebar and scrollable content.
+    </p>
+
+    <div
+      class="mt-4"
+      x-data="{ openModal: false, openSidebar: true }"
+    >
+      <button
+        type="button"
+        class="rounded-full bg-white px-4 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-100"
+        @click="openModal = true"
+      >
+        Open layered modal
+      </button>
+
+      <!-- Backdrop + modal -->
+      <div
+        x-show="openModal"
+        x-cloak
+        class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+        x-transition.opacity
+      >
+        <div
+          class="relative flex h-[420px] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl"
+          @click.away="openModal = false"
+        >
+          <!-- Sidebar -->
+          <aside
+            class="flex w-64 flex-col border-r border-slate-200 bg-slate-950/95 px-4 py-4 text-xs text-slate-200"
+          >
+            <div class="mb-4 flex items-center justify-between">
+              <span class="font-medium text-slate-50">Sidebar</span>
+              <button
+                type="button"
+                class="rounded-full bg-slate-800 px-2 py-0.5 text-[10px]"
+                @click="openSidebar = !openSidebar"
+              >
+                Toggle
+              </button>
+            </div>
+
+            <div
+              class="space-y-4 overflow-y-auto pr-2"
+              x-show="openSidebar"
+            >
+              <p class="text-slate-400">
+                Links and actions here share space with tooltips. This sidebar is scrollable and sits above the page
+                content.
+              </p>
+
+              <div class="flex items-center gap-2">
+                {% call tooltip('Tooltip mô tả một mục điều hướng trong sidebar nhiều lớp.', 'horizontal') %}
+                  <button class="rounded bg-slate-800 px-3 py-1 text-[11px] text-slate-100">
+                    Sidebar item
+                  </button>
+                {% endcall %}
+              </div>
+            </div>
+          </aside>
+
+          <!-- Modal content -->
+          <div class="flex flex-1 flex-col">
+            <header class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+              <div>
+                <h4 class="text-sm font-semibold text-slate-900">
+                  Modal content
+                </h4>
+                <p class="text-[11px] text-slate-500">
+                  The tooltip is positioned relative to the viewport, even when nested inside overlays.
+                </p>
+              </div>
+              <div class="flex items-center gap-3">
+                {% call tooltip('Lưu lại các thay đổi trong modal này.') %}
+                  <button class="rounded-full bg-blue-500 px-3 py-1 text-[11px] font-medium text-white">
+                    Save
+                  </button>
+                {% endcall %}
+                <button
+                  type="button"
+                  class="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-300"
+                  @click="openModal = false"
+                >
+                  Close
+                </button>
+              </div>
+            </header>
+
+            <div class="flex-1 space-y-6 overflow-y-auto px-5 py-4 text-xs text-slate-600">
+              <p>
+                This scrollable area simulates a dense form or settings view. Hover the controls to ensure the tooltip
+                remains readable above the modal and sidebar layers.
+              </p>
+
+              <div class="flex items-center gap-3">
+                <label class="w-40 text-[11px] font-medium text-slate-700">
+                  Username
+                </label>
+                <div class="flex flex-1 items-center gap-2">
+                  <input
+                    type="text"
+                    class="h-8 w-full rounded border border-slate-300 px-2 text-xs focus:border-blue-500 focus:outline-none"
+                    placeholder="jane.doe"
+                  >
+                  {% call tooltip('Tên người dùng hiển thị trong toàn bộ ứng dụng.') %}
+                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-[11px] text-white">
+                      i
+                    </span>
+                  {% endcall %}
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <label class="w-40 text-[11px] font-medium text-slate-700">
+                  Notifications
+                </label>
+                <div class="flex items-center gap-2">
+                  {% call tooltip('Bật để nhận thông báo về hoạt động quan trọng.') %}
+                    <button class="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-medium text-white">
+                      Enabled
+                    </button>
+                  {% endcall %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

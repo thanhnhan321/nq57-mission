@@ -1,0 +1,23 @@
+{% extends 'templates/layouts/index.html' %}
+{% from 'templates/components/table/table.html' import table %}
+
+{% block title %}Danh sách báo cáo{% endblock %}
+
+{% block content %}
+<div id="department-report-page" class="space-y-4 p-4">
+  {{ table(
+    header=title,
+    filters=filters,
+    columns=columns,
+    rows=rows,
+    partial_url=url('department_report_list_partial'),
+    actions=actions,
+    bulk_actions=bulk_actions,
+    row_actions=row_actions,
+    page_index=page_index,
+    page_size=page_size,
+    total_count=total_count,
+    reload_event='table:reload'
+  ) }}
+</div>
+{% endblock %}

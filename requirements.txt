@@ -1,0 +1,17 @@
+Django==5.2.7 # psycopg, .env loading, jinja2 not included
+gunicorn==23.0.0 # webserver for UNIX-like systems
+waitress==3.0.2 # webserver for Windows
+whitenoise==6.11.0 # static file serving
+Jinja2==3.1.6 # template engine
+pydantic==2.10.6 # serialization
+loguru==0.7.3 # logging
+python-dotenv==1.2.1 # environment variables
+psycopg[binary,pool]==3.2.12 # prebuilt, pool compatible
+# redis==5.2.1 # cache
+openpyxl==3.1.5 # excel export
+huey==2.5.4 # task queue
+setuptools==80.9.0 # build tool for peewee
+wheel==0.45.0 # build tool for peewee
+peewee==3.18.3 # huey dependency for sql storage
+psycopg2-binary==2.9.11 # peewee postgres driver
+minio==7.2.8 # storage

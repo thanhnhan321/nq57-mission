@@ -1,0 +1,12 @@
+{% from 'templates/components/card/file/upload.html' import file_upload %}
+
+{% for card in cards %}
+  {{ file_upload(
+    file_name=card.file_name,
+    size_kb=card.size_kb,
+    object_id=card.object_id,
+    field_name=card.field_name,
+    status='uploaded'
+  ) }}
+{% endfor %}
+

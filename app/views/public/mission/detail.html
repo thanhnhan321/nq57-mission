@@ -1,0 +1,379 @@
+{% from 'templates/components/input/select/select.html' import select %}
+
+<div
+  class="relative z-[91] flex w-full 2xl:min-w-[1300px] max-h-[85vh] flex-col rounded-2xl bg-white shadow-2xl"
+  x-data="{
+    reportPreviewModalOpen: false,
+    reportPreviewTitle: '',
+    reportPreviewContent: '',
+    reportResultFilterValue: '',
+
+    handleReportPeriodFilterChange(event) {
+      const el = event.target;
+      if (!el || el.name !== 'report_result_period_filter') return;
+      const raw = (el.value || '').trim();
+      this.reportResultFilterValue = !raw || raw === 'all' ? '' : raw;
+    },
+
+    reportMatchesResultFilter(year, month) {
+      const v = this.reportResultFilterValue;
+      if (!v || v === 'all') return true;
+      const y = Number(year);
+      const m = Number(month);
+      const parts = String(v).split('-');
+      if (parts.length !== 2) return true;
+      return Number(parts[0]) === y && Number(parts[1]) === m;
+    },
+
+    openReportPreview(title, content) {
+      this.reportPreviewTitle = title || 'Chi tiết báo cáo';
+      this.reportPreviewContent = content || '';
+      this.reportPreviewModalOpen = true;
+    },
+
+    closeReportPreview() {
+      this.reportPreviewModalOpen = false;
+      this.reportPreviewTitle = '';
+      this.reportPreviewContent = '';
+    },
+
+    copyReport(content) {
+      const text = (content || '').trim();
+      if (!text) return;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).catch(() => this.fallbackCopy(text));
+        return;
+      }
+
+      this.fallbackCopy(text);
+    },
+
+    fallbackCopy(text) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch (e) {}
+    }
+  }"
+  @keydown.escape.window="if (reportPreviewModalOpen) closeReportPreview()"
+>
+  <div class="grid grid-cols-1 gap-6 2xl:grid-cols-12 2xl:items-start">
+    <!-- LEFT -->
+    <div class="space-y-6 2xl:col-span-8">
+      <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div class="px-5 py-5">
+          <div class="mb-4 flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-5 w-1 rounded bg-red-700"></span>
+              <h4 class="text-base font-bold uppercase text-slate-800">
+                Thông tin nhiệm vụ
+              </h4>
+            </div>
+
+            {% if mission.completed_date and mission.completed_date != '--/--/----' %}
+            <div class="flex shrink-0 items-center gap-2">
+              <span class="inline-flex items-center rounded bg-green-600 px-3 py-1 text-sm font-medium text-white">
+                ✓ Hoàn thành
+              </span>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-3">
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Mã nhiệm vụ
+              </div>
+              <div class="text-base font-semibold text-slate-900">
+                {{ mission.code }}
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Tên nhiệm vụ
+              </div>
+              <div class="text-base font-medium leading-6 text-slate-900">
+                {{ mission.name }}
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Cấp chỉ đạo
+              </div>
+              <div class="text-base text-slate-900">
+                {{ mission.directive_level }}
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Văn bản chỉ đạo
+              </div>
+              <div class="text-base text-slate-900">
+                {{ mission.directive_document }}
+              </div>
+            </div>
+
+            <div></div>
+
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Ngày bắt đầu
+              </div>
+              <div class="text-base text-slate-900">
+                {{ mission.start_date }}
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Hạn xử lý
+              </div>
+              <div class="text-base font-semibold text-red-600">
+                {{ mission.due_date }}
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Ngày hoàn thành
+              </div>
+              <div class="text-base text-slate-900">
+                {{ mission.completed_date }}
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Đơn vị chủ trì
+              </div>
+              <div class="text-base text-slate-900">
+                {{ mission.department }}
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Đơn vị thực hiện
+              </div>
+              <div class="text-base text-slate-900">
+                {{ mission.assignee_departments }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT -->
+    <aside class="2xl:col-span-4">
+      <div class="space-y-4 lg:sticky lg:top-4">
+        <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-5 w-1 rounded bg-sky-600"></span>
+              <h4 class="text-sm font-bold uppercase tracking-wide text-slate-800">
+                Kết quả thực hiện
+              </h4>
+            </div>
+
+            {% if mission_reports %}
+            <div
+              class="min-w-[11rem] max-w-[18rem] shrink-0"
+              @change="handleReportPeriodFilterChange($event)"
+            >
+              {{ select(
+                name='report_result_period_filter',
+                options_url=url('public_mission_result_report_period_filter_options', kwargs={'pk': mission.id}),
+                label='',
+                placeholder='Tìm tháng...',
+                value=['all'],
+              ) }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="max-h-[72vh] overflow-y-auto">
+            {% if mission_reports %}
+            <div class="divide-y divide-slate-100">
+              {% for report in mission_reports %}
+              <article
+                x-show="reportMatchesResultFilter({{ report.year }}, {{ report.month }})"
+                class="p-4 transition hover:bg-slate-50 {% if report.is_latest %}border-l-2 border-red-600 bg-red-50/40{% endif %}"
+              >
+                <div class="mb-2 flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      {% if report.show_no_submit_badge %}
+                      <span
+                        class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-400"
+                        aria-hidden="true"
+                      >
+                        <span class="inline-flex h-3 w-3 shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                          {% include 'minus.svg' %}
+                        </span>
+                      </span>
+                      {% elif report.has_content %}
+                      <span
+                        class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-600 text-white"
+                        aria-hidden="true"
+                      >
+                        <span class="inline-flex h-3 w-3 shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                          {% include 'check.svg' %}
+                        </span>
+                      </span>
+                      {% else %}
+                      <span
+                        class="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-slate-300 bg-white"
+                        aria-hidden="true"
+                      ></span>
+                      {% endif %}
+
+                      <h5 class="truncate text-sm font-semibold {% if report.show_no_submit_badge and not report.content %}text-slate-400{% else %}text-slate-800{% endif %}">
+                        Tháng {{ '%02d'|format(report.month) }}/{{ report.year }}
+                      </h5>
+                    </div>
+                  </div>
+
+                  <div class="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                    {% if report.show_no_submit_badge %}
+                    <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      Không gửi báo cáo
+                    </span>
+                    {% endif %}
+
+                    {% if report.is_latest %}
+                    <span class="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                      Mới nhất
+                    </span>
+                    {% endif %}
+
+                    {% if report.has_content or report.show_no_activity_message %}
+                    <button
+                      type="button"
+                      class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      title="Xem toàn bộ báo cáo"
+                      @click="openReportPreview('Báo cáo tháng {{ '%02d'|format(report.month) }}/{{ report.year }}', `{{ (report.content if report.content else 'Không có phát sinh báo cáo trong tháng.')|replace('\\', '\\\\')|replace('`', '\\`')|replace('${', '\\${') }}`)"
+                    >
+                      <span class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                        {% include 'eye.svg' %}
+                      </span>
+                    </button>
+                    {% endif %}
+
+                    {% if report.has_content or report.show_no_activity_message %}
+                    <button
+                      type="button"
+                      class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      title="Sao chép toàn bộ báo cáo"
+                      @click="copyReport(`{{ (report.content if report.content else 'Không có phát sinh báo cáo trong tháng.')|replace('\\', '\\\\')|replace('`', '\\`')|replace('${', '\\${') }}`)"
+                    >
+                      <span class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                        {% include 'copy.svg' %}
+                      </span>
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+
+                {% if report.content %}
+                <p class="text-sm leading-6 text-slate-600 whitespace-pre-line break-words">
+                  {{ report.content_preview }}
+                </p>
+                {% elif report.show_no_activity_message %}
+                <p class="text-sm leading-6 text-slate-600">
+                  Không có phát sinh báo cáo trong tháng.
+                </p>
+                {% else %}
+                <p class="text-sm leading-6 text-slate-400">
+                  Không có nội dung báo cáo.
+                </p>
+                {% endif %}
+
+                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                  {% if report.created_by %}
+                  <span>{{ report.created_by }}</span>
+                  {% endif %}
+                  {% if report.created_at_display %}
+                  <span>•</span>
+                  <span>{{ report.created_at_display }}</span>
+                  {% endif %}
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="flex min-h-[240px] flex-col items-center justify-center px-6 py-10 text-center">
+              <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <span class="inline-flex h-6 w-6 shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                  {% include 'report.svg' %}
+                </span>
+              </div>
+              <p class="text-sm font-medium text-slate-600">
+                Chưa có kết quả thực hiện
+              </p>
+              <p class="mt-1 text-xs text-slate-400">
+                Các báo cáo theo tháng sẽ hiển thị tại đây.
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- MODAL XEM FULL BÁO CÁO -->
+    <div
+      x-show="reportPreviewModalOpen"
+      x-cloak
+      class="fixed inset-0 z-[90] flex items-center justify-center p-4"
+      style="display: none"
+    >
+      <div class="absolute inset-0 bg-slate-900/50" @click="closeReportPreview()"></div>
+
+      <div class="relative z-[91] flex w-full max-w-3xl max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <div class="min-w-0">
+            <h3 class="truncate text-lg font-semibold text-slate-900" x-text="reportPreviewTitle"></h3>
+            <p class="mt-1 text-sm text-slate-500">Toàn bộ nội dung báo cáo</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              @click="copyReport(reportPreviewContent)"
+            >
+              Sao chép
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              @click="closeReportPreview()"
+            >
+              <span class="inline-flex h-5 w-5 shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                {% include 'close.svg' %}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto px-5 py-5">
+          <div class="whitespace-pre-line break-words text-sm leading-7 text-slate-700" x-text="reportPreviewContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+{% from 'templates/components/table/body.html' import table_body %}
+{{
+  table_body(
+    columns=columns,
+    rows=rows,
+    row_actions=row_actions,
+    partial_url=partial_url,
+    page_index=page_index,
+    page_size=page_size,
+    total_count=total_count,
+    sort=sort,
+    sort_direction=sort_direction,
+  )
+}}

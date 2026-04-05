@@ -1,0 +1,65 @@
+{% from 'templates/components/menu/menu.html' import menu %}
+<header
+    class="w-full bg-white bg-center bg-blend-screen sticky top-0 z-10 transition-all ease-in-out shadow-sm border-b border-gray-200 h-16 flex items-center justify-between">
+
+    {# Bố cục 3 phần: trái (trống) - giữa (logo + tên hệ thống) - phải (User Menu) #}
+    <div class="flex items-center justify-between w-full">
+        {# Trái: Breadcrumbs #}
+        <div class="w-10 lg:w-20"></div>
+
+        {# Giữa: logo + tên hệ thống (chiếm nhiều nhất) #}
+        <div class="flex-1 flex items-center justify-center pointer-events-none select-none">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8">
+                    <!-- APP LOGO-->
+                    <!-- <img src="{{ static('images/') }}" alt="Logo" class="w-full h-full"> -->
+                </div>
+                <h1 class="text-xl lg:text-xl font-bold text-red-600 tracking-wide">
+                    <!-- APP NAME-->
+                </h1>
+            </div>
+        </div>
+
+        {# Phải: User Menu #}
+        <div class="flex items-center space-x-4 px-4">
+            {% set user = request.user %}
+            {% set avatar_url = '' %}
+            {% set avatar_initial = ((user.username[0] or 'A') | trim | upper) %}
+            {% set groups = [
+                [
+                    {
+                        'label': 'Thông tin cá nhân',
+                        'href': url('profile'),
+                        'icon': 'user.svg',
+                    },
+                ],
+                [
+                    {
+                        'label': 'Đăng xuất',
+                        'href': url('logout'),
+                        'icon': 'sign-out.svg',
+                        'danger': True,
+                    }
+                ],
+            ] %}
+            {% call menu(groups=groups, position='right') %}
+            <div class="h-10 p-2 flex flex-col items-start justify-center leading-tight">
+                <span class="text-sm font-bold">
+                    {{ user.username }}
+                </span>
+                <span class="text-xs text-slate-500">
+                    {{ user.profile.department.short_name if user.profile and user.profile.department else '' }}
+                </span>
+            </div>
+            <div
+                class="ml-2 w-10 h-10 rounded-full bg-emerald-600 overflow-hidden flex items-center justify-center shrink-0">
+                {% if avatar_url %}
+                <img src="{{ avatar_url }}" alt="Avatar" class="w-full h-full object-cover" />
+                {% else %}
+                <span class="text-lg font-semibold text-white select-none">{{ avatar_initial }}</span>
+                {% endif %}
+            </div>
+            {% endcall %}
+        </div>
+    </div>
+</header>

@@ -1,0 +1,106 @@
+[
+  {
+    "model": "app.documenttype",
+    "pk": "SAMPLE-QD",
+    "fields": {
+      "code": "SAMPLE-QD",
+      "name": "Quyết định (mẫu import)",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.storage",
+    "pk": "b1e2c3d4-5e6f-7890-abcd-ef1234567890",
+    "fields": {
+      "file_name": "mau-van-ban-dinh-kem.pdf",
+      "size": 102400,
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.document",
+    "pk": "DOC-2025-001",
+    "fields": {
+      "title": "Quyết định về công tác bảo đảm an ninh trật tự dịp Tết Nguyên đán",
+      "type": "SAMPLE-QD",
+      "issued_at": "2025-11-15",
+      "issued_by": "Giám đốc Công an tỉnh",
+      "expired_at": "2026-11-15",
+      "object": "b1e2c3d4-5e6f-7890-abcd-ef1234567890",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.document",
+    "pk": "DOC-2025-002",
+    "fields": {
+      "title": "Chỉ thị tăng cường tuần tra, kiểm soát trên các tuyến giao thông trọng điểm",
+      "type": "SAMPLE-QD",
+      "issued_at": "2025-10-01",
+      "issued_by": "Phó Giám đốc Công an tỉnh",
+      "expired_at": "2026-10-01",
+      "object": "b1e2c3d4-5e6f-7890-abcd-ef1234567890",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.document",
+    "pk": "DOC-2025-003",
+    "fields": {
+      "title": "Kế hoạch phối hợp giữa các đơn vị trong đợt cao điểm tấn công tội phạm",
+      "type": "SAMPLE-QD",
+      "issued_at": "2025-09-20",
+      "issued_by": "Thủ trưởng Cơ quan Cảnh sát điều tra",
+      "expired_at": "2026-03-20",
+      "object": "b1e2c3d4-5e6f-7890-abcd-ef1234567890",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.document",
+    "pk": "DOC-2025-004",
+    "fields": {
+      "title": "Thông báo triển khai nội dung cải cách hành chính trong Công an nhân dân",
+      "type": "SAMPLE-QD",
+      "issued_at": "2025-08-05",
+      "issued_by": "Văn phòng Công an tỉnh",
+      "expired_at": "2027-08-05",
+      "object": "b1e2c3d4-5e6f-7890-abcd-ef1234567890",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  },
+  {
+    "model": "app.document",
+    "pk": "DOC-2025-005",
+    "fields": {
+      "title": "Hướng dẫn nghiệp vụ tiếp nhận, xử lý tin báo tội phạm qua kênh điện tử",
+      "type": "SAMPLE-QD",
+      "issued_at": "2025-12-01",
+      "issued_by": "Phòng Tham mưu",
+      "expired_at": "2026-12-01",
+      "object": "b1e2c3d4-5e6f-7890-abcd-ef1234567890",
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2026-01-01 07:00:00.000 +0700",
+      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    }
+  }
+]

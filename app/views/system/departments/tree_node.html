@@ -1,0 +1,22 @@
+{% macro department_tree_node(node, has_children=false, expanded=false, toggle_button_class='') %}
+<div class="grid min-w-0 grid-cols-[72px_140px_minmax(0,1fr)_140px] items-center text-sm">
+  <div class="px-4 py-4 text-center font-medium text-slate-500 group-hover:bg-gray-200">{{ node.display_index or '—' }}</div>
+  <div class="px-4 py-4 truncate text-slate-700 group-hover:bg-gray-200">{{ node.item.short_name or '—' }}</div>
+  <div class="flex min-w-0 items-center gap-2 px-4 py-4 group-hover:bg-gray-200">
+    {% if has_children %}
+    <button
+      type="button"
+      class="{{ toggle_button_class }}"
+      :class="expanded ? 'text-slate-700' : ''"
+      @click="expanded = !expanded"
+    >
+      <span class="h-4 w-4 transition-transform" :class="expanded ? 'rotate-90' : ''">{% include 'angle-right.svg' %}</span>
+    </button>
+    {% else %}
+    <span class="h-7 w-7 shrink-0"></span>
+    {% endif %}
+    <span class="min-w-0 truncate font-medium text-slate-900">{{ node.item.name }}</span>
+  </div>
+  <div class="px-4 py-4 truncate text-slate-600 group-hover:bg-gray-200">{{ node.item.get_type_display() }}</div>
+</div>
+{% endmacro %}

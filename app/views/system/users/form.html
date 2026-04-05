@@ -1,0 +1,295 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/checkbox/checkbox.html' import checkbox %}
+{% from 'templates/components/tree/tree.html' import tree %}
+{% from 'system/users/department_tree_node.html' import department_tree_node %}
+<form
+    id="user-form"
+    x-data="{
+        username: {{ jsonify(username) }},
+        full_name: {{ jsonify(full_name) }},
+        email: {{ jsonify(email) }},
+        phone: {{ jsonify(phone) }},
+        password: {{ jsonify(password) }},
+        departmentId: {{ jsonify(department_id) }},
+        departmentName: {{ jsonify(department_name) }},
+        departmentOpen: false,
+        departmentSearchQuery: {{ jsonify(department_name if department_id else '') }},
+        departmentHasMatches: true,
+        departmentPanelPlaced: false,
+        departmentPlacement: 'bottom',
+        departmentCoords: { top: 0, left: 0, width: 0, minWidth: 0 },
+        departmentMargin: 12,
+        departmentRepositionListener: null,
+        departmentOutsideClickListener: null,
+        is_admin: {{ jsonify(is_admin) }},
+        errors: {{ jsonify(errors) }},
+        get normalizedDepartmentSearchQuery() {
+            return unaccent((this.departmentSearchQuery || '').trim()).toLowerCase();
+        },
+        openDepartmentDropdown() {
+            if (this.departmentOpen) return;
+            this.departmentOpen = true;
+            this.departmentPanelPlaced = false;
+            this.departmentPlacement = 'bottom';
+            this.departmentCoords = { top: 0, left: 0, width: 0, minWidth: 0 };
+            this.departmentSearchQuery = this.departmentId ? this.departmentName : (this.departmentSearchQuery || '');
+            this.departmentHasMatches = true;
+            this.$nextTick(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        this.repositionDepartmentDropdown();
+                        this.departmentPanelPlaced = true;
+                        this.startDepartmentOutsideClickListener();
+                        this.$refs.departmentSearchInput?.focus();
+                        this.refreshDepartmentTreeState();
+                    });
+                });
+            });
+        },
+        closeDepartmentDropdown() {
+            this.departmentOpen = false;
+            this.departmentPanelPlaced = false;
+            this.departmentSearchQuery = this.departmentId ? this.departmentName : '';
+            this.departmentHasMatches = true;
+            this.stopDepartmentOutsideClickListener();
+        },
+        clearDepartmentSelection() {
+            this.departmentId = '';
+            this.departmentName = {{ jsonify(department_tree_placeholder) }};
+            this.departmentSearchQuery = '';
+        },
+        repositionDepartmentDropdown() {
+            if (!this.$refs || !this.$refs.departmentTrigger || !this.$refs.departmentPanel) return;
+
+            const triggerRect = this.$refs.departmentTrigger.getBoundingClientRect();
+            const panelEl = this.$refs.departmentPanel;
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const margin = this.departmentMargin || 12;
+            const gap = 6;
+            const panelRect = panelEl.getBoundingClientRect();
+            const naturalWidth = panelRect.width || panelEl.scrollWidth || triggerRect.width;
+            const width = Math.max(0, Math.min(naturalWidth, viewportWidth - margin * 2));
+            const minLeft = margin;
+            const maxLeft = viewportWidth - width - margin;
+            let left = triggerRect.left;
+            if (left > maxLeft) {
+                left = triggerRect.right - width;
+            }
+            if (left < minLeft) left = minLeft;
+            if (left > maxLeft) left = maxLeft;
+
+            const spaceAbove = triggerRect.top - margin;
+            const spaceBelow = viewportHeight - triggerRect.bottom - margin;
+            let placement = this.departmentPlacement;
+            if (placement === 'bottom' && spaceBelow < panelRect.height + gap && spaceAbove > spaceBelow) {
+                placement = 'top';
+            } else if (placement === 'top' && spaceAbove < panelRect.height + gap && spaceBelow > spaceAbove) {
+                placement = 'bottom';
+            }
+
+            const top = placement === 'bottom'
+                ? triggerRect.bottom + gap
+                : triggerRect.top - panelRect.height - gap;
+
+            this.departmentPlacement = placement;
+            this.departmentCoords = {
+                top: top + scrollY,
+                left: left + scrollX,
+                width,
+                minWidth: triggerRect.width,
+            };
+        },
+        refreshDepartmentTreeState() {
+            if (!this.departmentOpen) return;
+            if (!this.normalizedDepartmentSearchQuery) {
+                this.departmentHasMatches = true;
+                return;
+            }
+
+            const nodes = this.$refs.departmentPanel?.querySelectorAll('[data-tree-node]') || [];
+            this.departmentHasMatches = Array.from(nodes).some(node => node.offsetParent !== null);
+        },
+        startDepartmentOutsideClickListener() {
+            if (this.departmentOutsideClickListener) return;
+
+            this.departmentOutsideClickListener = (event) => {
+                if (!this.departmentOpen) return;
+                const trigger = this.$refs?.departmentTrigger;
+                const panel = this.$refs?.departmentPanel;
+                if (!trigger || !panel) return;
+                const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+                const isInsideTrigger = path.includes(trigger) || trigger.contains(event.target);
+                const isInsidePanel = path.includes(panel) || panel.contains(event.target);
+                if (isInsideTrigger || isInsidePanel) return;
+                this.closeDepartmentDropdown();
+            };
+
+            document.addEventListener('mousedown', this.departmentOutsideClickListener, true);
+            document.addEventListener('touchstart', this.departmentOutsideClickListener, true);
+
+            this.departmentRepositionListener = () => {
+                if (!this.departmentOpen) return;
+                this.repositionDepartmentDropdown();
+            };
+            window.addEventListener('scroll', this.departmentRepositionListener, { capture: true, passive: true });
+            window.addEventListener('resize', this.departmentRepositionListener, { passive: true });
+        },
+        stopDepartmentOutsideClickListener() {
+            if (this.departmentRepositionListener) {
+                window.removeEventListener('scroll', this.departmentRepositionListener, { capture: true, passive: true });
+                window.removeEventListener('resize', this.departmentRepositionListener, { passive: true });
+                this.departmentRepositionListener = null;
+            }
+            if (!this.departmentOutsideClickListener) return;
+            document.removeEventListener('mousedown', this.departmentOutsideClickListener, true);
+            document.removeEventListener('touchstart', this.departmentOutsideClickListener, true);
+            this.departmentOutsideClickListener = null;
+        },
+    }"
+    class="min-w-3xl grid grid-cols-2 gap-3"
+    @submit.prevent>
+    {{ csrf_input }}
+
+    <input type="hidden" name="department_id" :value="departmentId" />
+
+    {{ input(
+        name='username',
+        label='Tên đăng nhập',
+        placeholder='Nhập tên đăng nhập',
+        value=username,
+        required=true,
+        error_message=errors.get('username', ''),
+    ) }}
+    {{ input(
+        name='full_name',
+        label='Họ tên',
+        placeholder='Nhập họ tên',
+        value=full_name,
+        required=true,
+        error_message=errors.get('full_name', ''),
+    ) }}
+    {{ input(
+        name='email',
+        label='Email',
+        placeholder='Nhập email',
+        value=email,
+        required=true,
+        error_message=errors.get('email', ''),
+    ) }}
+    {{ input(
+        name='phone',
+        label='Số điện thoại',
+        type='number',
+        placeholder='Nhập số điện thoại',
+        value=phone,
+        required=true,
+        error_message=errors.get('phone', ''),
+    ) }}
+    {{ input(
+        name='password',
+        label='Mật khẩu',
+        type='password',
+        placeholder='Nhập mật khẩu',
+        value=password,
+        required=true,
+        error_message=errors.get('password', ''),
+    ) }}
+
+        <div>
+            <label class="mb-1 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                <span>Đơn vị</span>
+                <span class="text-red-600">*</span>
+            </label>
+            <div class="relative">
+                <div
+                    x-ref="departmentTrigger"
+                    role="combobox"
+                    tabindex="0"
+                    class="flex h-10 w-full items-center rounded-md border border-slate-300 bg-white px-3 pr-10 text-sm text-slate-700 transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    @click="openDepartmentDropdown()"
+                    @keydown.down.prevent="openDepartmentDropdown()"
+                >
+                    <span x-show="!departmentOpen" x-cloak class="w-full truncate text-slate-900" x-text="departmentName || {{ jsonify(department_tree_placeholder) }}"></span>
+                    <input
+                        x-ref="departmentSearchInput"
+                        x-show="departmentOpen"
+                        x-cloak
+                        x-model="departmentSearchQuery"
+                        type="text"
+                        class="w-full border-0 bg-transparent p-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                        placeholder="Chọn đơn vị"
+                        @focus="openDepartmentDropdown()"
+                        @click.stop="openDepartmentDropdown()"
+                        @input="departmentOpen || openDepartmentDropdown(); departmentHasMatches = true; $nextTick(() => { refreshDepartmentTreeState(); repositionDepartmentDropdown(); })"
+                        @keydown.escape.stop.prevent="closeDepartmentDropdown()"
+                    />
+                    <span class="ml-2 text-slate-400 transition-transform shrink-0" :class="departmentOpen ? 'rotate-180' : ''">{% include 'angle-down.svg' %}</span>
+                </div>
+
+                <button
+                    type="button"
+                    x-show="departmentId"
+                    x-cloak
+                    class="absolute right-10 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    @click.stop="clearDepartmentSelection()"
+                    aria-label="Xóa đơn vị"
+                >
+                    {% include 'close.svg' %}
+                </button>
+
+                <template x-teleport="body">
+                    <div
+                        x-show="departmentOpen"
+                        x-ref="departmentPanel"
+                        x-cloak
+                        class="fixed z-[510] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+                        :class="[
+                            departmentPlacement === 'top' ? 'origin-bottom' : 'origin-top',
+                            (departmentOpen && !departmentPanelPlaced ? 'invisible pointer-events-none ' : '') + (departmentOpen && departmentPanelPlaced ? 'opacity-100' : 'opacity-0')
+                        ]"
+                        :style="
+                            'inset:0 auto auto 0;min-width:' + departmentCoords.minWidth + 'px;'
+                            + 'transform:translate(' + departmentCoords.left + 'px,' + departmentCoords.top + 'px);'
+                            + (departmentCoords.width > 0 ? 'width:' + departmentCoords.width + 'px;' : '')
+                        "
+                        @click.stop
+                    >
+                        <div class="max-h-80 overflow-auto p-2">
+                            <div x-show="normalizedDepartmentSearchQuery && !departmentHasMatches" x-cloak class="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
+                                Không tìm thấy đơn vị phù hợp.
+                            </div>
+                            <div x-show="!normalizedDepartmentSearchQuery || departmentHasMatches">
+                                {{ tree(
+                                    department_tree_nodes,
+                                    department_tree_node,
+                                    empty_message=department_tree_empty_message,
+                                    search_active=true,
+                                    search_enabled=true,
+                                    search_query_var='departmentSearchQuery',
+                                    normalized_search_query_var='normalizedDepartmentSearchQuery',
+                                    show_leaf_placeholder=false,
+                                    children_wrapper_class='',
+                                ) }}
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            {% if errors.get('department_id') %}
+            <p class="mt-2 text-xs text-red-600">{{ errors.get('department_id') }}</p>
+            {% endif %}
+        </div>
+
+    {# <div class="col-span-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+        {{ checkbox(
+            name='is_admin',
+            label='Quản trị viên',
+            text='Tích chọn để tạo người dùng với vai trò Quản trị viên',
+            checked=is_admin,
+            value='1',
+        ) }}
+    </div> #}
+</form>

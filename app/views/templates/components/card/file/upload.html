@@ -1,0 +1,64 @@
+{% from 'templates/components/button/button.html' import button %}
+{% macro file_upload(
+  file_name='',
+  size_kb=0,
+  object_id='',
+  field_name='file',
+  status='uploaded',
+  extra_attributes={}
+) %}
+{% set main_color = 'text-red-600' %}
+<div
+  class="relative flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+  x-data="{
+    
+    remove() {
+      $el.remove();
+    }
+  }"
+  {{ extra_attributes | xmlattr }}
+>
+  <div class="absolute top-2 right-2">
+    {{ button(
+        icon='trash.svg',
+        icon_position='right',
+        variant='transparent',
+        class='h-8 w-8 text-red-600',
+        extra_attributes={
+          '@click': 'remove'
+        })}}
+  </div>
+
+  <div class="w-14 p-2 shrink-0 rounded-md bg-slate-100 {{ main_color }}">
+    {% include 'file.svg' %}
+  </div>
+
+  <div class="flex-1">
+        <div class="truncate text-sm font-medium text-red-600" title="{{ file_name }}">
+          {{ file_name }}
+        </div>
+        {% set size_kb_f = size_kb|float %}
+        <div class="mt-0.5 text-xs text-slate-500">
+          {% if size_kb_f > 1000 %}
+            {% set size_mb = size_kb_f / 1000 %}
+            {% if size_mb > 1000 %}
+              {{ ('%.1f'|format(size_mb / 1000)) }} GB
+            {% else %}
+              {{ ('%.1f'|format(size_mb)) }} MB
+            {% endif %}
+          {% else %}
+            {{ ('%.0f'|format(size_kb_f)) }} KB
+          {% endif %}
+        </div> 
+        <div class=" mt-2 flex items-center gap-2">
+          <progress id='progress' value='90' max='100' class="h-2 flex-1"></progress>
+          <span class="text-sm {{ main_color }}">
+            100%
+          </span>
+        </div>
+  </div>
+    <!-- Hidden field storing the uploaded object id -->
+    <input type="hidden" name="{{ field_name }}" value="{{ object_id }}" />
+</div>
+{% endmacro %}
+

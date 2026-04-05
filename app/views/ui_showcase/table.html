@@ -1,0 +1,16 @@
+{% from 'templates/components/table/table.html' import table %}
+{{ table(
+    header='<h1 class="text-4xl font-semibold my-4">Table showcase</h1>',
+    filters=filters,
+    columns=columns,
+    rows=rows,
+    partial_url=url('ui_showcase_table_partial'),
+    actions=actions,
+    bulk_actions=bulk_actions,
+    row_actions=row_actions,
+    page_index=0,
+    page_size=10,
+    total_count=total_count,
+    reload_event='table:reload',
+) }}
+

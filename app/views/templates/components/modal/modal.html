@@ -1,0 +1,166 @@
+{% macro modal() %}
+<div
+  id="modal-manager"
+  x-data="window.__modalManager ? window.__modalManager() : {}"
+  x-init="init && init()"
+  @modal:open.window="onOpenEvent && onOpenEvent($event)"
+  @modal:close-top.window="closeTop && closeTop()"
+  @keydown.escape.window="closeTop && closeTop()"
+  class="contents"
+>
+  <template x-for="m in modals" :key="m.id">
+    <template x-teleport="body">
+      <div
+        class="fixed inset-0 z-500"
+        x-show="m.open"
+        x-transition.opacity
+        role="presentation"
+      >
+        <div
+          class="absolute inset-0 bg-black/50"
+          aria-hidden="true"
+          x-on:click="close && close(m.id)"
+        ></div>
+        <div
+          class="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-fit h-fit max-w-9/10 rounded-xl bg-white shadow-2xl ring-1 ring-black/10"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="m.ariaLabel || 'Modal'"
+        >
+          <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3">
+            <div class="min-w-0">
+              <h2 class="truncate text-base font-semibold text-slate-900" x-text="m.title || ''"></h2>
+            </div>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+              x-on:click="close && close(m.id)"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="px-4 py-4 max-h-[calc(100vh-10rem)] overflow-auto">
+            <div
+              :id="`modal-body-${m.id}`"
+              :hx-get="m.url"
+              hx-trigger="modal:load"
+              hx-target="this"
+              class="min-h-[2rem]"
+            >
+              <div class="text-sm text-slate-600" x-show="m.loading">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </template>
+</div>
+
+<script>
+  (() => {
+    if (window.__modalManager) return;
+
+    window.__modalManager = function () {
+      return {
+        modals: [],
+
+        init() {
+          this.modals = [];
+        },
+
+        onOpenEvent(evt) {
+          const detail = evt?.detail;
+          const url = detail?.url;
+          if (!url) return;
+          const opts = typeof detail === "object" && detail ? detail : {};
+          const raw = opts.closeEvent;
+          const closeEvent =
+            typeof raw === "string" && raw.trim() ? raw.trim() : null;
+          this.open(url, {
+            title: opts.title,
+            ariaLabel: opts.ariaLabel,
+            closeEvent,
+          });
+        },
+
+        _attachCloseListeners(modal, id, closeEvent) {
+          const handler = () => {
+            this.close(id);
+          };
+          modal._closeListeners = [];
+          window.addEventListener(closeEvent, handler);
+          modal._closeListeners.push([closeEvent, handler]);
+        },
+
+        _detachCloseListeners(modal) {
+          if (!modal._closeListeners) return;
+          for (const [name, fn] of modal._closeListeners) {
+            window.removeEventListener(name, fn);
+          }
+          modal._closeListeners = null;
+        },
+
+        open(url, { title, ariaLabel, closeEvent } = {}) {
+          const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          const modal = { id, url, title, ariaLabel, open: true, loading: true };
+          this.modals.push(modal);
+          if (closeEvent) {
+            this._attachCloseListeners(modal, id, closeEvent);
+          }
+
+          this.$nextTick(() => {
+            const target = document.getElementById(`modal-body-${id}`);
+            if (!target) return;
+
+            const onDone = () => {
+              modal.loading = false;
+              target.removeEventListener("htmx:afterSwap", onDone);
+              target.removeEventListener("htmx:responseError", onDone);
+              target.removeEventListener("htmx:sendError", onDone);
+            };
+
+            target.addEventListener("htmx:afterSwap", onDone, { once: true });
+            target.addEventListener("htmx:responseError", onDone, { once: true });
+            target.addEventListener("htmx:sendError", onDone, { once: true });
+
+            const tryLoad = (triesLeft = 20) => {
+              const h = window.htmx;
+              if (!h || typeof h.process !== "function" || typeof h.trigger !== "function") {
+                if (triesLeft <= 0) return;
+                setTimeout(() => tryLoad(triesLeft - 1), 25);
+                return;
+              }
+              h.process(target);
+              h.trigger(`#${target.id}`, "modal:load");
+            };
+
+            tryLoad();
+          });
+        },
+
+        close(id) {
+          const i = this.modals.findIndex((m) => m.id === id);
+          if (i === -1) return;
+          this._detachCloseListeners(this.modals[i]);
+          this.modals[i].open = false;
+          setTimeout(() => {
+            const j = this.modals.findIndex((m) => m.id === id);
+            if (j !== -1) this.modals.splice(j, 1);
+          }, 200);
+        },
+
+        closeTop() {
+          for (let i = this.modals.length - 1; i >= 0; i--) {
+            if (this.modals[i]?.open) {
+              this.close(this.modals[i].id);
+              return;
+            }
+          }
+        },
+      };
+    };
+  })();
+</script>
+{% endmacro %}

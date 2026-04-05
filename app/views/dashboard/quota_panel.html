@@ -1,0 +1,329 @@
+<div class="space-y-6">
+  {# Summary cards #}
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    {% set card_wrapper_base_class = 'border border-slate-100 rounded-2xl border-t-4 bg-white p-5 shadow-md' %}
+    {% set card_title_base_class = 'mt-1 text-xs font-bold uppercase tracking-wide text-slate-500' %}
+    {% set card_value_base_class = 'text-4xl font-extrabold tabular-nums' %}
+    {% set prefix = 'public_' if not request.user.is_authenticated else '' %}
+    <a
+      class="{{ card_wrapper_base_class }} border-t-red-500"
+      href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': department_id}) }}"
+      target="_blank"
+    >
+      <p class="{{ card_value_base_class }}">{{ quota_stats.distinct_quota_count }}</p>
+      <p class="{{ card_title_base_class }}">Tổng số chỉ tiêu</p>
+    </a>
+    <a
+      class="{{ card_wrapper_base_class }} border-t-emerald-500"
+      href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': department_id, 'evaluation_result': 'true'}) }}"
+      target="_blank"
+    >
+      <p class="{{ card_value_base_class }}">{{ quota_stats.passed_count }}</p>
+      <p class="{{ card_title_base_class }}">Đạt chỉ tiêu</p>
+    </a>
+    <a
+      class="{{ card_wrapper_base_class }} border-t-red-500"
+      href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': department_id, 'evaluation_result': 'false'}) }}"
+      target="_blank"
+    >
+      <p class="{{ card_value_base_class }}">{{ quota_stats.failed_count }}</p>
+      <p class="{{ card_title_base_class }}">Không đạt</p>
+    </a>
+  </div>
+
+  {# Charts row #}
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <section
+      class="xl:col-span-4 rounded-xl border border-slate-100 bg-white p-5 shadow-md"
+    >
+      <h2 class="mb-4 text-center text-sm font-bold uppercase tracking-wide text-slate-700">
+        Trạng thái đánh giá chỉ tiêu
+      </h2>
+      <div
+        id="dashboard-donut"
+        class="h-72 w-full min-h-[280px]"
+        x-init="$nextTick(() => initDonut())"
+      ></div>
+    </section>
+
+    <div class="space-y-6 xl:col-span-8">
+      {% if top_head_department_stats and bot_head_department_stats %}
+      <section class="rounded-xl border border-slate-100 bg-white p-5 shadow-md">
+        <h2 class="mb-4 text-center text-sm font-bold uppercase tracking-wide text-slate-700">
+          Đánh giá kết quả (cấp phòng)
+        </h2>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <p class="mb-3 text-center text-xs font-bold uppercase text-emerald-700">Top 3 cao nhất</p>
+            <div>
+              {% for dept in top_head_department_stats %}
+              <a class="flex items-center gap-2 text-sm hover:bg-slate-100 rounded-md p-2"
+                href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': dept.id, 'evaluation_result': 'true' }) }}"
+                target="_blank"
+              >
+                <span class="min-w-0 flex-1 truncate text-slate-700" title="{{ dept.name }}">{{ dept.name }}</span>
+                <div class="h-2 w-28 shrink-0 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    class="h-full rounded-full bg-emerald-600"
+                    style="width: {{ (100*dept.performance_ratio)|round(2) }}%"
+                  ></div>
+                </div>
+                <span class="w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-emerald-700">{{ (100*dept.performance_ratio)|round(2) }}%</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          <div>
+            <p class="mb-3 text-center text-xs font-bold uppercase text-red-700">Top 3 thấp nhất</p>
+            <div>
+              {% for dept in bot_head_department_stats %}
+              <a class="flex items-center gap-2 text-sm hover:bg-slate-100 rounded-md p-2"
+                href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': dept.id, 'evaluation_result': 'true' }) }}"
+                target="_blank"
+              >
+                <span class="min-w-0 flex-1 truncate text-slate-700" title="{{ dept.name }}">{{ dept.name }}</span>
+                <div class="h-2 w-28 shrink-0 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    class="h-full rounded-full bg-red-500"
+                    style="width: {{ (100*dept.performance_ratio)|round(2) }}%"
+                  ></div>
+                </div>
+                <span class="w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-red-700">{{ (100*dept.performance_ratio)|round(2) }}%</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+      {% if top_branch_department_stats and bot_branch_department_stats %}
+
+      <section class="rounded-xl border border-slate-100 bg-white p-5 shadow-md">
+        <h2 class="mb-4 text-center text-sm font-bold uppercase tracking-wide text-slate-700">
+          Đánh giá kết quả (công an xã/đồn)
+        </h2>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <p class="mb-3 text-center text-xs font-bold uppercase text-emerald-700">Top 3 cao nhất</p>
+            <div>
+              {% for dept in top_branch_department_stats %}
+              <a class="flex items-center gap-2 text-sm hover:bg-slate-100 rounded-md p-2"
+                href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': dept.id, 'evaluation_result': 'true' }) }}"
+                target="_blank"
+              >
+                <span class="min-w-0 flex-1 truncate text-slate-700" title="{{ dept.name }}">{{ dept.name }}</span>
+                <div class="h-2 w-28 shrink-0 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    class="h-full rounded-full bg-emerald-600"
+                    style="width: {{ (100*dept.performance_ratio)|round(2) }}%"
+                  ></div>
+                </div>
+                <span class="w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-emerald-700">{{ (100*dept.performance_ratio)|round(2) }}%</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          <div>
+            <p class="mb-3 text-center text-xs font-bold uppercase text-red-700">Top 3 thấp nhất</p>
+            <div>
+              {% for dept in bot_branch_department_stats %}
+              <a class="flex items-center gap-2 text-sm hover:bg-slate-100 rounded-md p-2"
+                href="{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': dept.id, 'evaluation_result': 'true' }) }}"
+                target="_blank"
+              >
+                <span class="min-w-0 flex-1 truncate text-slate-700" title="{{ dept.name }}">{{ dept.name }}</span>
+                <div class="h-2 w-28 shrink-0 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    class="h-full rounded-full bg-red-500"
+                    style="width: {{ (dept.performance_ratio*100)|round(2) }}%"
+                  ></div>
+                </div>
+                <span class="w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-red-700">{{ (100*dept.performance_ratio)|round(2) }}%</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+
+  {#
+  <!-- <section class="rounded-xl border border-slate-100 bg-white p-5 shadow-md">
+    <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <h2 class="text-center text-sm font-bold uppercase tracking-wide text-slate-800 sm:text-left">
+        Tình hình cập nhật báo cáo chỉ tiêu
+      </h2>
+      <div class="flex items-center justify-between gap-4 sm:justify-end">
+        <span class="text-xs font-bold uppercase text-slate-500">Tổng số báo cáo</span>
+        <span class="text-lg font-bold tabular-nums" style="color: #8B0000">{{ report_stats.total_count }} / {{ report_stats.total_count }}</span>
+      </div>
+    </div>
+    <div class="mb-4 h-8 w-full overflow-hidden rounded-lg bg-slate-100">
+      <div class="flex h-full w-full">
+        {% set bar_base_class = 'flex justify-center items-center' %}
+        {% set label_base_class = 'px-1 text-[11px] font-semibold tabular-nums text-white whitespace-nowrap select-none' %}
+        {% set min_label_percent = 5 %}
+          <div class="{{ bar_base_class }} bg-emerald-500 overflow-hidden" style="width: {{ report_stats.passed_percent | round(2) }}%" title="Đạt chỉ tiêu">
+            {% if report_stats.passed_percent >= min_label_percent %}
+              <span class="{{ label_base_class }}">{{ report_stats.passed_percent | round(0) }}%</span>
+            {% endif %}
+          </div>
+          <div class="{{ bar_base_class }} bg-red-400 overflow-hidden" style="width: {{ report_stats.failed_percent | round(2) }}%" title="Không đạt">
+            {% if report_stats.failed_percent >= min_label_percent %}
+              <span class="{{ label_base_class }}">{{ report_stats.failed_percent | round(0) }}%</span>
+            {% endif %}
+          </div>
+          <div class="{{ bar_base_class }} bg-amber-400 overflow-hidden" style="width: {{ report_stats.pending_percent | round(2) }}%" title="Chờ phê duyệt">
+            {% if report_stats.pending_percent >= min_label_percent %}
+              <span class="{{ label_base_class }}">{{ report_stats.pending_percent | round(0) }}%</span>
+            {% endif %}
+          </div>
+          <div class="{{ bar_base_class }} bg-slate-400 overflow-hidden" style="width: {{ report_stats.rejected_percent | round(2) }}%" title="Từ chối">
+            {% if report_stats.rejected_percent >= min_label_percent %}
+              <span class="{{ label_base_class }}">{{ report_stats.rejected_percent | round(0) }}%</span>
+            {% endif %}
+          </div>
+          <div class="{{ bar_base_class }} bg-slate-200 overflow-hidden" style="width: {{ report_stats.not_sent_percent | round(2) }}%" title="Chưa gửi">
+            {% if report_stats.not_sent_percent >= min_label_percent %}
+              <span class="{{ label_base_class }} text-slate-700!">{{ report_stats.not_sent_percent | round(0) }}%</span>
+            {% endif %}
+          </div>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+      {% set wrapper_base_class = 'inline-flex items-center gap-2' %}
+      {% set icon_base_class = 'h-2.5 w-2.5 rounded-full' %}
+      <span class="{{ wrapper_base_class }}">
+        <span class="{{ icon_base_class }} bg-emerald-500"></span> Đạt chỉ tiêu
+      </span>
+      <span class="{{ wrapper_base_class }}">
+        <span class="{{ icon_base_class }} bg-red-400"></span> Không đạt
+      </span>
+      <span class="{{ wrapper_base_class }}">
+        <span class="{{ icon_base_class }} bg-amber-400"></span> Chờ phê duyệt
+      </span>
+      <span class="{{ wrapper_base_class }}">
+        <span class="{{ icon_base_class }} bg-slate-400"></span> Từ chối
+      </span>
+      <span class="{{ wrapper_base_class }}">
+        <span class="{{ icon_base_class }} bg-slate-200"></span> Chưa gửi
+      </span>
+    </div>
+  </section> -->
+  #}
+  {% if request.user.is_authenticated %}
+  <section class="rounded-xl border border-slate-100 bg-white p-5 shadow-md">
+    <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <h2 class="text-center text-sm font-bold uppercase tracking-wide text-slate-800 sm:text-left">
+        Tỉ lệ báo cáo chỉ tiêu của các đơn vị
+      </h2>
+    </div>
+    <div
+            hx-get="{{ url('department_performance', query={'year': year, 'department_id': department_id}) }}"
+            hx-trigger="load once"
+            hx-target="this"
+            aria-busy="true"
+            aria-live="polite"
+        >
+            <div class="flex items-center gap-2 text-sm text-slate-600 m-4">
+                <span class="inline-flex h-4 w-4 animate-spin text-slate-500">{% include 'spinner.svg' %}</span>
+                <span>Đang tải dữ liệu...</span>
+            </div>
+            <div class="m-4 space-y-2 animate-pulse">
+                <div class="h-3 w-11/12 rounded bg-slate-200"></div>
+                <div class="h-3 w-4/5 rounded bg-slate-200"></div>
+                <div class="h-3 w-2/3 rounded bg-slate-200"></div>
+            </div>
+        </div>
+  </section>
+  {% endif %}
+</div>
+<script>
+  window.initDonut = function initDonut() {
+      var el = document.getElementById('dashboard-donut');
+      if (!el || typeof echarts === 'undefined') {
+        // Retry until element is ready and echarts is loaded
+        setTimeout(initDonut, 100);
+        return;
+      }
+      if (el.getAttribute('data-echarts-init') === '1') return;
+      el.setAttribute('data-echarts-init', '1');
+      var chart = echarts.init(el);
+      chart.setOption({
+        color: ['#28A745', '#DC3545', '#FFC107'],
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} ({d}%)',
+        },
+        legend: {
+          bottom: 0,
+          left: 'center',
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: { 
+            fontSize: '0.75rem',
+            color: '#475569',
+            fontFamily: '"Nunito"',
+        },
+          data: ['Đạt chỉ tiêu', 'Không đạt'],
+        },
+        series: [
+          {
+            name: 'Chỉ tiêu',
+            type: 'pie',
+            radius: ['48%', '72%'],
+            center: ['50%', '44%'],
+            avoidLabelOverlap: true,
+            itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+            label: { show: false },
+            emphasis: {
+              label: { show: false },
+            },
+            data: [
+              { 
+                value: {{ quota_stats.passed_count }}, 
+                name: 'Đạt chỉ tiêu',
+                url: "{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': department_id, 'evaluation_result': 'true'})|safe }}"
+              },
+              { 
+                value: {{ quota_stats.failed_count }}, 
+                name: 'Không đạt',
+                url: "{{ url(prefix + 'quota_list', query={'year': year, 'assigned_department_id': department_id, 'evaluation_result': 'false'})|safe }}"
+              },
+            ],
+          },
+        ],
+        graphic: [
+          {
+            type: 'text',
+            left: 'center',
+            top: '36%',
+            style: {
+              text: '{{ quota_stats.distinct_quota_count }}',
+              fill: '#8B0000',
+              textAlign: 'center',
+              font: '700 1.5rem "Nunito"',
+            },
+          },
+          {
+            type: 'text',
+            left: 'center',
+            top: '46%',
+            style: {
+              text: 'CHỈ TIÊU',
+              fill: '#64748b',
+              font: '700 0.75rem "Nunito"',
+            },
+          },
+        ],
+      });
+      chart.on('click', function (params) {
+        window.open(params.data.url, '_blank');
+      });
+      window.addEventListener('resize', function () {
+        chart.resize();
+      });
+  };
+</script>

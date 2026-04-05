@@ -1,0 +1,152 @@
+{% macro tooltip(description=none, axis='vertical') %}
+{% if description is none or not description|trim %}
+  {{ caller() }}
+{% else %}
+<div
+  class="inline-flex"
+  x-data="{
+    open: false,
+    placement: 'top',
+    tooltipId: $id('tooltip'),
+    axis: '{{ axis }}',
+    coords: { top: 0, left: 0 },
+    margin: 12,
+    init() {
+      const handler = () => this.reposition();
+      window.addEventListener('resize', handler);
+      window.addEventListener('scroll', handler, true);
+    },
+    reposition() {
+      if (!this.$refs || !this.$refs.trigger || !this.$refs.panel) return;
+
+      const triggerRect = this.$refs.trigger.getBoundingClientRect();
+      const panelEl = this.$refs.panel;
+
+      const previousDisplay = panelEl.style.display;
+      const previousVisibility = panelEl.style.visibility;
+
+      /*
+      Measure the tooltip's natural size even while it's hidden (x-show=false).
+      We temporarily force it into the layout, but keep it invisible to avoid flicker.
+      */
+      panelEl.style.visibility = 'hidden';
+      panelEl.style.display = 'block';
+      const panelRect = panelEl.getBoundingClientRect();
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+      if (this.axis === 'horizontal') {
+        const spaceLeft = triggerRect.left;
+        const spaceRight = viewportWidth - triggerRect.right;
+        let placement = 'right';
+        let top = triggerRect.top + triggerRect.height / 2 - panelRect.height / 2;
+        let left = triggerRect.right + this.margin;
+
+        if (left + panelRect.width + this.margin > viewportWidth || spaceLeft > spaceRight) {
+          placement = 'left';
+          left = triggerRect.left - panelRect.width - this.margin;
+        }
+
+        const maxTop = viewportHeight - panelRect.height - this.margin;
+        if (top < this.margin) top = this.margin;
+        if (top > maxTop) top = maxTop;
+
+        const maxLeft = viewportWidth - panelRect.width - this.margin;
+        if (left < this.margin) left = this.margin;
+        if (left > maxLeft) left = maxLeft;
+
+        this.coords = { top, left };
+        this.placement = placement;
+      } else {
+        const spaceAbove = triggerRect.top;
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        let placement = 'top';
+        let top = triggerRect.top - panelRect.height - this.margin;
+        if (top < this.margin && spaceBelow > spaceAbove) {
+          placement = 'bottom';
+          top = triggerRect.bottom + this.margin;
+        }
+
+        /*
+        Decide horizontal alignment (left / center / right) based on trigger position
+        so the tooltip can use as much width as possible.
+        */
+        const triggerCenter = triggerRect.left + triggerRect.width / 2;
+        const leftZone = viewportWidth / 3;
+        const rightZone = (viewportWidth * 2) / 3;
+        let align = 'center';
+        if (triggerCenter <= leftZone) {
+          align = 'start';
+        } else if (triggerCenter >= rightZone) {
+          align = 'end';
+        }
+
+        let left;
+        if (align === 'start') {
+          // Prefer aligning with the left margin / trigger, then clamp
+          left = Math.max(this.margin, triggerRect.left);
+        } else if (align === 'end') {
+          // Prefer aligning the right edge to the trigger's right edge
+          left = triggerRect.right - panelRect.width;
+        } else {
+          // Center on trigger
+          left = triggerCenter - panelRect.width / 2;
+        }
+
+        const maxLeft = viewportWidth - panelRect.width - this.margin;
+        if (left < this.margin) left = this.margin;
+        if (left > maxLeft) left = maxLeft;
+
+        this.coords = { top, left };
+        this.placement = placement;
+      }
+
+      /*
+      Restore original inline styles so we don't affect normal rendering.
+      */
+      panelEl.style.display = previousDisplay;
+      panelEl.style.visibility = previousVisibility;
+    }
+  }"
+>
+  <div
+    x-ref="trigger"
+    class="inline-flex"
+    @mouseenter="open = true; $nextTick(() => reposition())"
+    @mouseleave="open = false"
+    @focus="open = true; $nextTick(() => reposition())"
+    @blur="open = false"
+    tabindex="0"
+    :aria-describedby="tooltipId"
+  >
+    {{ caller() }}
+  </div>
+
+  <!-- body: fixed + getBoundingClientRect() must share the same coordinate space (transformed modals break that). -->
+  <template x-teleport="body">
+    <div
+      x-ref="panel"
+      x-cloak
+      x-show="open"
+      x-transition
+      role="tooltip"
+      :id="tooltipId"
+      class="fixed z-[9999] rounded-xl bg-slate-900 text-slate-50 shadow-lg px-3 py-2 text-sm font-normal leading-relaxed whitespace-normal break-words"
+      :class="[
+        'inline-block max-w-xs',
+        placement === 'top'
+          ? 'origin-bottom'
+          : 'origin-top'
+      ].filter(Boolean).join(' ')"
+      :style="{ top: coords.top + 'px', left: coords.left + 'px' }"
+      @mouseenter="open = true"
+      @mouseleave="open = false"
+    >
+      <p class="text-slate-300">
+        {{ description | safe }}
+      </p>
+    </div>
+  </template>
+</div>
+{% endif %}
+{% endmacro %}

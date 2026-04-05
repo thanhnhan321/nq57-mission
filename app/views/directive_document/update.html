@@ -1,0 +1,19 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/button/button.html' import button %}
+<div>
+    {% include 'directive_document/form.html' %}
+    <div class="mt-2 text-right">
+        {{ button(
+            text='Lưu',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='directive-document',
+            extra_attributes={
+                'hx-post': url('directive_document_update'),
+                'hx-target': "#directive-document-form",
+                'hx-include': "#directive-document-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+    </div>
+</div>

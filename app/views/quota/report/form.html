@@ -1,0 +1,52 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/textarea/textarea.html' import textarea %}
+<form
+    id="quota-report-form"
+    x-data="{
+        errors: {{ jsonify(errors) }},
+    }" 
+    class="min-w-3xl grid grid-cols-2 gap-3"
+    @submit.prevent>
+    {{ csrf_input }}
+    <input type="hidden" name="id" value="{{ id }}">
+    <input type="hidden" name="version" value="{{ version }}">
+    {{ input(
+        name='expected_value',
+        type='number',
+        label='Chỉ tiêu phải thực hiện',
+        placeholder='Nhập chỉ tiêu phải thực hiện',
+        value=expected_value,
+        disabled=not can_edit,
+        tooltip_content=register_guide,
+        required=true,
+        error_message=errors.get('expected_value', ""),
+    ) }}
+    {{ input(
+        name='actual_value',
+        type='number',
+        label='Kết quả thực hiện',
+        placeholder='Nhập kết quả thực hiện',
+        value=actual_value,
+        disabled=not can_edit,
+        tooltip_content=submit_guide,
+        required=true,
+        error_message=errors.get('actual_value', ""),
+    ) }}
+    {{ textarea(
+        name='note',
+        label='Ghi chú/Giải trình',
+        placeholder='Nhập ghi chú/giải trình',
+        value=note,
+        disabled=not can_edit,
+        error_message=errors.get('note', ""),
+    ) }}
+    {{ textarea(
+        name='reason',
+        label='Lý do từ chối',
+        placeholder='Nhập lý do từ chối',
+        value=reason,
+        disabled=false if status == "pending" and (request.user.is_superuser or is_leader) else true,
+        required=true,
+        error_message=errors.get('reason', ""),
+    ) }}
+</form>

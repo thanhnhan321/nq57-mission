@@ -1,0 +1,50 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/button/button.html' import button %}
+<div>
+    {% include 'quota/report/form.html' %}
+    <div class="mt-2 text-right gap-2">
+        {% if can_edit %}
+        {{ button(
+            text='Cập nhật',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='quota-report',
+            extra_attributes={
+                'hx-post': url('quota_report_update'),
+                'hx-vals': '{"action": "submit"}',
+                'hx-target': "#quota-report-form",
+                'hx-include': "#quota-report-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+        {% endif %}
+        {% if status == "pending" and (request.user.is_superuser or is_leader) %}
+        {{ button(
+            text='Từ chối',
+            variant='outlined',
+            disabled=false,
+            htmx_event_prefix='quota-report',
+            extra_attributes={
+                'hx-post': url('quota_report_update'),
+                'hx-vals': '{"action": "reject"}',
+                'hx-target': "#quota-report-form",
+                'hx-include': "#quota-report-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+        {{ button(
+            text='Phê duyệt',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='quota-report',
+            extra_attributes={
+                'hx-post': url('quota_report_update'),
+                'hx-vals': '{"action": "approve"}',
+                'hx-target': "#quota-report-form",
+                'hx-include': "#quota-report-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+        {% endif %}
+    </div>
+</div>

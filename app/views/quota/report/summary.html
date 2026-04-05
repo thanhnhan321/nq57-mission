@@ -1,0 +1,15 @@
+{% from 'templates/components/table/table.html' import table %}
+{{
+    table(
+        filters=filters,
+        columns=columns,
+        rows=rows,
+        partial_url=partial_url,
+        actions=actions,
+        row_actions=row_actions,
+        page_index=page_index,
+        page_size=page_size,
+        total_count=total_count,
+        reload_event=reload_event,
+    )
+}}

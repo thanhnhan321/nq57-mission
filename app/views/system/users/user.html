@@ -1,0 +1,26 @@
+{% extends 'templates/layouts/index.html' %}
+{% from 'templates/components/table/table.html' import table %}
+
+{% block title %}Danh sách người dùng{% endblock %}
+
+{% block content %}
+<div class="p-4">
+  {{
+    table(
+      header='<h1 class="text-4xl font-semibold my-4">Danh sách người dùng</h1>',
+      filters=filters,
+      actions=actions,
+      row_actions=row_actions,
+      columns=columns,
+      rows=rows,
+      partial_url=partial_url,
+      page_index=page_index,
+      page_size=page_size,
+      total_count=total_count,
+      sort=sort,
+      sort_direction=sort_direction,
+      reload_event=reload_event,
+    )
+  }}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+
+{% macro checkbox(
+  name,
+  value='1',
+  label='',
+  text='',
+  hint=none,
+  required=false,
+  checked=false,
+  disabled=false,
+  is_submitted=false,
+  id=none,
+  class='',
+  input_class='',
+  error_message='Thông tin bắt buộc',
+  tooltip_text=none,
+  multiple=false,
+  kwargs={}
+) %}
+{% set checkbox_id = id or ('checkbox-' ~ name | replace(' ', '-')) %}
+
+<div
+  class="relative w-full {{ class }}"
+  x-data='{
+    checked: {{ checked|tojson }},
+    required: {{ required|tojson }},
+    submitted: {{ is_submitted|tojson }},
+    disabled: {{ disabled|tojson }},
+    focused: false,
+
+    get hasError() {
+      return !this.disabled && this.required && this.submitted && !this.checked;
+    }
+  }'
+>
+  {% if label is not none and label|trim %}
+  <label
+    for="{{ checkbox_id }}"
+    class="mb-1 flex items-center gap-1.5 text-sm font-medium transition-colors"
+    :class="disabled
+      ? 'border-2 border-slate-500 bg-slate-300 text-slate-600'
+      : (hasError
+          ? 'text-red-600'
+          : ((focused || checked)
+              ? 'text-blue-600'
+              : 'text-slate-900'))"
+  >
+    <span>{{ label }}{% if required %} <span class="text-red-600">*</span>{% endif %}</span>
+
+    {% if tooltip_text is not none and tooltip_text|trim %}
+      {% call tooltip(tooltip_text, 'vertical') %}
+        <button
+          type="button"
+          class="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
+          tabindex="-1"
+        >
+          ?
+        </button>
+      {% endcall %}
+    {% endif %}
+  </label>
+  {% endif %}
+
+  <label
+    for="{{ checkbox_id }}"
+    class="flex items-start gap-3"
+    :class="disabled ? 'cursor-not-allowed' : 'cursor-pointer'"
+  >
+    <input
+      id="{{ checkbox_id }}"
+      type="checkbox"
+      x-model="checked"
+      :disabled="disabled"
+      class="peer sr-only"
+      @focus="focused = true"
+      @blur="focused = false"
+      {{ kwargs|xmlattr }}
+    />
+
+    <span
+      class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border transition {{ input_class }}"
+      :class="disabled
+        ? 'border-slate-200 bg-slate-100'
+        : (hasError
+            ? 'border-red-600 bg-white'
+            : (checked
+                ? 'border-red-500 bg-red-500'
+                : 'border-red-500 bg-white'))"
+    >
+      <template x-if="checked">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4.5 w-4.5 text-white"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M16.704 5.29a1 1 0 0 1 .006 1.414l-8 8a1 1 0 0 1-1.415 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.296-7.296a1 1 0 0 1 1.408 0Z"
+          />
+        </svg>
+      </template>
+    </span>
+
+    <div class="min-w-0 flex-1 pt-0.5">
+      {% if text %}
+      <p class="text-sm" :class="disabled ? 'text-slate-400' : 'text-slate-700'">
+        {{ text }}
+      </p>
+      {% endif %}
+
+      {% if hint is not none and hint|trim %}
+      <p class="mt-1 text-xs" :class="disabled ? 'text-slate-400' : 'text-slate-500'">
+        {{ hint }}
+      </p>
+      {% endif %}
+
+      <p x-show="hasError" class="mt-1 text-xs text-red-600">
+        {{ error_message }}
+      </p>
+    </div>
+  </label>
+
+  {% if multiple %}
+  <template x-if="checked">
+    <input type="hidden" name="{{ name }}[]" value="{{ value }}">
+  </template>
+  {% else %}
+  <template x-if="checked">
+    <input type="hidden" name="{{ name }}" value="{{ value }}">
+  </template>
+  {% endif %}
+</div>
+{% endmacro %}

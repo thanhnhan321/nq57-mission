@@ -1,0 +1,20 @@
+{% from 'templates/components/button/button.html' import button %}
+
+<div>
+    {% include 'categories/report_type/form.html' %}
+
+    <div class="mt-4 flex items-center justify-end gap-2">
+        {{ button(
+            text='Lưu',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='report-period-month',
+            extra_attributes={
+                'hx-post': url('report_period_month_update'),
+                'hx-target': '#report-period-month-form',
+                'hx-include': '#report-period-month-form',
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+    </div>
+</div>

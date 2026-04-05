@@ -1,0 +1,19 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/button/button.html' import button %}
+<div>
+    {% include 'quota/form.html' %}
+    <div class="mt-2 text-right">
+        {{ button(
+            text='Lưu',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='quota',
+            extra_attributes={
+                'hx-post': url('quota_update'),
+                'hx-target': "#quota-form",
+                'hx-include': "#quota-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+    </div>
+</div>

@@ -1,0 +1,29 @@
+<div 
+    class="w-7xl space-y-2"
+>
+    <div 
+        class="grid grid-cols-[10rem_auto] gap-2 bg-slate-200 ring-1 ring-slate-300 rounded-md p-4" 
+    >
+    {% for field, label in fields.items() %}
+        <div class="uppercase">{{ label }}</div>
+        <div class="font-bold">{{ quota[field] }}</div>
+    {% endfor %}
+    </div>
+    <div 
+        hx-get="{{ url('public_quota_report_list', query={'quota_id': quota.id}) }}" 
+        hx-trigger="load once" 
+        hx-target="this"
+        aria-busy="true"
+        aria-live="polite"
+    >
+        <div class="flex items-center gap-2 text-sm text-slate-600 m-4">
+            <span class="inline-flex h-4 w-4 animate-spin text-slate-500">{% include 'spinner.svg' %}</span>
+            <span>Đang tải dữ liệu...</span>
+        </div>
+        <div class="m-4 space-y-2 animate-pulse">
+            <div class="h-3 w-11/12 rounded bg-slate-200"></div>
+            <div class="h-3 w-4/5 rounded bg-slate-200"></div>
+            <div class="h-3 w-2/3 rounded bg-slate-200"></div>
+        </div>
+    </div>
+</div>

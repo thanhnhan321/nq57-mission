@@ -1,0 +1,78 @@
+{% from 'templates/components/input/checkbox/checkbox.html' import checkbox %}
+
+<form
+    id="report-period-month-form"
+    class="min-w-[520px] flex flex-col gap-4"
+    x-data="{
+        selected_report_types: {{ jsonify(selected_report_types or []) }},
+        errors: {{ jsonify(errors) }},
+    }"
+    @submit.prevent
+>
+    {{ csrf_input }}
+    <input type="hidden" name="month" value="{{ month }}">
+
+    <div class="mb-1">
+        <h3 class="text-base font-semibold text-slate-900">Tháng {{ month }}</h3>
+        <p class="mt-1 text-sm text-slate-500">
+            Chọn các loại báo cáo cần nộp cho tháng này.
+        </p>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-4 space-y-4">
+        {{ checkbox(
+            id='report-type-month',
+            name='report_types',
+            value='MONTH',
+            label=none,
+            text='Báo cáo tháng',
+            checked=true,
+            disabled=true,
+            multiple=true,
+        ) }}
+
+        {{ checkbox(
+            id='report-type-quarter',
+            name='report_types',
+            value='QUARTER',
+            label=none,
+            text='Báo cáo quý',
+            checked='QUARTER' in selected_report_types,
+            multiple=true,
+        ) }}
+
+        {{ checkbox(
+            id='report-type-half-year',
+            name='report_types',
+            value='HALF_YEAR',
+            label=none,
+            text='Báo cáo 6 tháng',
+            checked='HALF_YEAR' in selected_report_types,
+            multiple=true,
+        ) }}
+
+        {{ checkbox(
+            id='report-type-nine-month',
+            name='report_types',
+            value='NINE_MONTH',
+            label=none,
+            text='Báo cáo 9 tháng',
+            checked='NINE_MONTH' in selected_report_types,
+            multiple=true,
+        ) }}
+
+        {{ checkbox(
+            id='report-type-year',
+            name='report_types',
+            value='YEAR',
+            label=none,
+            text='Báo cáo năm',
+            checked='YEAR' in selected_report_types,
+            multiple=true,
+        ) }}
+    </div>
+
+    {% if errors.get('report_types') %}
+    <p class="text-sm text-red-600">{{ errors.get('report_types') }}</p>
+    {% endif %}
+</form>

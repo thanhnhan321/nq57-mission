@@ -1,0 +1,126 @@
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+
+{% macro radio(
+  name,
+  value,
+  label='',
+  text='',
+  hint=none,
+  required=false,
+  checked=false,
+  disabled=false,
+  is_submitted=false,
+  id=none,
+  class='',
+  input_class='',
+  error_message='Thông tin bắt buộc',
+  tooltip_text=none,
+  kwargs={}
+) %}
+{% set radio_id = id or ('radio-' ~ name ~ '-' ~ value | replace(' ', '-') | replace('.', '-') | replace('[', '-') | replace(']', '-')) %}
+
+<div
+  class="relative w-full {{ class }}"
+  x-data='{
+    focused: false,
+    checked: {{ checked|tojson }},
+    required: {{ required|tojson }},
+    submitted: {{ is_submitted|tojson }},
+    disabled: {{ disabled|tojson }},
+
+    get hasError() {
+      return !this.disabled && this.required && this.submitted && !this.checked;
+    }
+  }'
+  {# Lắng nghe sự kiện thay đổi từ các radio khác cùng name #}
+  @radio-group-changed.window="if ($event.detail.name === '{{ name }}') { checked = ($event.detail.value === '{{ value }}') }"
+>
+  {% if label is not none and label|trim %}
+  <label
+    for="{{ radio_id }}"
+    class="mb-1 flex items-center gap-1.5 text-sm font-medium transition-colors"
+    :class="disabled
+      ? 'text-slate-400'
+      : (hasError
+          ? 'text-red-600'
+          : (focused
+              ? 'text-blue-600'
+              : 'text-slate-900'))"
+  >
+    <span>{{ label }}{% if required %} <span class="text-red-600">*</span>{% endif %}</span>
+
+    {% if tooltip_text is not none and tooltip_text|trim %}
+      {% call tooltip(tooltip_text, 'vertical') %}
+        <button
+          type="button"
+          class="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
+          tabindex="-1"
+        >
+          ?
+        </button>
+      {% endcall %}
+    {% endif %}
+  </label>
+  {% endif %}
+
+  <label
+    for="{{ radio_id }}"
+    class="flex items-start gap-3"
+    :class="disabled ? 'cursor-not-allowed' : 'cursor-pointer'"
+  >
+    <input
+      id="{{ radio_id }}"
+      type="radio"
+      name="{{ name }}"
+      value="{{ value }}"
+      {% if checked %}checked{% endif %}
+      {% if disabled %}disabled{% endif %}
+      class="peer sr-only"
+      @focus="focused = true"
+      @blur="focused = false"
+      {# Khi thay đổi, thông báo cho cả "làng" biết để các radio cùng name cập nhật lại UI #}
+      @change="
+        checked = $el.checked;
+        if (checked) {
+          $dispatch('radio-group-changed', { name: '{{ name }}', value: '{{ value }}' });
+        }
+      "
+      {{ kwargs|xmlattr }}
+    />
+
+    <span
+      class="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition {{ input_class }}"
+      :class="disabled
+        ? 'border-slate-300 bg-transparent' 
+        : (checked
+            ? 'border-red-500 bg-red-500'
+            : 'border-red-700 bg-white')"
+    >
+      <span
+        class="h-2.5 w-2.5 rounded-full transition-colors"
+        :class="disabled
+          ? (checked ? 'bg-slate-300' : 'bg-transparent')
+          : (checked ? 'bg-white' : 'bg-transparent')"
+      ></span>
+    </span>
+
+    <div class="min-w-0 flex-1 pt-0.5">
+      {% if text %}
+      <p class="text-sm" :class="disabled ? 'text-slate-400' : 'text-slate-700'">
+        {{ text }}
+      </p>
+      {% endif %}
+
+      {% if hint is not none and hint|trim %}
+      <p class="mt-1 text-xs" :class="disabled ? 'text-slate-400' : 'text-slate-500'">
+        {{ hint }}
+      </p>
+      {% endif %}
+
+      <p x-show="hasError" class="mt-1 text-xs text-red-600" x-cloak>
+        {{ error_message }}
+      </p>
+    </div>
+  </label>
+</div>
+{% endmacro %}

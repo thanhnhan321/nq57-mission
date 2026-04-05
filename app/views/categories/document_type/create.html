@@ -1,0 +1,19 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/button/button.html' import button %}
+<div>
+    {% include 'categories/document_type/form.html' %}
+    <div class="mt-2 text-right">
+        {{ button(
+            text='Lưu',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='document-type',
+            extra_attributes={
+                'hx-post': url('document_type_create'),
+                'hx-target': "#document-type-form",
+                'hx-include': "#document-type-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+    </div>
+</div>

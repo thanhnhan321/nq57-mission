@@ -1,0 +1,10 @@
+{% macro department_tree_node(node) %}
+<button
+  type="button"
+  class="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50"
+  :class="departmentId == {{ jsonify(node.item.id) }} ? 'bg-slate-100 text-slate-900' : ''"
+  @click="departmentId = {{ jsonify(node.item.id) }}; departmentName = {{ jsonify(node.item.name) }}; closeDepartmentDropdown();"
+>
+  <span class="min-w-0 truncate">{{ node.item.name }}</span>
+</button>
+{% endmacro %}

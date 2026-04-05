@@ -1,0 +1,65 @@
+{% macro tree(
+  nodes,
+  render_node,
+  empty_message='Không có dữ liệu',
+  search_active=False,
+  initially_open_node_ids=[],
+  search_enabled=False,
+  search_query_var='parentSearchQuery',
+  normalized_search_query_var='normalizedParentSearchQuery',
+  show_leaf_placeholder=False,
+  wrapper_class='space-y-0',
+  card_class='border-b border-slate-200 bg-white last:border-b-0',
+  row_class='flex items-start gap-2 px-3 py-2',
+  toggle_button_class='mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-700 disabled:cursor-default disabled:opacity-40',
+  children_wrapper_class='border-l border-slate-200',
+  children_inner_class='space-y-0 pl-4',
+  empty_class='rounded-lg border border-dashed border-slate-200 bg-white px-4 py-5 text-sm text-slate-500'
+) %}
+{% if nodes %}
+<div class="{{ wrapper_class }}">
+  {% for node in nodes %}
+  {% set has_children = node.children|length > 0 %}
+  <div
+    {% if search_enabled %}
+    data-tree-node
+    x-show="!{{ normalized_search_query_var }} || {{ jsonify(node.search_text or '') }}.includes({{ normalized_search_query_var }})"
+    {% endif %}
+    x-data="{ expanded: {{ 'true' if search_active or node.item.id in initially_open_node_ids else 'false' }} }"
+    class="{{ card_class }}"
+  >
+    <div class="{{ row_class }}">
+      {% if has_children %}
+      <button
+        type="button"
+        class="{{ toggle_button_class }}"
+        :class="expanded ? 'text-slate-700' : ''"
+        @click="expanded = !expanded"
+      >
+        <span class="h-4 w-4 transition-transform" :class="expanded ? 'rotate-90' : ''">{% include 'angle-right.svg' %}</span>
+      </button>
+      {% else %}
+      <span class="h-7 w-7 shrink-0"></span>
+      {% endif %}
+
+      <div class="min-w-0 flex-1">
+        {{ render_node(node)|safe }}
+      </div>
+    </div>
+
+    {% if has_children %}
+    <div x-show="expanded" x-cloak class="{{ children_wrapper_class }}">
+      <div class="{{ children_inner_class }}">
+        {{ tree(node.children, render_node, empty_message, search_active, initially_open_node_ids, search_enabled, search_query_var, normalized_search_query_var, show_leaf_placeholder, wrapper_class, card_class, row_class, toggle_button_class, children_wrapper_class, children_inner_class, empty_class) }}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="{{ empty_class }}">
+  {{ empty_message }}
+</div>
+{% endif %}
+{% endmacro %}

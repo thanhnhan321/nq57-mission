@@ -1,0 +1,44 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/select/select.html' import select %}
+<form
+    id="user-update-form"
+    class="min-w-3xl grid grid-cols-2 gap-3"
+    @submit.prevent>
+    {{ csrf_input }}
+
+    <input type="hidden" name="user_id" value="{{ user_id }}" />
+
+    {{ input(
+        name='username',
+        label='Tên đăng nhập',
+        value=username,
+        disabled=true,
+        placeholder='Tên đăng nhập',
+    ) }}
+
+    {{ input(
+        name='full_name',
+        label='Họ tên',
+        value=full_name,
+        disabled=true,
+        placeholder='Họ tên',
+    ) }}
+
+    {{ input(
+        name='password',
+        label='Mật khẩu mới',
+        type='password',
+        placeholder='Nhập mật khẩu mới',
+        value=password,
+        error_message=errors.get('password', ''),
+    ) }}
+
+    {{ select(
+        name='is_active',
+        label='Trạng thái',
+        placeholder='Chọn trạng thái',
+        options_url=url('user_active_status_options'),
+        value=is_active,
+        error_message=errors.get('is_active', ''),
+    ) }}
+</form>

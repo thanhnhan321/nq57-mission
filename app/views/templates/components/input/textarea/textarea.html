@@ -1,0 +1,77 @@
+{% from 'templates/components/input/wrapper.html' import wrapper %}
+
+{% macro textarea(
+    name,
+    label='',
+    placeholder='',
+    hint='',
+    required=false,
+    disabled=false,
+    error_message='',
+    class='',
+    value='',
+    tooltip_content=none,
+    tooltip_axis='vertical',
+    validate=none,
+    extra_attributes={}
+) %}
+  {% set placeholder = (placeholder or '') | trim %}
+  {% set rows = get_attribute(extra_attributes, 'rows', 3) %}
+
+  {% call wrapper(
+    label=label,
+    hint=hint,
+    required=required,
+    disabled=disabled,
+    error_message=error_message,
+    tooltip_content=tooltip_content,
+    tooltip_axis=tooltip_axis,
+  ) %}
+    <div
+      class="h-full"
+      x-data="{
+        value: {{ jsonify(value) }} || '',
+        displayValue: {{ jsonify(value) }} || '',
+        timeout: null,
+        input: null,
+        parseInput(val, oldVal) {
+          let cleanVal = val
+          {% if validate %}
+          this.errorMessage = {{ validate }}(cleanVal)
+          if (this.errorMessage) {
+            this.displayValue = null
+            this.value = null
+            return
+          }
+          {% endif %}
+          this.value = cleanVal
+          this.errorMessage = null
+        },
+      }"
+      x-init="$watch('displayValue', (val, oldVal) => parseInput(val, oldVal))"
+    >
+      <input
+        type="hidden"
+        name="{{ name }}"
+        :value="value"
+        x-ref="input"
+        {{ extra_attributes | xmlattr }}
+      />
+
+      <textarea
+        :id="$id('input')"
+        x-model="displayValue"
+        placeholder="{{ placeholder }}"
+        @focus="if (!disabled) focused = true"
+        @blur="focused = false"
+        rows="{{ rows }}"
+        @change.stop
+        :disabled="disabled"
+        class="resize-y min-h-full w-full p-2 text-slate-900 outline-none {{ class }}"
+        :class="disabled ? 'cursor-not-allowed opacity-70' : ''"
+        style="scrollbar-width: thin;"
+      ></textarea>
+    </div>
+  {% endcall %}
+{% endmacro %}
+

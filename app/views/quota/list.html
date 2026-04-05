@@ -1,0 +1,79 @@
+{% extends 'templates/layouts/index.html' %}
+{% from 'templates/components/table/table.html' import table %}
+{% block title %}Danh sách chỉ tiêu{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="space-y-4">
+        {% if deadline_alert %}
+        <div
+            class="rounded-lg border border-amber-300 bg-amber-100 px-4 py-3"
+            x-cloak
+            x-data='{
+                deadlineIso: {{ jsonify(deadline_alert) }},
+                deadlineText: "",
+                remainingParts: "",
+                isOverdue: false,
+                init() {
+                    const d = new Date(this.deadlineIso);
+                    const pad = (n) => String(n).padStart(2, "0");
+                    const w = ["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","Chủ nhật"];
+                    const wd = (d.getDay() + 6) % 7;
+                    this.deadlineText = `${pad(d.getHours())}:${pad(d.getMinutes())} ${w[wd]} ngày ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+                    this.tick();
+                    // Update every minute
+                    setInterval(() => this.tick(), 60000);
+                },
+                tick() {
+                    const end = new Date(this.deadlineIso).getTime();
+                    const diff = end - Date.now();
+                    if (diff <= 0) {
+                        this.isOverdue = true;
+                        this.remainingParts = "";
+                        return;
+                    }
+                    this.isOverdue = false;
+                    const days = Math.floor(diff / 86400000);
+                    let r = diff % 86400000;
+                    const hours = Math.floor(r / 3600000);
+                    r %= 3600000;
+                    const minutes = Math.floor(r / 60000);
+                    const parts = [];
+                    if (days > 0) parts.push(`${days} ngày`);
+                    if (hours > 0) parts.push(`${hours} giờ`);
+                    if (minutes > 0) parts.push(`${minutes} phút`);
+                    this.remainingParts = parts.length ? parts.join(" ") : "0 phút";
+                }
+            }'
+        >
+            <div class="flex items-center gap-2 text-sm text-amber-600">
+                <span class="text-lg" aria-hidden="true">⏰</span>
+                <div>
+                    Hạn cập nhật báo cáo là
+                    <span class="font-bold" x-text="deadlineText"></span>
+                    <span x-show="!isOverdue">(còn lại <span x-text="remainingParts"></span>)</span>
+                    <span x-show="isOverdue">(đã quá hạn)</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {{
+        table(
+            header='<h1 class="text-4xl font-semibold my-4">Danh sách chỉ tiêu</h1>',
+            filters=filters,
+            columns=columns,
+            rows=rows,
+            partial_url=partial_url,
+            actions=actions,
+            row_actions=row_actions,
+            page_index=page_index,
+            page_size=page_size,
+            total_count=total_count,
+            reload_event=reload_event,
+            sort=sort,
+            sort_direction=sort_direction,
+        )
+    }}
+    </div>
+</div>
+{% endblock %}

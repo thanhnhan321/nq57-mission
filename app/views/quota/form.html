@@ -1,0 +1,137 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/textarea/textarea.html' import textarea %}
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/input/datetimepicker/datetimepicker.html' import datetimepicker %}
+<form
+    id="quota-form"
+    x-data="{
+        name: {{ jsonify(name) }},
+        type: {{ jsonify(type) }},
+        register_guide: {{ jsonify(register_guide) }},
+        submit_guide: {{ jsonify(submit_guide) }},
+        target_percent: {{ jsonify(target_percent) }},
+        issued_at: {{ jsonify(issued_at) }},
+        expired_at: {{ jsonify(expired_at) }},
+        lead_department_id: {{ jsonify(lead_department_id) }},
+        assigned_department_ids: {{ jsonify(assigned_department_ids) }},
+        errors: {{ jsonify(errors) }},
+        validateTargetPercent(value) {
+            if (value < 1) {
+                return 'Tỉ lệ được giao không được nhỏ hơn 1%';
+            }
+            if (value > 100) {
+                return 'Tỉ lệ được giao không được lớn hơn 100%';
+            }
+            return null;
+        },
+    }"
+    @change="
+        const t = $event.target;
+        if (!t || !t.name) return;
+        if (t.name === 'issued_at') issued_at = t.value;
+        if (t.name === 'expired_at') expired_at = t.value;
+    "
+    class="min-w-3xl grid grid-cols-2 gap-3"
+    @submit.prevent>
+    {{ csrf_input }}
+    {% if id %}
+    <input type="hidden" name="id" value="{{ id }}">
+    {% endif %}
+    {{ input(
+        name='name',
+        label='Tên chỉ tiêu',
+        placeholder='Nhập tên chỉ tiêu',
+        value=name,
+        required=true,
+        error_message=errors.get('name', ""),
+    ) }}
+    {{ select(
+        name='type',
+        label='Cách tính',
+        placeholder='Chọn cách tính',
+        disabled=has_submitted_reports,
+        options_url=url('quota_type_options'),
+        value=type,
+        required=true,
+        error_message=errors.get('type', ""),
+    ) }}
+    {{ textarea(
+        name='register_guide',
+        label='Nội dung chỉ tiêu phải thực hiện',
+        placeholder='Nhập nội dung chỉ tiêu phải thực hiện',
+        value=register_guide,
+        required=true,
+        error_message=errors.get('register_guide', ""),
+    ) }}
+    {{ textarea(
+        name='submit_guide',
+        label='Nội dung kết quả thực hiện',
+        placeholder='Nhập nội dung kết quả thực hiện',
+        value=submit_guide,
+        required=true,
+        error_message=errors.get('submit_guide', ""),
+    ) }}
+    
+    {{ datetimepicker(
+        name='issued_at',
+        label='Hiệu lực từ',
+        variant='date',
+        placeholder='Chọn ngày bắt đầu hiệu lực',
+        value=issued_at,
+        min=issued_at,
+        required=true,
+        disabled=has_submitted_reports,
+        error_message=errors.get('issued_at', ""),
+        extra_attributes={
+            'format': 'Tháng MM/YYYY',
+            'day': 1,
+            'max': 'expired_at',
+        }
+    ) }}
+    {{ datetimepicker(
+        name='expired_at',
+        label='Hiệu lực đến',
+        variant='date',
+        placeholder='Chọn ngày kết thúc hiệu lực',
+        value=expired_at,
+        required=true,
+        error_message=errors.get('expired_at', ""),
+        extra_attributes={
+            'format': 'Tháng MM/YYYY',
+            'day': 31,
+            'min': 'issued_at',
+        }
+    ) }}
+    {{ input(
+        name='target_percent',
+        type='number',
+        label='Tỉ lệ được giao',
+        placeholder='Nhập tỉ lệ được giao',
+        value=target_percent,
+        required=true,
+        disabled=has_submitted_reports,
+        error_message=errors.get('target_percent', ""),
+        validate='validateTargetPercent',
+    ) }}
+    {{ select(
+        name='lead_department_id',
+        label='Đơn vị chủ trì',
+        placeholder='Chọn đơn vị chủ trì',
+        options_url=url('department_options', query={'scope': 'lead'}),
+        value=lead_department_id,
+        required=true,
+        error_message=errors.get('lead_department_id', ""),
+    ) }}
+    <div class="col-span-2">
+        {{ select(
+            name='assigned_department_ids',
+            multiple=true,
+            label='Đơn vị thực hiện',
+            placeholder='Chọn đơn vị thực hiện',
+            options_url=url('department_options'),
+            value=assigned_department_ids,
+            required=true,
+            error_message=errors.get('assigned_department_ids', ""),
+        ) }}
+    </div>
+</form>

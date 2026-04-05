@@ -1,0 +1,82 @@
+<div id="quota-import-panel" class="space-y-4" x-data="{ file: null, errors: {{ jsonify(errors) }} }">
+    <form id="quota-import-form" class="space-y-4" @submit.prevent>
+        {{ csrf_input }}
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-6">
+                <a href="{{ static('templates/bulk_quota.xlsx') }}" download="mau_nhap_chi_tieu.xlsx"
+                    class="inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800">
+                    <span class="h-4 w-4 shrink-0">{% include 'download.svg' %}</span>
+                    <span>Tải mẫu</span>
+                </a>
+
+                <label
+                    class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700 hover:text-slate-900">
+                    <span class="h-4 w-4 shrink-0 text-slate-500">{% include 'paperclip.svg' %}</span>
+                    <span class="max-w-[min(100%,14rem)] truncate" x-text="file ? file.name : 'Chọn file'"></span>
+                    <span class="text-red-600">{{ errors.get('file', '')}}</span>
+                    <input type="file" name="file" accept=".xlsx,.xls" class="hidden"
+                        @change="file = $event.target.files?.[0] || null;">
+                </label>
+            </div>
+        </div>
+    </form>
+    {% if errors.get('rows') %}
+    {% set rows_errors = errors.get('rows') %}
+    <div class="space-y-3">
+        <div class="flex items-center gap-2">
+            <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-red-700"
+                aria-hidden="true">
+                <span class="h-4 w-4">{% include 'error.svg' %}</span>
+            </span>
+            <h3 class="text-base font-semibold text-slate-900">Dữ liệu lỗi</h3>
+        </div>
+
+        <div class="max-h-130 overflow-auto rounded-lg">
+            <table class="w-full text-sm text-center">
+                <thead>
+                    <tr class="sticky top-0 z-5 tracking-wider bg-slate-100 font-medium text-slate-700">
+                        <th class="px-3 py-2">Dòng</th>
+                        <th class="px-3 py-2">Cột</th>
+                        <th class="px-3 py-2">Dữ liệu nhập vào</th>
+                        <th class="px-3 py-2">Dữ liệu mẫu</th>
+                        <th class="px-3 py-2">Lỗi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 bg-white">
+                    {% for err in rows_errors %}
+                    <tr>
+                        <td class="px-3 py-2 text-slate-800 whitespace-nowrap">{{ err.row_number }}</td>
+                        <td class="px-3 py-2 text-slate-800 whitespace-nowrap">{{ err.column_label }}</td>
+                        <td class="px-3 py-2">
+                            <div class="px-3 py-2 text-red-600 max-w-50 truncate">
+                                {{ err.input_value }}
+                            </div>
+                        </td>
+                        <td class="px-3 py-2 text-slate-800 whitespace-nowrap">{{ err.sample_value }}</td>
+                        <td class="px-3 py-2 min-w-60">
+                            <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+                                {{ err.message }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="flex items-center gap-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm"
+        role="status">
+        <span class="mt-0.5 h-8 w-8 shrink-0 text-amber-600" aria-hidden="true">
+            {% include 'warning.svg' %}
+        </span>
+        <div class="min-w-0 space-y-1">
+            <p class="font-semibold text-red-700">
+                Phát hiện {{ rows_errors|length }} lỗi trong dữ liệu
+            </p>
+            <p class="text-amber-800">
+                Vui lòng kiểm tra và sửa lỗi trước khi xác nhận nhập để đảm bảo dữ liệu chính xác.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,365 @@
+{% from 'templates/components/button/button.html' import button %}
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/input/datetimepicker/datetimepicker.html' import datetimepicker %}
+{% from 'templates/components/menu/menu.html' import menu %}
+{% from 'templates/components/tooltip/tooltip.html' import tooltip %}
+
+{% macro department_table(
+header='',
+filters=[],
+columns=[],
+rows=[],
+sort='',
+sort_direction='',
+partial_url='',
+actions=[],
+page_index=0,
+page_size=10,
+total_count=0,
+reload_event='department:reload',
+statistics_block='',
+tree_expanded_ids=[],
+table_class='w-full table-fixed'
+) %}
+<div
+    class="bg-white shadow-sm rounded-lg border border-gray-200"
+    x-id="['table', 'filter']"
+    x-data="{
+      // x-data at same/parent scope is required for x-id
+    }"
+    :hx-include="'#' + $id('filter')"
+>
+    <div class="px-6">
+        {{ header|safe }}
+        <form
+            :id="$id('filter')"
+            class="flex flex-wrap gap-x-3 gap-y-2 {% if filters %}my-2{% endif %}"
+            hx-get="{{ partial_url }}"
+            :hx-target="'#' + $id('table')"
+            hx-include="[name='page_size'], [name='sort'], [name='sort_direction']"
+            hx-push-url="false"
+            hx-trigger="{% if reload_event %}{{ reload_event }} from:body, {% endif %}change, keyup changed delay:600ms"
+            hx-swap="outerHTML"
+            @submit.prevent
+        >
+            {% for filter in filters|default([]) %}
+            <div class="flex-1">
+                {% if filter.type == 'select' or filter.type == 'multiselect' %}
+                    {{ select(
+                        name=filter.name,
+                        label=filter.label,
+                        multiple=filter.type == 'multiselect',
+                        options_url=filter.extra_attributes.get('options_url'),
+                        value=filter.value,
+                        disabled=filter.disabled,
+                        hint=filter.hint,
+                        placeholder=filter.placeholder,
+                        required=filter.required,
+                        class=filter.klass,
+                        tooltip_content=filter.tooltip_content,
+                        tooltip_axis=filter.tooltip_axis,
+                        reload_events=filter.extra_attributes.get('reload_events'),
+                        extra_attributes=filter.extra_attributes
+                    ) }}
+                {% elif filter.type == 'datetime' or filter.type == 'date' %}
+                    {{ datetimepicker(
+                        name=filter.name,
+                        label=filter.label,
+                        variant=filter.type,
+                        value=filter.value,
+                        disabled=filter.disabled,
+                        hint=filter.hint,
+                        placeholder=filter.placeholder,
+                        required=filter.required,
+                        class=filter.klass,
+                        tooltip_content=filter.tooltip_content,
+                        tooltip_axis=filter.tooltip_axis,
+                        extra_attributes=filter.extra_attributes
+                    ) }}
+                {% else %}
+                    {{ input(
+                        name=filter.name,
+                        label=filter.label,
+                        type=filter.type,
+                        value=filter.value,
+                        disabled=filter.disabled,
+                        hint=filter.hint,
+                        placeholder=filter.placeholder,
+                        required=filter.required,
+                        class=filter.klass,
+                        tooltip_content=filter.tooltip_content,
+                        tooltip_axis=filter.tooltip_axis,
+                        validate=filter.client_validate,
+                        extra_attributes=filter.extra_attributes
+                    ) }}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </form>
+        {% if actions %}
+        <div class="mb-2 flex flex-wrap gap-2 justify-end">
+            {% for action in actions %}
+            {% set ctx_menu = get_attribute(action.extra_attributes, 'menu', {}) %}
+            {% call menu(groups=ctx_menu.groups, position=ctx_menu.position) %}
+            {{
+                button(
+                    text=action.label,
+                    icon=action.icon,
+                    icon_position=action.icon_position,
+                    variant=action.variant,
+                    disabled=action.disabled,
+                    loading_text=action.loading_text,
+                    href=action.href,
+                    htmx_event_prefix=action.htmx_event_prefix,
+                    class=action.klass,
+                    extra_attributes=action.extra_attributes,
+                )
+            }}
+            {% endcall %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {{ department_table_body(
+        columns=columns,
+        rows=rows,
+        sort=sort,
+        sort_direction=sort_direction,
+        partial_url=partial_url,
+        page_index=page_index,
+        page_size=page_size,
+        total_count=total_count,
+        statistics_block=statistics_block,
+        tree_expanded_ids=tree_expanded_ids,
+        table_class=table_class,
+    ) }}
+</div>
+{% endmacro %}
+
+{% macro department_table_body(
+columns=[],
+rows=[],
+sort='',
+sort_direction='',
+partial_url='',
+page_index=0,
+page_size=10,
+total_count=0,
+statistics_block='',
+tree_expanded_ids=[],
+table_class='w-full table-fixed'
+) %}
+<div
+    :id="$id('table')"
+    x-data="{
+      expandedNodes: {{ jsonify(tree_expanded_ids|default([])) }},
+    }"
+>
+  <div class="overflow-auto max-h-130">
+    {% if statistics_block %}
+    {{ statistics_block | safe}}
+    {% endif %}
+    <table class="{{ table_class }}">
+      <thead
+        class="sticky top-0 z-5 h-12 text-sm tracking-wider cursor-pointer break-words"
+        style="background-color: #F1F3F9; color: #1F2937;"
+      >
+        <tr>
+          {% for column in columns %}
+          <th scope="col" class="h-1 py-3 px-3 max-w-fit whitespace-nowrap" {% if get_attribute(column, 'width') %}style="width: {{ get_attribute(column, 'width') }};"{% endif %}>
+            {% if column.sortable %}
+            {% set sort_direction_icon = 'arrow-up-down.svg' if sort != column.name else 'arrow-up.svg' if sort_direction == 'asc' else 'arrow-down.svg' %}
+            {{ button(
+              text=column.label or column.name,
+              icon=sort_direction_icon,
+              icon_position='right',
+              variant='transparent',
+              class='font-bold! text-sm',
+              extra_attributes={
+                'hx-get': partial_url,
+                'hx-include': 'inherit, [name="page_size"]',
+                ':hx-target': "'#' + $id('table')",
+                'hx-push-url': 'false',
+                'hx-vals': jsonify(
+                  {
+                    'page_index':  page_index,
+                    'sort':  column.name,
+                    'sort_direction': "desc" if sort == column.name and sort_direction == "asc" else "asc"
+                  }
+                ),
+              }
+            ) }}
+            {% if sort == column.name %}
+            <input type="hidden" name="sort" value="{{ column.name }}" :form="$id('filter')">
+            <input type="hidden" name="sort_direction" :form="$id('filter')" value='{{ sort_direction }}'>
+            {% endif %}
+            {% else %}
+            <span>{{ column.label or column.name }}</span>
+            {% endif %}
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% if rows %}
+        {% for row in rows %}
+        {% set row_bg_color = 'bg-white' if loop.index0 % 2 == 0 else 'bg-gray-100' %}
+        {% set row_depth = get_attribute(row, 'depth') or 0 %}
+        {% set row_id = get_attribute(row, 'id') %}
+        {% set has_children = get_attribute(row, 'has_children') %}
+        <tr
+          class="transition-colors duration-150 group divide-x divide-gray-200 {{ row_bg_color }}"
+          x-show="{{ jsonify(get_attribute(row, 'ancestor_ids') or []) }}.every(id => expandedNodes.includes(id))"
+        >
+          {% for column in columns %}
+          {% set need_tooltip = get_attribute(column, 'need_tooltip') %}
+          {% set wrap_class = 'whitespace-nowrap' if need_tooltip is sameas False else 'break-words min-w-80 max-w-120' %}
+          <td class="px-4 py-4 {{ wrap_class }} text-sm text-gray-900 text-{{ column.align or 'center' }} group-has-hover:bg-gray-200" {% if get_attribute(column, 'width') %}style="width: {{ get_attribute(column, 'width') }};"{% endif %}>
+            {% set value = get_attribute(row, column.name) %}
+            {% set formatter = get_attribute(column, 'format') %}
+            {% if column.is_hypertext %}
+            {% set formatted_value = formatter(row) %}
+            {% else %}
+            {% set formatted_value = formatter(value) %}
+            {% endif %}
+            {% if column.name == 'name' %}
+            <div class="flex min-w-0 items-center gap-2" style="padding-left: {{ row_depth * 18 }}px;">
+              {% if has_children %}
+              <button
+                type="button"
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
+                @click.stop="expandedNodes.includes({{ row_id }}) ? expandedNodes = expandedNodes.filter((id) => id !== {{ row_id }}) : expandedNodes = [...expandedNodes, {{ row_id }}]"
+              >
+                <span class="h-4 w-4 transition-transform" :class="expandedNodes.includes({{ row_id }}) ? 'rotate-90' : ''">{% include 'angle-right.svg' %}</span>
+              </button>
+              {% else %}
+              <span class="h-7 w-7 shrink-0"></span>
+              {% endif %}
+              {% if need_tooltip %}
+              {% call tooltip(value) %}
+              <span class="min-w-0 truncate">{{ formatted_value|safe }}</span>
+              {% endcall %}
+              {% else %}
+              <span class="min-w-0 truncate">{{ formatted_value|safe }}</span>
+              {% endif %}
+            </div>
+            {% else %}
+              {% if need_tooltip %}
+              {% call tooltip(value) %}
+              {{ formatted_value|safe }}
+              {% endcall %}
+              {% else %}
+              {{ formatted_value|safe }}
+              {% endif %}
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="{{ columns|length }}" class="px-6 py-12 text-center text-gray-500">Không có dữ liệu</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+    <div class="flex items-center space-x-2">
+      <p class="text-sm text-red-700">
+        Hiển thị
+        <span class="font-medium">{{ (page_index * page_size + 1) if rows else 0 }}</span> -
+        <span class="font-medium">{{ page_index * page_size + [page_size, rows|length]|min }}</span> trong tổng số
+        <span class="font-medium">{{ total_count }}</span> kết quả
+      </p>
+      <div>
+        <select
+          name="page_size"
+          :form="$id('filter')"
+          hx-get="{{ partial_url }}"
+          hx-include="inherit"
+          :hx-target="'#' + $id('table')"
+          hx-push-url="false"
+          class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+        >
+          <option value="10" {% if page_size|int==10 %}selected{% endif %}>10 dòng/trang</option>
+          <option value="25" {% if page_size|int==25 %}selected{% endif %}>25 dòng/trang</option>
+          <option value="50" {% if page_size|int==50 %}selected{% endif %}>50 dòng/trang</option>
+        </select>
+      </div>
+    </div>
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-end">
+      <div>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          {{ button(
+            text='',
+            icon='angle-left.svg',
+            icon_position='left',
+            variant='outlined',
+            class='rounded-none rounded-l-md',
+            disabled=page_index <= 0,
+            extra_attributes={
+              'hx-get': partial_url,
+              'hx-include': 'inherit, [name="page_size"]',
+              ':hx-target': "'#' + $id('table')",
+              'hx-push-url': 'false',
+              'hx-vals': jsonify(
+                {
+                  'page_index': page_index - 1,
+                  'sort': sort,
+                  'sort_direction': sort_direction,
+                }
+              ),
+            }
+          ) }}
+          {% set total_pages = [1, (total_count + page_size - 1) // page_size]|max %}
+          {% for page in range([1, page_index|int -1]|max, [total_pages|int + 1, page_index|int + 4]|min) %}
+            {{ button(
+              text=page,
+              variant='outlined' if page - 1 != page_index else 'filled',
+              class='rounded-none',
+              extra_attributes={
+                'hx-get': partial_url,
+                'hx-include': "inherit, [name='page_size']",
+                ':hx-target': "'#' + $id('table')",
+                'hx-push-url': 'false',
+                'hx-vals': jsonify(
+                  {
+                    'page_index': page - 1,
+                    'sort': sort,
+                    'sort_direction': sort_direction,
+                  }
+                ),
+              }
+            ) }}
+          {% endfor %}
+          {{ button(
+            text='',
+            icon='angle-right.svg',
+            icon_position='right',
+            variant='outlined',
+            class='rounded-none rounded-r-md',
+            disabled=page_index >= total_pages|int - 1,
+            extra_attributes={
+              'hx-get': partial_url,
+              'hx-include': "inherit, [name='page_size']",
+              ':hx-target': "'#' + $id('table')",
+              'hx-push-url': 'false',
+              'hx-vals': jsonify(
+                {
+                  'page_index':  page_index + 1 if page_index < total_pages|int else total_pages,
+                  'sort': sort,
+                  'sort_direction': sort_direction,
+                }
+              ),
+            }
+          ) }}
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}

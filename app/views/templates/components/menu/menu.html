@@ -1,0 +1,51 @@
+{% from 'templates/components/button/button.html' import button %}
+{% macro menu(groups=[], position='') %}
+{% if not groups %}
+  {{ caller() }}
+{% else %}
+<div class="relative w-fit" x-data="{ open: false }">
+  <span @click="open = !open" class="flex items-center bg-tranparent">
+    {{ caller() }}
+  </span>
+  <div x-show="open" @click.away="open = false" class="absolute {{ position }}-0 mt-2 z-30">
+    <div class="bg-white rounded-md shadow-lg border border-gray-200 py-1 min-w-56 text-sm text-gray-800 select-none">
+      {% for group in groups%}
+      {% if not loop.first %}
+      <div class="border-t border-gray-100 my-1"></div>
+      {% endif %}
+      <ul class="py-1">
+        {% for item in group %}
+        {% set is_danger = get_attribute(item, 'is_danger') or get_attribute(item, 'danger') %}
+        {% set icon = get_attribute(item, 'icon') %}
+        {% set href = get_attribute(item, 'href') %}
+        {% set htmx_event_prefix = get_attribute(item, 'htmx_event_prefix') %}
+        {% set extra_attributes = get_attribute(item, 'extra_attributes') or {} %}
+        {% set loading_text = get_attribute(item, 'loading_text') %}
+        {% set extra_attributes = get_attribute(item, 'extra_attributes') or {} %}
+        {% set extra_classes = 'w-full justify-start gap-3 px-3 py-2 h-auto rounded-none text-left ' %}
+        {% if is_danger %}
+        {% set extra_classes = extra_classes + 'text-red-600 hover:text-red-700' %}
+        {% else %}
+        {% set extra_classes = extra_classes + 'text-gray-800' %}
+        {% endif %}
+        <li>
+          {{ button(
+            text=item.label,
+            icon=icon,
+            icon_position='left',
+            variant='transparent',
+            href=href,
+            htmx_event_prefix=htmx_event_prefix,
+            loading_text=loading_text or 'Submitting...',
+            class=extra_classes,
+            extra_attributes=extra_attributes
+          ) }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

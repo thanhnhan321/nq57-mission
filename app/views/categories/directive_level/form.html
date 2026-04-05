@@ -1,0 +1,31 @@
+{% from 'templates/components/input/base/input.html' import input %}
+<form
+    id="directive-level-form"
+    x-data="{
+        name: {{ jsonify(name) }},
+        description: {{ jsonify(description) }},
+        errors: {{ jsonify(errors) }},
+    }" 
+    class="min-w-md flex flex-col gap-2"
+    @submit.prevent>
+    {{ csrf_input }}
+    {% if id %}
+    <input type="hidden" name="id" value="{{ id }}">
+    {% endif %}
+    {{ input(
+        name='name',
+        label='Mã cấp chỉ đạo',
+        placeholder='Nhập mã cấp chỉ đạo',
+        value=name,
+        required=true,
+        error_message=errors.get('name', ""),
+    ) }}
+    {{ input(
+        name='description',
+        label='Tên cấp chỉ đạo',
+        placeholder='Nhập tên cấp chỉ đạo',
+        value=description,
+        required=true,
+        error_message=errors.get('description', ""),
+    ) }}
+</form>

@@ -1,0 +1,442 @@
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/button/button.html' import button %}
+
+{% set report_type_sequence = report_items | map(attribute='report_type') | list %}
+
+<form
+  id="department-report-create-form"
+  x-data='{
+    uploadedFiles: {},
+    uploading: {},
+    reportOrder: {{ report_type_sequence | tojson }},
+    selectedPeriod: {{ selected_period_value | tojson }},
+    selectedDepartmentId: {{ department_id | tojson }},
+    modalUrlBase: {{ modal_url_base | tojson }},
+    isSubmitting: false,
+    isReloading: false,
+
+init() {
+  this.$el.addEventListener("change", async (event) => {
+    const target = event.target;
+    if (!target || this.isReloading) return;
+
+    if (target.name === "department_select") {
+      const newValue = target.value || "";
+      if (newValue === (this.selectedDepartmentId || "")) return;
+
+      this.selectedDepartmentId = newValue;
+      this.uploadedFiles = {};
+      await this.reloadModal();
+      return;
+    }
+
+    if (target.name === "period_select") {
+      const newValue = target.value || "";
+      if (newValue === (this.selectedPeriod || "")) return;
+
+      this.selectedPeriod = newValue;
+      this.uploadedFiles = {};
+      await this.reloadModal();
+      return;
+    }
+  });
+},
+
+    pushToast(message, level = 25) {
+      if (window.htmx) {
+        htmx.trigger(document.body, "new-message", {
+          value: [
+            {
+              id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              message: message || "",
+              level: level
+            }
+          ]
+        });
+      }
+    },
+
+    chooseFile(type) {
+      if (!this.canUpload(type)) return;
+      const input = this.$refs["file_" + type];
+      if (input) input.click();
+    },
+
+   async reloadModal() {
+  if (this.isReloading) return;
+  this.isReloading = true;
+
+  const params = new URLSearchParams();
+
+  if (this.selectedPeriod) {
+    params.set("period", this.selectedPeriod);
+  }
+
+  if (this.selectedDepartmentId) {
+    params.set("department_id", this.selectedDepartmentId);
+  }
+
+  try {
+    const response = await fetch(`${this.modalUrlBase}?${params.toString()}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!response.ok) {
+      throw new Error("Không thể tải lại loại báo cáo");
+    }
+
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const newForm = doc.querySelector("#department-report-create-form");
+    const currentForm = document.querySelector("#department-report-create-form");
+
+    if (newForm && currentForm) {
+      currentForm.replaceWith(newForm);
+    }
+  } catch (error) {
+    this.pushToast("Không thể tải lại form", 40);
+  } finally {
+    this.isReloading = false;
+  }
+},
+
+    previousType(type) {
+      const idx = this.reportOrder.indexOf(type);
+      if (idx <= 0) return null;
+      return this.reportOrder[idx - 1];
+    },
+
+    hasFile(type) {
+      return !!this.uploadedFiles[type]?.uploaded;
+    },
+
+    canUpload(type) {
+      const prev = this.previousType(type);
+      if (!prev) return true;
+      return this.hasFile(prev);
+    },
+
+    isUploading(type) {
+      return !!this.uploading[type];
+    },
+
+    isCurrentStep(type) {
+      return this.canUpload(type) && !this.hasFile(type);
+    },
+
+    getCsrfToken() {
+      const name = "csrftoken=";
+      const decodedCookie = decodeURIComponent(document.cookie || "");
+      const parts = decodedCookie.split(";");
+
+      for (let i = 0; i < parts.length; i++) {
+        let c = parts[i].trim();
+        if (c.indexOf(name) === 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+
+      return "";
+    },
+
+    async onFileChange(type, event) {
+      if (!this.canUpload(type)) {
+        event.target.value = "";
+        this.pushToast("Bạn cần tải báo cáo trước đó trước", 30);
+        return;
+      }
+
+      const input = event.target;
+      const file = input?.files?.[0];
+      if (!file) return;
+
+      const url = input.dataset.uploadUrl;
+      if (!url) {
+        this.pushToast("Thiếu cấu hình upload", 40);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("report_type", type);
+
+      this.uploading[type] = true;
+
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": this.getCsrfToken(),
+          },
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const errorMessage =
+            data?.error ||
+            data?.message ||
+            data?.errors?.file ||
+            data?.errors?.report_type ||
+            data?.errors?.month ||
+            data?.errors?.year ||
+            data?.errors?.department_id ||
+            "Tải file thất bại";
+          throw new Error(errorMessage);
+        }
+
+        this.uploadedFiles[type] = {
+          name: data.file_name || file.name,
+          sizeLabel: data.file_size_label || "",
+          uploaded: true,
+          fileId: data.file_id || "",
+        };
+
+        this.pushToast(`Tải lên thành công: ${data.file_name || file.name}`, 25);
+      } catch (error) {
+        input.value = "";
+        this.pushToast(error.message || "Tải file thất bại", 40);
+      } finally {
+        this.uploading[type] = false;
+      }
+    },
+
+    async submitReport() {
+      if (this.isSubmitting) return;
+
+      const missingTypes = this.reportOrder.filter(type => !this.hasFile(type));
+      if (missingTypes.length) {
+        this.pushToast("Vui lòng tải lên đầy đủ tất cả loại báo cáo trước khi gửi", 30);
+        return;
+      }
+
+      const uploadedTypes = [...this.reportOrder];
+
+      const formData = new FormData();
+
+      formData.append("period", this.selectedPeriod || "");
+      formData.append("department_id", this.selectedDepartmentId || "");
+
+      uploadedTypes.forEach(type => {
+        formData.append("report_types[]", type);
+      });
+
+      this.isSubmitting = true;
+
+      try {
+        const response = await fetch({{ submit_url | tojson }}, {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": this.getCsrfToken(),
+          },
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const errorMessage =
+            data?.error ||
+            data?.message ||
+            data?.errors?.period ||
+            data?.errors?.department_id ||
+            data?.errors?.report_types ||
+            "Gửi báo cáo thất bại";
+          throw new Error(errorMessage);
+        }
+
+        this.pushToast(data.message || "Gửi báo cáo thành công", 25);
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("modal:close-top"));
+          const listPage = document.getElementById("department-report-page");
+          if (listPage && window.htmx) {
+            const filterForm = listPage.querySelector("form[hx-get]");
+            const tableShell = listPage.querySelector("[data-el-description=table]");
+            const getUrl = filterForm && filterForm.getAttribute("hx-get");
+            if (filterForm && tableShell && getUrl) {
+              try {
+                const u = new URL(getUrl, window.location.href);
+                new FormData(filterForm).forEach((v, k) => {
+                  u.searchParams.append(k, v);
+                });
+                htmx.ajax("GET", u.toString(), {
+                  source: filterForm,
+                  target: tableShell,
+                  swap: "outerHTML",
+                });
+              } catch (e) {
+                document.body.dispatchEvent(new CustomEvent("department-report:reload", { bubbles: true }));
+              }
+              return;
+            }
+          }
+          document.body.dispatchEvent(new CustomEvent("department-report:reload", { bubbles: true }));
+        }, 250);
+      } catch (error) {
+        this.pushToast(error.message || "Gửi báo cáo thất bại", 40);
+      } finally {
+        this.isSubmitting = false;
+      }
+    }
+  }'
+  class="w-[840px] max-w-full rounded-[12px] bg-white"
+  @submit.prevent
+>
+  {{ csrf_input if csrf_input is defined else '' }}
+
+  <div class="px-7 pb-7 pt-6">
+    <div class="grid grid-cols-2 gap-8">
+      <div>
+        {{ select(
+          name="period_select",
+          label="Kỳ báo cáo",
+          placeholder="Chọn kỳ báo cáo",
+          options_url=period_options_url,
+          value=selected_period_value,
+          required=true
+        ) }}
+      </div>
+
+      <div>
+        {% if is_admin %}
+          {{ select(
+            name="department_select",
+            label="Đơn vị thực hiện",
+            placeholder="Chọn đơn vị",
+            options_url=department_options_url,
+            value=department_id,
+            required=true
+          ) }}
+        {% else %}
+          {{ select(
+            name="department_select",
+            label="Đơn vị thực hiện",
+            placeholder="Đơn vị thực hiện",
+            options_url=department_options_url,
+            value=department_id,
+            required=true,
+            disabled=true
+          ) }}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <div class="mb-3 text-[12px] font-semibold uppercase text-[#6b7280]">
+        LOẠI BÁO CÁO
+      </div>
+
+      <div class="space-y-3">
+        {% for item in report_items %}
+          <div class="overflow-hidden rounded-[8px] border border-[#d9dee7] bg-white">
+            <div class="flex items-center justify-between gap-4 px-4 py-3">
+              <div class="flex items-center gap-3">
+                <span
+                  class="inline-flex h-4 w-4 items-center justify-center rounded-[4px] border text-[11px] font-bold"
+                  :class="hasFile('{{ item.report_type }}')
+                    ? 'border-[#b30000] bg-[#b30000] text-white'
+                    : 'border-[#d1d5db] bg-white text-transparent'"
+                >
+                  ✓
+                </span>
+
+                <span
+                  class="text-[15px] font-medium"
+                  :class="isCurrentStep('{{ item.report_type }}') || hasFile('{{ item.report_type }}')
+                    ? 'text-[#1f2937]'
+                    : 'text-[#9ca3af]'"
+                >
+                  {{ item.label }}
+                </span>
+
+                {% if item.required %}
+                  <span class="rounded-full bg-[#fdecec] px-2 py-[2px] text-[11px] font-medium text-[#d92d20]">
+                    (Bắt buộc)
+                  </span>
+                {% endif %}
+              </div>
+
+              <div
+                x-show="hasFile('{{ item.report_type }}')"
+                x-cloak
+                class="flex items-center gap-2 text-[14px] text-[#16a34a]"
+              >
+                <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#16a34a] text-[10px] text-white">
+                  ✓
+                </span>
+                <span>Đã tải lên</span>
+              </div>
+            </div>
+
+            <div
+              x-show="isCurrentStep('{{ item.report_type }}')"
+              x-cloak
+              class="border-t border-[#f1f5f9] px-4 py-4"
+            >
+              <div class="rounded-[8px] border border-dashed border-[#d1d5db] bg-[#fcfcfd] px-4 py-8 text-center">
+                <div class="text-[14px] font-medium text-[#ef4444]">
+                  Kéo thả tệp PDF vào đây hoặc click để chọn
+                </div>
+
+                <div class="mt-1 text-[12px] text-[#9ca3af]">
+                  Định dạng: PDF. Dung lượng tối đa 20MB
+                </div>
+
+                <input
+                  x-ref="file_{{ item.report_type }}"
+                  type="file"
+                  name="file_{{ item.report_type }}"
+                  accept=".pdf,application/pdf"
+                  class="hidden"
+                  data-upload-url="{{ item.upload_url }}"
+                  @change="onFileChange('{{ item.report_type }}', $event)"
+                >
+
+                <div class="mt-4">
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-md border border-[#d1d5db] bg-white px-4 py-2 text-[13px] font-medium text-[#374151] hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+                    @click="chooseFile('{{ item.report_type }}')"
+                    :disabled="isUploading('{{ item.report_type }}')"
+                  >
+                    <span x-show="!isUploading('{{ item.report_type }}')">Chọn tệp</span>
+                    <span x-show="isUploading('{{ item.report_type }}')" x-cloak>Đang tải...</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="rounded-[8px] border border-dashed border-[#d1d5db] bg-[#f9fafb] px-4 py-8 text-center text-[14px] text-[#6b7280]">
+            Không có cấu hình loại báo cáo cho kỳ đã chọn.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-[#e5e7eb] bg-[#f9fafb] px-6 py-4">
+    {{ button(
+      text="HỦY",
+      variant="outlined",
+      class="!h-10 !min-w-[100px] !rounded-md !border-[#d1d5db] !px-4 !text-[14px] !font-medium !text-[#374151] hover:!bg-[#f3f4f6]",
+      extra_attributes={"@click": "$dispatch(\"modal:close-top\")"}
+    ) }}
+
+    {{ button(
+      text="GỬI BÁO CÁO",
+      variant="filled",
+      class="!h-10 !min-w-[140px] !rounded-md !bg-[#b30000] !px-5 !text-[14px] !font-semibold hover:!bg-[#8f0000]",
+      extra_attributes={
+        "@click": "submitReport()",
+        ":disabled": "isSubmitting",
+        ":class": "isSubmitting ? \"opacity-60 cursor-not-allowed\" : \"\""
+      }
+    ) }}
+  </div>
+</form>

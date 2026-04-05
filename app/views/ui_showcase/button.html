@@ -1,0 +1,187 @@
+{% from 'templates/components/button/button.html' import button %}
+{% from 'templates/components/menu/menu.html' import menu %}
+
+<section class="py-16 space-y-12">
+  <header class="mb-10">
+    <h2 class="text-2xl font-semibold text-slate-900">Button</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Two types (button, link), two variants (filled, outlined). Supports modal and form use, loading and disabled
+      state.
+    </p>
+  </header>
+  <div class="space-y-4">
+    <h3 class="text-sm font-semibold text-slate-900">Icon-only with tooltip</h3>
+    <div class="flex flex-wrap items-center gap-4">
+      {{ button('', icon='plus.svg', variant='filled', tooltip_content='Add item', tooltip_axis='vertical') }}
+      {{ button('', icon='edit.svg', variant='outlined', tooltip_content='Edit', tooltip_axis='vertical') }}
+      {{ button('', icon='trash.svg', variant='outlined', tooltip_content='Delete', tooltip_axis='vertical') }}
+      {{ button('', icon='search.svg', variant='filled', tooltip_content='Search', tooltip_axis='vertical') }}
+      {{ button('', icon='close.svg', variant='outlined', tooltip_content='Close', tooltip_axis='vertical') }}
+    </div>
+  </div>
+  <div class="grid gap-12 lg:grid-cols-2">
+    <div class="space-y-8">
+      <h3 class="text-sm font-semibold text-slate-900">Filled</h3>
+      <div class="flex flex-wrap items-center gap-4">
+        {{ button('Filled button', icon='circle.svg', variant='filled') }}
+        {{ button('Filled link', icon='circle.svg', variant='filled', href='#') }}
+      </div>
+    </div>
+    <div class="space-y-8">
+      <h3 class="text-sm font-semibold text-slate-900">Outlined</h3>
+      <div class="flex flex-wrap items-center gap-4">
+        {{ button('Outlined button', icon='circle.svg', variant='outlined') }}
+        {{ button('Outlined link', icon='circle.svg', variant='outlined', href='#') }}
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <h3 class="text-sm font-semibold text-slate-900">Loading & disabled</h3>
+    <div class="flex flex-wrap items-center gap-4">
+      {{ button('Disabled', icon='circle.svg', variant='filled', disabled=true) }}
+      {{ button('Disabled', icon='circle.svg', variant='outlined', disabled=true) }}
+      {{ button('Trigger loading', icon='circle.svg', variant='filled', loading_text='Loading...', tooltip_content='Trigger loading', tooltip_axis='horizontal', extra_attributes={'hx-get': url('ui_showcase_delay_demo'), 'hx-target': '#loading-demo-result', 'hx-swap': 'innerHTML'}) }}
+    </div>
+    <div id="loading-demo-result" class="min-h-[1.5rem]"></div>
+  </div>
+
+  <div class="space-y-4" x-data="{ modalOpen: false }" @open-modal.window="modalOpen = true"
+    @form:submit:success.window="modalOpen = false; $refs.modalForm && $refs.modalForm.reset()">
+    <h3 class="text-sm font-semibold text-slate-900">Modal & form</h3>
+    <div class="flex flex-wrap items-center gap-4">
+      {{ button('Open modal', icon='circle.svg', variant='filled', extra_attributes={ '@click': '$dispatch("open-modal")' }) }}
+    </div>
+    <div x-show="modalOpen" x-cloak
+      class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-transition.opacity>
+      <div class="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        @click.away="modalOpen = false">
+        <h4 class="text-lg font-semibold text-slate-900">Submit form</h4>
+        <p class="mt-1 text-sm text-slate-600">On success the modal closes and the form is cleared.</p>
+        <form x-ref="modalForm" class="mt-4 flex flex-col gap-4" @submit.prevent>
+          <label class="block text-sm font-medium text-slate-700">
+            Name
+            <input type="text" name="name"
+              class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Your name">
+          </label>
+          <div class="flex items-center justify-end gap-3">
+            {{ button('Close', variant='outlined', extra_attributes={ '@click': '$dispatch("close-modal")' }) }}
+            {{ button(
+              'Submit', 
+              icon='circle.svg',
+              variant='filled',
+              loading_text='Sending...',
+              htmx_event_prefix='form:submit',
+              extra_attributes={
+                'hx-post': url('ui_showcase_delay_demo'),
+                'hx-target': '#modal-form-result',
+                'hx-swap': 'innerHTML',
+              }
+            ) }}
+          </div>
+          <div id="modal-form-result" class="min-h-[1rem]"></div>
+        </form>
+      </div>
+    </div>
+    <div @close-modal.window="modalOpen = false"></div>
+  </div>
+
+  <div
+    class="space-y-4"
+    x-data="{ menuOpen: false, simpleModalOpen: false, lastMenuAction: null }"
+    @open-simple-modal.window="simpleModalOpen = true"
+    @keydown.escape.window="menuOpen = false"
+    @menu:profile.window="lastMenuAction = 'Profile'"
+    @menu:settings.window="lastMenuAction = 'Settings'"
+    @menu:help.window="lastMenuAction = 'Help & docs'"
+    @menu:duplicate.window="lastMenuAction = 'Duplicate'"
+    @menu:archive.window="lastMenuAction = 'Archive'"
+    @menu:delete.window="lastMenuAction = 'Delete'"
+  >
+    <h3 class="text-sm font-semibold text-slate-900">Modal & HTMX table demo</h3>
+    {% set groups = [
+      [
+        {
+          'label': 'Open simple modal',
+          'icon': 'circle.svg',
+          'extra_attributes': { '@click': '$dispatch("open-simple-modal")' }
+        },
+        {
+          'label': 'Load table',
+          'icon': 'circle.svg',
+          'loading_text': 'Loading table...',
+          'htmx_event_prefix': 'table:load',
+          'extra_attributes': {
+            'hx-get': url('ui_showcase_table'),
+            'hx-target': '#table-showcase',
+            'hx-swap': 'innerHTML'
+          }
+        }
+      ],
+      [
+        {
+          'label': 'Profile',
+          'icon': 'circle.svg',
+          'extra_attributes': { '@click': '$dispatch("menu:profile")' }
+        },
+        {
+          'label': 'Settings',
+          'icon': 'circle.svg',
+          'extra_attributes': { '@click': '$dispatch("menu:settings")' }
+        },
+        {
+          'label': 'Help & docs',
+          'icon': 'circle.svg',
+          'href': '#'
+        }
+      ],
+      [
+        {
+          'label': 'Duplicate',
+          'icon': 'circle.svg',
+          'extra_attributes': { '@click': '$dispatch("menu:duplicate")' }
+        },
+        {
+          'label': 'Archive',
+          'icon': 'circle.svg',
+          'extra_attributes': { '@click': '$dispatch("menu:archive")' }
+        }
+      ],
+      [
+        {
+          'label': 'Delete',
+          'icon': 'circle.svg',
+          'danger': true,
+          'extra_attributes': { '@click': '$dispatch("menu:delete")' }
+        }
+      ]
+    ] %}
+      {% call menu(groups=groups, position='right') %}
+      {{ button('Open context menu', icon='circle.svg', variant='outlined') }}
+      {% endcall %}
+
+    <div
+      class="text-xs text-slate-600"
+      x-show="lastMenuAction"
+      x-cloak
+    >
+      Last action: <span class="font-semibold text-slate-900" x-text="lastMenuAction"></span>
+    </div>
+
+    <div x-show="simpleModalOpen" x-cloak
+      class="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+      x-transition.opacity>
+      <div class="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        @click.away="simpleModalOpen = false">
+        <h4 class="text-lg font-semibold text-slate-900">Simple modal</h4>
+        <p class="mt-1 text-sm text-slate-600">
+          This modal is opened by the first button. Close it by clicking outside.
+        </p>
+      </div>
+    </div>
+
+    <div id="table-showcase" class="mt-4 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+      Click "Load table" to fetch the table demo via HTMX.
+    </div>
+  </div>
+</section>

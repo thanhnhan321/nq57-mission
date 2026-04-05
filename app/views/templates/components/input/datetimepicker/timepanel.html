@@ -1,0 +1,39 @@
+{# Reusable time UI only (no wrapper, no hidden inputs).
+   Expects Alpine state + methods to be provided by the parent `x-data`:
+   - draftHour (0..23|null), draftMinute (number|null)
+   - hourOptions (number[]), minuteOptions (number[])
+   - methods: setDraftHour(hour24), setDraftMinute(minute), goNow()
+   - disabled (boolean)
+#}
+{% macro timepicker_panel() %}
+  <div class="space-y-3">
+    <div class="flex items-center justify-between px-2">
+      <div class="text-sm font-semibold text-slate-900">Chọn giờ</div>
+      <button type="button" class="h-8 rounded-md bg-red-700 text-white px-3 text-sm font-semibold hover:bg-red-800 disabled:opacity-50" :disabled="disabled || (!canSelectHour && !canSelectMinute)" @click="goNow()">Bây giờ</button>
+    </div>
+    <div class="flex items-start gap-4">
+      <div class="w-[5.5rem] flex flex-col items-center gap-2" x-show="canSelectHour" x-cloak>
+        <div class="w-full max-h-56 overflow-auto rounded-lg border border-slate-100 bg-white" style="scrollbar-width: thin;">
+          <div class="flex flex-col">
+            <template x-for="h in hourOptions" :key="h">
+              <button type="button" class="h-10 px-2 text-sm font-semibold transition-colors border-b border-slate-50 last:border-b-0 w-full text-center" :class="(draftHour === h ? 'bg-red-700 text-white' : (isHourOutOfRange(h) ? 'bg-white text-slate-300 cursor-not-allowed' : 'bg-white text-slate-800 hover:bg-slate-50'))" :disabled="disabled || isHourOutOfRange(h)" @click="setDraftHour(h)">
+                <span x-text="String(h).padStart(2, '0')"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+      <div class="w-[4.75rem] flex flex-col items-center gap-2" x-show="canSelectMinute" x-cloak>
+        <div class="w-full max-h-56 overflow-auto rounded-lg border border-slate-100 bg-white" style="scrollbar-width: thin;">
+          <div class="flex flex-col">
+            <template x-for="m in minuteOptions" :key="m">
+              <button type="button" class="h-10 px-2 text-sm font-semibold transition-colors border-b border-slate-50 last:border-b-0 w-full text-center" :class="(draftMinute === m ? 'bg-red-700 text-white' : (isMinuteOutOfRange(m) ? 'bg-white text-slate-300 cursor-not-allowed' : 'bg-white text-slate-800 hover:bg-slate-50'))" :disabled="disabled || isMinuteOutOfRange(m)" @click="setDraftMinute(m)">
+                <span x-text="String(m).padStart(2, '0')"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endmacro %}

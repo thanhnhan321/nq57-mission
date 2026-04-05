@@ -1,0 +1,20 @@
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/button/button.html' import button %}
+
+<div id="document-update-panel">
+    {% include 'document/form.html' %}
+    <div class="mt-2 text-right">
+        {{ button(
+            text='Lưu',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='document',
+            extra_attributes={
+                'hx-post': url('document_update'),
+                'hx-target': "#document-update-panel",
+                'hx-include': "#document-form",
+                'hx-swap': 'outerHTML',
+            },
+        ) }}
+    </div>
+</div>

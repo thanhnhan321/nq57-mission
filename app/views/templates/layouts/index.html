@@ -1,0 +1,75 @@
+{% from "templates/components/modal/modal.html" import modal %}
+{% from "templates/components/toast/toast.html" import toast %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="#">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+  <!-- Support Alpine.js maintain state for HTMX swap content -->
+   <!-- Usage: hx-ext="morph" hx-swap="morph"-->
+  <!-- <script src="https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/morph@3.x.x/dist/cdn.min.js"></script> -->
+  <!-- Support htmx-boost swap head content -->
+  <script src="https://cdn.jsdelivr.net/npm/htmx-ext-head-support@2.0.5" integrity="sha384-cvMqHzjCJsOHgGuyB3sWXaUSv/Krm0BdzjuI1rtkjCbL1l1oHJx+cHyVRJhyuEz0" crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener('htmx:beforeHeadMerge', function(evt) {
+    // Preserve all styles
+    const styles = document.querySelectorAll('style');
+    styles.forEach(style => {
+      style.setAttribute('hx-preserve', 'true');
+    });
+  });
+  </script>
+  <!-- Support persist variables (localStorage) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+  <!-- Support input mask -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="{{ static('css/index.css') }}"/>
+  <script src="{{ static('js/index.js') }}"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Giám sát Nghị quyết 57 - {% block title %}{% endblock %}</title>
+  <meta
+    name="htmx-config"
+    content='{
+          "responseHandling":[
+            {"code":"204", "swap": false},
+            {"code":"[23]..", "swap": true},
+            {"code":"422", "swap": true},
+            {"code":"[45]..", "swap": false, "error":true},
+            {"code":"...", "swap": false}
+          ]
+      }'
+  />
+  {% block styles %}
+  {% endblock %}
+  {% block pre_scripts %}
+  {% endblock %}
+</head>
+
+<body class="h-full overflow-hidden" hx-ext="head-support">
+  <main class="h-screen bg-gray-100 flex">
+    {% if request.user.is_authenticated %}
+    {% include 'templates/layouts/sidebar.html' %}
+    {% endif %}
+    <div class="grow flex flex-col overflow-auto">
+      {% if request.user.is_authenticated %}
+      {% include 'templates/layouts/header.html' %}
+      {% endif %}
+      <div class="flex-1 overflow-auto">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
+  {{ modal() }}
+  {{ toast(source=get_messages(request)) }}
+</body>
+{% block post_scripts %}
+{% endblock %}
+</html>

@@ -1,0 +1,29 @@
+{% from 'templates/components/input/base/input.html' import input %}
+<form
+    id="document-type-form"
+    x-data="{
+        name: {{ jsonify(name) }},
+        code: {{ jsonify(code) }},
+        errors: {{ jsonify(errors) }},
+    }" 
+    class="min-w-md flex flex-col gap-2"
+    @submit.prevent>
+    {{ csrf_input }}
+    {{ input(
+        name='code',
+        label='Mã loại văn bản',
+        placeholder='Nhập mã loại văn bản',
+        value=code,
+        required=true,
+        disabled=true if request.path == url('document_type_update') else false,
+        error_message=errors.get('code', ""),
+    ) }}
+    {{ input(
+        name='name',
+        label='Tên loại văn bản',
+        placeholder='Nhập tên loại văn bản',
+        value=name,
+        required=true,
+        error_message=errors.get('name', ""),
+    ) }}
+</form>
