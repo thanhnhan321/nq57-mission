@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -8,12 +8,9 @@ from ..query import (
     get_configuration_tab_context,
     parse_configuration_payload,
     save_tab_values,
+
 )
-
-
-@method_decorator(login_required, name='dispatch')
-@method_decorator(permission_required('app.view_systemconfig', raise_exception=True), name='dispatch')
-@method_decorator(permission_required('app.change_systemconfig', raise_exception=True), name='post')
+@method_decorator(permission_required('app.change_systemconfig'), name='post')
 class ConfigurationPartialView(View):
     template_name = 'system/configurations/partial.html'
 

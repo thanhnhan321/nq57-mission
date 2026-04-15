@@ -17,10 +17,12 @@ from ...models import (
     Period,
 )
 from ...handlers.period import get_latest_period
+from utils.validate import isfloat
 
 @method_decorator(permission_required('app.add_quota'), name='dispatch')
 class QuotaCreateView(View):
     template_name = 'quota/create.html'
+    form_name = 'quota/form.html'
 
     def get(self, request, *args, **kwargs):
         latest_period = get_latest_period()
@@ -63,12 +65,12 @@ class QuotaCreateView(View):
         target_percent = request.POST.get('target_percent', "").strip()
         if not target_percent:
             errors['target_percent'] = 'Tỉ lệ được giao là bắt buộc'
-        elif not target_percent.isdigit():
+        elif not isfloat(target_percent):
             errors['target_percent'] = 'Tỉ lệ được giao phải là số tự nhiên'
         else:
-            target_percent = int(target_percent)
-        if target_percent > 100:
-            errors['target_percent'] = 'Tỉ lệ được giao không được lớn hơn 100%'
+            target_percent = float(target_percent)
+            if target_percent > 100:
+                errors['target_percent'] = 'Tỉ lệ được giao không được lớn hơn 100%'
         issued_at = request.POST.get('issued_at', "").strip()
         if not issued_at:
             errors['issued_at'] = 'Ngày ban hành là bắt buộc'
@@ -91,7 +93,7 @@ class QuotaCreateView(View):
         if errors:
             return render(
                 request,
-                'quota/form.html',
+                self.form_name,
                 {
                     'name': name,
                     'type': type,
@@ -131,23 +133,16 @@ class QuotaCreateView(View):
                         target_percent=target_percent,
                         issued_at=issued_at,
                         expired_at=expired_at,
+                        department=lead_department,
                     )
                     new_quota.save(user=request.user)
                     assignments = [
                         QuotaAssignment(
                             quota=new_quota,
                             department=assigned_department,
-                            is_leader=False,
                         ).on_behalf_of(request.user)
                         for assigned_department in assigned_departments
                     ]
-                    assignments.append(
-                        QuotaAssignment(
-                            quota=new_quota,
-                            department=lead_department,
-                            is_leader=True,
-                        ).on_behalf_of(request.user)
-                    )
                     QuotaAssignment.objects.bulk_create(assignments)
                     # Create reports immediately if the quota is issued in the current month
                     period = Period.objects.filter(year=issued_at.year, month=issued_at.month).first()
@@ -168,7 +163,7 @@ class QuotaCreateView(View):
             status = HTTPStatus.INTERNAL_SERVER_ERROR
         return render(
             request, 
-            'quota/form.html',
+            self.form_name,
             {
                 'name': name,
                 'type': type,

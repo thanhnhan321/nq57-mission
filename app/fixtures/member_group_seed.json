@@ -1,0 +1,23 @@
+{
+    "groups": [
+        {
+            "name": "Member",
+            "permissions": [
+                "app.view_quota",
+                "app.view_mission",
+                "app.view_document",
+                "app.read_document",
+                "app.view_departmentreport",
+                "auth.change_user",
+                "auth.view_user",
+                "app.change_userprofile",
+                "app.view_userprofile",
+                "app.change_missionreport",
+                "app.view_missionreport",
+                "app.change_quotareport",
+                "app.view_quotareport",
+                "app.change_departmentreport"
+            ]
+        }
+    ]
+}

@@ -2,15 +2,14 @@ from django.contrib import messages
 from django.http import FileResponse, HttpResponse
 from django.urls import reverse
 from django.views import View
-from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.views import method_decorator
 
 import env
-
 from ...models import DepartmentReport
 from utils import minio
 
-
+@method_decorator(permission_required('app.view_departmentreport'), name='dispatch')
 class DepartmentReportDownloadView(View):
     def get(self, request, *args, **kwargs):
         response = HttpResponse()

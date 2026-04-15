@@ -24,25 +24,34 @@ REPORT_TYPE_META = {
     "YEAR": {"label": "Báo cáo năm", "required": True, "order": 5},
 }
 
+def _department_queryset():
+    return Department.objects.only("id", "name", "short_name").order_by("name")
+
+def _get_department_by_id(department_id):
+    if not department_id:
+        return None
+    return _department_queryset().filter(pk=department_id).first()
 
 def _get_user_department(user):
     if not user or not user.is_authenticated:
         return None
 
-    if hasattr(user, "department") and user.department:
-        return user.department
+    direct_department_id = getattr(user, "department_id", None)
+    if direct_department_id:
+        return _get_department_by_id(direct_department_id)
 
-    if hasattr(user, "profile") and getattr(user.profile, "department", None):
-        return user.profile.department
+    profile = getattr(user, "profile", None)
+    profile_department_id = getattr(profile, "department_id", None) if profile else None
+    if profile_department_id:
+        return _get_department_by_id(profile_department_id)
+
+    if hasattr(user, "department") and getattr(user, "department", None):
+         return _get_department_by_id(getattr(user.department, "id", None))
+
+    if profile and getattr(profile, "department", None):
+        return _get_department_by_id(getattr(profile.department, "id", None))
 
     return None
-
-
-def _is_admin(user):
-    """Chỉ superuser được chọn đơn vị khác khi tạo báo cáo. User có is_staff vẫn là thành viên đơn vị."""
-    if not user or not user.is_authenticated:
-        return False
-    return bool(user.is_superuser)
 
 
 def _build_period_options(department_id=None):
@@ -107,7 +116,7 @@ def _resolve_selected_period(request, period_options):
 
 def department_report_period_options(request):
     user = request.user
-    is_admin = _is_admin(user)
+    is_admin = bool(getattr(user, "is_superuser", False))
     user_department = _get_user_department(user)
 
     requested_department_id = request.GET.get("department_id")
@@ -123,13 +132,13 @@ def department_report_period_options(request):
 
 def department_report_create_department_options(request):
     user = request.user
-    is_admin = _is_admin(user)
+    is_admin = bool(getattr(user, "is_superuser", False))
     user_department = _get_user_department(user)
 
     if is_admin:
-        qs = Department.objects.all().order_by("name")
+        qs = _department_queryset()
     elif user_department:
-        qs = Department.objects.filter(pk=user_department.pk).order_by("name")
+        qs = _department_queryset().filter(pk=user_department.pk)
     else:
         qs = Department.objects.none()
 
@@ -153,7 +162,7 @@ def department_report_create_department_options(request):
 
 def create_report_modal(request):
     user = request.user
-    is_admin = _is_admin(user)
+    is_admin = bool(getattr(user, "is_superuser", False))
     user_department = _get_user_department(user)
 
     requested_department_id = (request.GET.get("department_id") or "").strip()
@@ -165,7 +174,7 @@ def create_report_modal(request):
 
     department = None
     if department_id:
-        department = get_object_or_404(Department, pk=department_id)
+        department = get_object_or_404(_department_queryset(), pk=department_id)
 
     period_options = _build_period_options(department_id=department_id or None)
     selected_period_value, selected_month, selected_year = _resolve_selected_period(
@@ -258,6 +267,31 @@ def _resolve_department_code(department: Department) -> str:
     return name or "DONVI"
 
 
+def _has_submitted_reports(department, month, year) -> bool:
+    if not department or not month or not year:
+        return False
+
+    return DepartmentReport.objects.filter(
+        department=department,
+        month=month,
+        report_year=year,
+    ).filter(
+        status="SENT",
+    ).exists()
+
+
+def _get_existing_report(department, month, year, report_type):
+    if not department or not month or not year or not report_type:
+        return None
+
+    return DepartmentReport.objects.filter(
+        department=department,
+        month=month,
+        report_type=report_type,
+        report_year=year,
+    ).first()
+
+
 @transaction.atomic
 def department_report_upload_temp(request):
     if request.method != "POST":
@@ -267,7 +301,7 @@ def department_report_upload_temp(request):
         )
 
     user = request.user
-    is_admin = _is_admin(user)
+    is_admin = bool(getattr(user, "is_superuser", False))
     user_department = _get_user_department(user)
 
     report_type = (request.GET.get("report_type") or request.POST.get("report_type") or "").strip().upper()
@@ -301,7 +335,7 @@ def department_report_upload_temp(request):
             errors["department_id"] = "Đơn vị là bắt buộc"
             department = None
         else:
-            department = Department.objects.filter(pk=department_id_raw).first()
+            department = _get_department_by_id(department_id_raw)
             if not department:
                 errors["department_id"] = "Đơn vị không tồn tại"
     else:
@@ -348,19 +382,32 @@ def department_report_upload_temp(request):
 
         minio.upload(upload_file, storage.object_uid)
 
+        existing_report = _get_existing_report(
+            department=department,
+            month=month,
+            year=year,
+            report_type=report_type,
+        )
+
+        defaults = {
+            "file": storage,
+            "file_name": final_file_name,
+            "status": "NOT_SENT",
+            "sent_at": None,
+            "is_locked": False,
+            "period": period,
+        }
+        if existing_report and existing_report.status == "SENT":
+            defaults["status"] = existing_report.status
+            defaults["sent_at"] = existing_report.sent_at
+            defaults["is_locked"] = existing_report.is_locked
+
         report, _created = DepartmentReport.objects.update_or_create(
             department=department,
             month=month,
             report_type=report_type,
             report_year=year,
-            defaults={
-                "file": storage,
-                "file_name": final_file_name,
-                "status": "NOT_SENT",
-                "sent_at": None,
-                "is_locked": False,
-                "period": period,  
-            },
+            defaults=defaults,
         )
 
         return JsonResponse(
@@ -395,7 +442,7 @@ def department_report_submit(request):
         )
 
     user = request.user
-    is_admin = _is_admin(user)
+    is_admin = bool(getattr(user, "is_superuser", False))
     user_department = _get_user_department(user)
 
     period = (request.POST.get("period") or "").strip()
@@ -418,7 +465,7 @@ def department_report_submit(request):
             errors["department_id"] = "Đơn vị là bắt buộc"
             department = None
         else:
-            department = Department.objects.filter(pk=department_id_raw).first()
+            department = _get_department_by_id(department_id_raw)
             if not department:
                 errors["department_id"] = "Đơn vị không tồn tại"
     else:
@@ -446,6 +493,12 @@ def department_report_submit(request):
 
     if errors:
         return JsonResponse({"errors": errors}, status=HTTPStatus.UNPROCESSABLE_ENTITY)
+
+    if _has_submitted_reports(department=department, month=month, year=year):
+        return JsonResponse(
+            {"error": "Đơn vị đã nộp báo cáo cho kỳ này rồi"},
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
     qs = DepartmentReport.objects.filter(
         department=department,

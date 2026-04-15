@@ -13,6 +13,7 @@ from .mission import Mission, MissionReport
 from .report import ReportPeriodMonth
 from .department_report import DepartmentReport
 from .period import Period
+from .rank import Ranking
 
 __all__ = [
     Department,
@@ -33,4 +34,5 @@ __all__ = [
     ReportPeriodMonth,
     DepartmentReport,
     Period,
+    Ranking,
 ]

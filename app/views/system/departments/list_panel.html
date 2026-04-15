@@ -1,6 +1,6 @@
 {% from 'system/departments/table.html' import department_table %}
 
-{% macro department_list_panel(page_title, filters, partial_url, actions, columns, rows, page_index, page_size, total_count, sort, sort_direction, reload_event, tree_expanded_ids) %}
+{% macro department_list_panel(page_title, filters, partial_url, actions, columns, rows, page_index, page_size, total_count, sort, sort_direction, reload_event, tree_expanded_ids, row_actions=[]) %}
 {{
   department_table(
     header='<h1 class="text-4xl font-semibold my-4">' ~ page_title ~ '</h1>',
@@ -16,6 +16,7 @@
     sort_direction=sort_direction,
     reload_event=reload_event,
     tree_expanded_ids=tree_expanded_ids,
+    row_actions=row_actions,
     table_class='w-full table-fixed',
   )
 }}

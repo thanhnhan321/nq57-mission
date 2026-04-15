@@ -18,24 +18,48 @@ def get_nav_items_with_permissions(user):
             'label': 'Nhiệm vụ',
             'url': reverse('mission_list'),
             'icon': 'task.svg',
+            'permissions': ['app.view_mission'],
         },
         {
             'label': 'Chỉ tiêu',
             'url': reverse('quota_list'),
             'icon': 'target.svg',
-            'badge': None,
+            'permissions': ['app.view_quota'],
         },
         {
             'label': 'Báo cáo', 
             'url': reverse('department_report_list'),
             'icon': 'report.svg',
+            'permissions': ['app.view_departmentreport'],
         }, 
         {
             'label': 'Văn bản',
             'url': reverse('document_list'),
             'icon': 'document.svg',
-            'badge': None,
+            'permissions': ['app.view_document'],
         },
+        # {
+        #     'label': 'Người đứng đầu',
+        #     'icon': 'category.svg',
+        #     'children': [
+        #         # {
+        #         #     'label': 'Cấp chỉ đạo',
+        #         #     'url': reverse('directive_level_list'),
+        #         # },
+        #         # {
+        #         #     'label': 'Loại văn bản',
+        #         #     'url': reverse('document_type_list'),
+        #         # },
+        #         # {
+        #         #     'label': 'Văn bản chỉ đạo',
+        #         #     'url': reverse('directive_document_list'),
+        #         # },
+        #         {
+        #             'label': 'Quy định xếp loại',
+        #             'url': reverse('ranking_list'),
+        #         }
+        #     ],
+        # },
         {
             'label': 'Danh mục',
             'icon': 'category.svg',
@@ -43,18 +67,22 @@ def get_nav_items_with_permissions(user):
                 {
                     'label': 'Cấp chỉ đạo',
                     'url': reverse('directive_level_list'),
+                    'permissions': ['app.view_directivelevel'],
                 },
                 {
                     'label': 'Loại văn bản',
                     'url': reverse('document_type_list'),
+                    'permissions': ['app.view_documenttype'],
                 },
                 {
                     'label': 'Văn bản chỉ đạo',
                     'url': reverse('directive_document_list'),
+                    'permissions': ['app.view_directivedocument'],
                 },
                 {
                     'label': 'Loại báo cáo theo tháng',
                     'url': reverse('report_period_month_list'),
+                    'permissions': ['app.view_reportperiodmonth'],
                 }
             ],
         },
@@ -65,14 +93,17 @@ def get_nav_items_with_permissions(user):
                 {
                     'label': 'Người dùng',
                     'url': reverse('user_list'),
+                    'permissions': ['app.view_user'],
                 },
                 {
                     'label': 'Đơn vị',
                     'url': reverse('department_list'),
+                    'permissions': ['app.view_department'],
                 },
                 {
                     'label': 'Cấu hình',
                     'url': reverse('configuration_list'),
+                    'permissions': ['app.view_systemconfig'],
                 },
             ],
         },
@@ -81,22 +112,8 @@ def get_nav_items_with_permissions(user):
     # Superuser có tất cả quyền - return tất cả items mà không cần kiểm tra permission
     if user.is_superuser:
         return all_items
+
     nav_items = []
-    # Map URL -> permission view theo chuẩn app.view_<lowercase_model_name>
-    permission_map = {
-        reverse('dashboard'): [],
-        reverse('mission_list'): ['app.view_mission'],
-        reverse('quota_list'): ['app.view_quota'],
-        reverse('department_report_list'): ['app.view_departmentreport'],
-        reverse('document_list'): ['app.view_document'],
-        reverse('directive_level_list'): ['app.view_directivelevel'],
-        reverse('document_type_list'): ['app.view_documenttype'],
-        reverse('directive_document_list'): ['app.view_directivedocument'],
-        reverse('report_period_month_list'): ['app.view_reportperiodmonth'],
-        reverse('user_list'): ['app.view_user'],
-        reverse('department_list'): ['app.view_department'],
-        reverse('configuration_list'): ['app.view_systemconfig'],
-    }
 
     def has_any_permission(permission_keys):
         if not permission_keys:
@@ -117,7 +134,7 @@ def get_nav_items_with_permissions(user):
         if not item_url:
             return item
 
-        permission_keys = permission_map.get(item_url, [])
+        permission_keys = item.get('permissions', [])
         if has_any_permission(permission_keys):
             return item
         return None

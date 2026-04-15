@@ -113,8 +113,8 @@
                 }) }}"
                 target="_blank"
               >
-                <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                <span class="text-red-700">{{ statistics['count-IN_PROGRESS_LATE'] }}</span>
+                <span class="h-2.5 w-2.5 rounded-full bg-orange-500"></span>
+                <span class="text-[#940001]">{{ statistics['count-IN_PROGRESS_LATE'] }}</span>
               </a>
               <span class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Trễ hạn</span>
             </div>
@@ -168,7 +168,7 @@
                 target="_blank"
               >
                 <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                <span class="text-red-700">{{ statistics['count-NOT_COMPLETED_LATE'] }}</span>
+                <span class="text-[#940001]">{{ statistics['count-NOT_COMPLETED_LATE'] }}</span>
               </a>
               <span class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Trễ hạn</span>
             </div>
@@ -220,7 +220,7 @@
               <a
                 class="{{ bar_base_class }} bg-emerald-500"
                 style="width: {{ statistics['count-APPROVED_ratio'] }}%"
-                title="Đã cập nhật"
+                title="Đã gửi"
                 href="{{ url(prefix + 'mission_list', query={
                   'directive_level': directive_level_id,
                   'year': year,
@@ -234,7 +234,7 @@
                 <a
                   class="{{ bar_base_class }} bg-amber-400"
                   style="width: {{ statistics['count-NOT_SENT_ratio'] }}%"
-                  title="Chưa cập nhật"
+                  title="Chưa gửi"
                   href="{{ url(prefix + 'mission_list', query={
                     'directive_level': directive_level_id,
                     'year': year,
@@ -260,7 +260,7 @@
             class="flex items-center justify-center gap-3 text-xs w-fit m-auto">
               <div class="flex min-w-0 items-center gap-2 text-slate-600">
                 <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-                <span class="truncate font-semibold">Đã cập nhật ({{ statistics['count-APPROVED'] }})</span>
+                <span class="truncate font-semibold">Đã gửi ({{ statistics['count-APPROVED'] }})</span>
               </div>
               <div class="font-bold tabular-nums text-emerald-700">{{ statistics['count-APPROVED_ratio'] }}%</div>
             </a>
@@ -275,7 +275,7 @@
             class="flex items-center justify-center gap-3 text-xs w-fit m-auto">
               <div class="flex min-w-0 items-center gap-2 text-slate-600">
                 <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
-                <span class="truncate font-semibold">Chưa cập nhật ({{ statistics['count-NOT_SENT'] }})</span>
+                <span class="truncate font-semibold">Chưa gửi ({{ statistics['count-NOT_SENT'] }})</span>
               </div>
               <div class="font-bold tabular-nums text-amber-700">{{ statistics['count-NOT_SENT_ratio'] }}%</div>
             </a>
@@ -291,8 +291,7 @@
               <span class="text-xs font-bold uppercase text-slate-500">Tổng số đơn vị</span>
               <span class="text-lg font-bold tabular-nums" style="color:#8B0000">
                 {{
-                  statistics['count-APPROVED_department'] + 
-                  statistics['count-NOT_SENT_department'] 
+                  statistics['total_departments']
                 }}
               </span>
             </div>
@@ -302,8 +301,8 @@
             <div class="flex h-full w-full">
               <a
                 class="{{ bar_base_class }} bg-emerald-500"
-                style="width: {{ statistics['count-APPROVED_department_ratio'] }}%"
-                title="Đã báo cáo"
+                style="width: {{ statistics['total_submitted_departments_ratio'] }}%"
+                title="Đã gửi"
                 href="{{ url(prefix + 'mission_list', query={
                   'directive_level': directive_level_id,
                   'year': year,
@@ -312,12 +311,12 @@
                 }) }}"
                 target="_blank"
               >
-                <span class="{{ label_base_class }}">{{ statistics['count-APPROVED_department_ratio'] }}%</span>
+                <span class="{{ label_base_class }}">{{ statistics['total_submitted_departments_ratio'] }}%</span>
               </a>
               <a
                 class="{{ bar_base_class }} bg-amber-400"
-                style="width: {{ statistics['count-NOT_SENT_department_ratio'] }}%"
-                title="Chưa báo cáo"
+                style="width: {{ 100 - statistics['total_submitted_departments_ratio'] }}%"
+                title="Chưa gửi"
                 href="{{ url(prefix + 'mission_list', query={
                   'directive_level': directive_level_id,
                   'year': year,
@@ -326,7 +325,7 @@
                 }) }}"
                 target="_blank"
               >
-                <span class="{{ label_base_class }}">{{ statistics['count-NOT_SENT_department_ratio'] }}%</span>
+                <span class="{{ label_base_class }}">{{ 100 - statistics['total_submitted_departments_ratio'] }}%</span>
               </a>
             </div>
           </div>
@@ -342,9 +341,9 @@
             class="flex items-center justify-center gap-3 text-xs w-fit m-auto">
               <div class="flex min-w-0 items-center gap-2 text-slate-600">
                 <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-                <span class="truncate font-semibold">Đã báo cáo ({{ statistics['count-APPROVED_department'] }})</span>
+                <span class="truncate font-semibold">Đã gửi ({{ statistics['total_submitted_departments'] }})</span>
               </div>
-              <div class="font-bold tabular-nums text-emerald-700">{{ statistics['count-APPROVED_department_ratio'] }}%</div>
+              <div class="font-bold tabular-nums text-emerald-700">{{ statistics['total_submitted_departments_ratio'] }}%</div>
             </a>
             <a href="{{ url(prefix + 'mission_list', query={
               'directive_level': directive_level_id,
@@ -356,9 +355,9 @@
             class="flex items-center justify-center gap-3 text-xs w-fit m-auto">
               <div class="flex min-w-0 items-center gap-2 text-slate-600">
                 <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
-                <span class="truncate font-semibold">Chưa báo cáo ({{ statistics['count-NOT_SENT_department'] }})</span>
+                <span class="truncate font-semibold">Chưa gửi ({{ statistics['total_departments'] - statistics['total_submitted_departments'] }})</span>
               </div>
-              <div class="font-bold tabular-nums text-amber-700">{{ statistics['count-NOT_SENT_department_ratio'] }}%</div>
+              <div class="font-bold tabular-nums text-amber-700">{{ 100 - statistics['total_submitted_departments_ratio'] }}%</div>
             </a>
           </div>
         </section>
@@ -426,7 +425,7 @@
             '#10b981',
             '#fbbf24',
             '#3b82f6',
-            '#ef4444',
+            '#ed802d',
             '#a855f7',
             '#ef4444',
           ],

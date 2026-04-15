@@ -60,7 +60,9 @@
     {% endif %}
     <div class="grow flex flex-col overflow-auto">
       {% if request.user.is_authenticated %}
+      {% with breadcrumbs=breadcrumbs %}
       {% include 'templates/layouts/header.html' %}
+      {% endwith %}
       {% endif %}
       <div class="flex-1 overflow-auto">
         {% block content %}{% endblock %}

@@ -41,7 +41,7 @@
         <div class="flex items-center gap-3">
           <span
             class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold"
-            :class="excelStep >= 1 ? 'bg-red-700 text-white' : 'bg-slate-200 text-slate-500'"
+            :class="excelStep >= 1 ? 'bg-[#940001] text-white' : 'bg-slate-200 text-slate-500'"
           >1</span>
           <span class="text-sm font-medium text-slate-800">Upload file</span>
         </div>
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
           <span
             class="inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm font-semibold"
-            :class="excelStep >= 2 ? 'border-red-700 bg-red-700 text-white' : 'border-slate-300 bg-white text-slate-400'"
+            :class="excelStep >= 2 ? 'border-[#940001] bg-[#940001] text-white' : 'border-slate-300 bg-white text-slate-400'"
           >2</span>
           <span
             class="text-sm font-medium"
@@ -108,7 +108,7 @@
               <div class="flex flex-wrap items-center gap-4">
                 <a
                   href="{{ url('mission_template_download') }}"
-                  class="inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:text-red-800"
+                  class="inline-flex items-center gap-2 text-sm font-medium text-[#940001] hover:text-red-700"
                 >
                   <span class="h-4 w-4 shrink-0">{% include 'download.svg' %}</span>
                   <span>Tải mẫu</span>
@@ -174,14 +174,14 @@
       <template x-if="excelStep === 1">
         <button
           type="button"
-          class="inline-flex h-10 items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex h-10 items-center justify-center rounded-lg bg-[#940001] px-5 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="!excelFile || !excelDirectiveLevel || !excelDirectiveDocument"
           @click="
             syncExcelValidationState();
             const validationEl = document.getElementById('mission-excel-validation-result');
             const hasTable = !!validationEl?.querySelector('table');
             const metaEl = validationEl?.querySelector('#mission-excel-has-errors');
-            const hasErrors = metaEl ? metaEl.value === '1' : !!validationEl?.querySelector('.text-red-700');
+            const hasErrors = metaEl ? metaEl.value === '1' : !!validationEl?.querySelector('.text-[#940001]');
             if (hasTable && !hasErrors && excelFile && excelDirectiveLevel && excelDirectiveDocument) excelStep = 2
           "
         >
@@ -223,7 +223,7 @@
 
             <button
               type="submit"
-              class="inline-flex h-10 items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex h-10 items-center justify-center rounded-lg bg-[#940001] px-5 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="submitting"
             >
               <span x-show="!submitting">Xác nhận</span>

@@ -8,12 +8,12 @@ from . import (
     system,
     mission,
     categories,
-    directive_document,
     options,
     report,
     quota,
     document,
     public,
+    leader,
 )
 from .auth import SignInView, sign_out
 
@@ -26,11 +26,11 @@ urlpatterns = [
     path('ui-showcase/', include(ui_showcase)),
     path('mission/', include(mission)),
     path('categories/', include(categories)),
-    path('directive-documents/', include(directive_document)),
     path('system/', include(system)),
     path('options/', include(options)),
     path('report/', include(report)),
     path('quotas/', include(quota)),
     path('document/', include(document)),
     path('public/', include(public)),
+    path('leader/', include(leader)),
 ]

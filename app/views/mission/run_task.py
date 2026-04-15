@@ -9,8 +9,9 @@ from app.tasks.mission import (
     run_create_mission_reports_sync,
     enqueue_update_mission_overdue_status_for_date,
     run_update_mission_overdue_status_sync,
+    enqueue_update_mission_report_period,
+    run_update_mission_report_period_sync,
 )
-
 
 @csrf_exempt
 @require_POST
@@ -153,6 +154,87 @@ def mission_run_overdue_status_task_api(request):
             {
                 "success": False,
                 "message": "Failed to run overdue status task",
+                "error": str(e),
+            },
+            status=500,
+        )
+    
+
+@csrf_exempt
+@require_POST
+def mission_run_update_report_period_task_api(request):
+    """
+    POST /app/mission/run-update-report-period-task/
+
+    Body:
+    {
+        "report_year": 2026,
+        "report_month": 4,
+        "run_type": "sync"   // optional: async | sync
+    }
+    """
+    try:
+        body = json.loads(request.body or "{}")
+
+        report_year = int(body.get("report_year"))
+        report_month = int(body.get("report_month"))
+        run_type = (body.get("run_type") or "async").lower()
+
+        if run_type not in ["async", "sync"]:
+            return JsonResponse(
+                {"success": False, "message": "run_type must be 'async' or 'sync'"},
+                status=400,
+            )
+
+        if run_type == "sync":
+            result = run_update_mission_report_period_sync(
+                report_year=report_year,
+                report_month=report_month,
+            )
+            return JsonResponse(
+                {
+                    "success": True,
+                    "task": "update_mission_report_period",
+                    "run_type": "sync",
+                    "report_year": report_year,
+                    "report_month": report_month,
+                    "result": result,
+                },
+                status=200,
+            )
+
+        task = enqueue_update_mission_report_period(
+            report_year=report_year,
+            report_month=report_month,
+        )
+        return JsonResponse(
+            {
+                "success": True,
+                "task": "update_mission_report_period",
+                "run_type": "async",
+                "report_year": report_year,
+                "report_month": report_month,
+                "task_id": str(task.id),
+                "message": "Mission report period update task queued successfully",
+            },
+            status=200,
+        )
+
+    except TypeError:
+        return JsonResponse(
+            {"success": False, "message": "report_year and report_month are required"},
+            status=400,
+        )
+    except ValueError as e:
+        return JsonResponse(
+            {"success": False, "message": str(e)},
+            status=400,
+        )
+    except Exception as e:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Failed to run mission report period update task",
                 "error": str(e),
             },
             status=500,

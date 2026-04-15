@@ -1,0 +1,72 @@
+[
+    {
+      "model": "app.ranking",
+      "pk": 1,
+      "fields": {
+        "code": "A",
+        "name": "Xuất sắc",
+        "score_from": "90.00",
+        "score_to": "100.00",
+        "description": "Hoàn thành xuất sắc nhiệm vụ",
+        "is_active": true,
+        "created_at": "2026-01-01 07:00:00.000 +0700",
+        "updated_at": "2026-01-01 07:00:00.000 +0700"
+      }
+    },
+    {
+      "model": "app.ranking",
+      "pk": 2,
+      "fields": {
+        "code": "B",
+        "name": "Tốt",
+        "score_from": "80.00",
+        "score_to": "89.00",
+        "description": "Hoàn thành tốt nhiệm vụ",
+        "is_active": true,
+        "created_at": "2026-01-01 07:00:00.000 +0700",
+        "updated_at": "2026-01-01 07:00:00.000 +0700"
+      }
+    },
+    {
+      "model": "app.ranking",
+      "pk": 3,
+      "fields": {
+        "code": "C",
+        "name": "Khá",
+        "score_from": "70.00",
+        "score_to": "79.00",
+        "description": "Hoàn thành khá nhiệm vụ",
+        "is_active": true,
+        "created_at": "2026-01-01 07:00:00.000 +0700",
+        "updated_at": "2026-01-01 07:00:00.000 +0700"
+      }
+    },
+    {
+      "model": "app.ranking",
+      "pk": 4,
+      "fields": {
+        "code": "D",
+        "name": "Trung bình",
+        "score_from": "50.00",
+        "score_to": "49.00",
+        "description": "Hoàn thành ở mức trung bình",
+        "is_active": true,
+        "created_at": "2026-01-01 07:00:00.000 +0700",
+        "updated_at": "2026-01-01 07:00:00.000 +0700"
+      }
+    },
+    {
+      "model": "app.ranking",
+      "pk": 5,
+      "fields": {
+        "code": "E",
+        "name": "Yếu",
+        "score_from": "0.00",
+        "score_to": "49.00",
+        "description": "Chưa hoàn thành tốt nhiệm vụ",
+        "is_active": true,
+        "created_at": "2026-01-01 07:00:00.000 +0700",
+        "updated_at": "2026-01-01 07:00:00.000 +0700"
+      }
+    }
+  ]

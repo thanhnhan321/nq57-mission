@@ -20,7 +20,7 @@ from .filters import parse_int_or_none
 
 STATUS_LABEL_MAP = {
     "SENT": "Đã gửi",
-    "NO_REPORT": "Không gửi",
+    "NO_REPORT": "Chưa gửi",
 }
 
 REPORT_TYPE_LABEL_MAP = {
@@ -376,7 +376,7 @@ def _build_summary_rows(rows: list[DepartmentReport]) -> list[dict]:
     Logic mới:
     - Mỗi dòng = 1 nhóm (kỳ báo cáo, loại báo cáo)
     - Đã gửi = số đơn vị distinct có status = SENT
-    - Không gửi = số đơn vị distinct có status = NO_REPORT
+    - Chưa gửi = số đơn vị distinct có status = NO_REPORT
     - Query trực tiếp từ bảng theo status, không lấy tổng đơn vị - đã gửi nữa
     """
     grouped_sent_departments: dict[tuple[str, str], set[int]] = defaultdict(set)

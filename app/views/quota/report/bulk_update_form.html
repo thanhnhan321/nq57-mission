@@ -1,0 +1,21 @@
+{% from 'templates/components/input/textarea/textarea.html' import textarea %}
+<form id="quota-report-bulk-update-form">
+    {{ csrf_input }}
+    <input type="hidden" name="action" value="{{ action }}">
+    {% if action == "reject" %}
+    {{ textarea(
+        name='reason',
+            label='Lý do từ chối',
+            placeholder='Nhập lý do từ chối',
+            value=reason,
+            required=true,
+            error_message=errors.get('reason', ""),
+        ) }}
+    {% else %}
+    Phê duyệt các báo cáo này ?
+    {% endif %}
+    {% for report in reports %}
+    <input type="hidden" name="ids" value="{{ report.id }}">
+    <input type="hidden" name="version[{{report.id}}]" value="{{ report.version }}">
+    {% endfor %}
+</form>

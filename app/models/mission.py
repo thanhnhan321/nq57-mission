@@ -170,7 +170,7 @@ class MissionReport(models.Model):
 
     def save(self, *args, **kwargs):
         # Keep status consistent with period/deadline + sent flags.
-        self.is_locked = self.status in (self.Status.APPROVED, self.Status.NO_REPORT)
+        self.is_locked = self.status in (self.Status.APPROVED) #, self.Status.NO_REPORT
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -1,4 +1,49 @@
 {% from 'templates/components/table/body.html' import table_body %}
+{#
+<div id="quota-summary-statistics" hx-swap-oob="outerHTML:#quota-summary-statistics">
+    <div class="rounded-md ring ring-1 ring-blue-300 bg-blue-200 grid grid-cols-6 items-center p-12 text-lg font-bold gap-y-8 text-blue-400">
+        {% set icon_class = 'h-10 w-10' %}
+        {% set text_class = 'text-slate-800' %}
+        {% set wrapper_class = 'col-span-2 flex items-center gap-2' %}
+        <div class="{{ wrapper_class }}">
+            <div class="{{ icon_class }}">
+                {% include 'chart.svg' %}
+            </div>
+            <p>Tổng kết quả thực hiện</p>
+        </div>
+        <div class="{{ text_class }}">
+            {{ quota.total_actual }} / {{ quota.total_expected }}
+        </div>
+        <div class="{{ wrapper_class }}">
+            <div class="{{ icon_class }} text-indigo-400">
+                {% include 'calendar.svg' %}
+            </div>
+            <p>Tháng đã báo cáo</p>
+        </div>
+        <div class="{{ text_class }}">
+            {{ quota.active_months }} / {{ quota.total_months }}
+        </div>
+        <div class="{{ wrapper_class }}">
+            <div class="{{ icon_class }} text-green-400">
+                {% include 'check.svg' %}
+            </div>
+            <p>Tháng đạt yêu cầu</p>
+        </div>
+        <div class="{{ text_class }}">
+            {{ quota.success_months }} / {{ quota.total_months }}
+        </div>
+        <div class="{{ wrapper_class }}">
+            <div class="{{ icon_class }} text-red-400">
+                {% include 'target.svg' %}
+            </div>
+            <p>Tỷ lệ thực hiện</p>
+        </div>
+        <div class="{{ text_class }}">
+            {{ quota.completion_percent }}
+        </div>
+    </div>
+</div>
+#}
 {{
     table_body(
         columns=columns,

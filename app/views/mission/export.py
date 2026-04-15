@@ -1,5 +1,6 @@
+import math
 from collections import defaultdict
-from datetime import datetime
+from datetime import date
 from io import BytesIO
 from pathlib import Path
 
@@ -9,10 +10,75 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 from app.models.document import DirectiveDocument
 from app.models.mission import Department, Mission, MissionReport
 from app.models.period import Period
+
+# Đồng bộ với _apply_layout — dùng khi Dimension chưa có width.
+_EXPORT_COL_WIDTH_DEFAULTS: dict[int, float] = {
+    1: 4,
+    2: 18,
+    3: 16,
+    4: 30,
+    **{c: 10.0 for c in range(5, 17)},
+    17: 12,
+    18: 12,
+    19: 12,
+    20: 16,
+    21: 16,
+    22: 26,
+    23: 20,
+}
+
+
+def _export_col_width(ws, col_idx: int) -> float:
+    letter = get_column_letter(col_idx)
+    dim = ws.column_dimensions.get(letter)
+    w = getattr(dim, "width", None) if dim else None
+    if w is not None:
+        try:
+            return float(w)
+        except (TypeError, ValueError):
+            pass
+    return _EXPORT_COL_WIDTH_DEFAULTS.get(col_idx, 12.0)
+
+
+def _wrapped_line_count(value, col_width: float) -> int:
+    """Ước lượng số dòng hiển thị khi wrap (Calibri ~11pt, hơi thận trọng để không cắt chữ)."""
+    if value is None:
+        return 1
+    if isinstance(value, bool):
+        return 1
+    if isinstance(value, date):
+        return 1
+    if isinstance(value, (int, float)):
+        return 1
+    text = str(value).replace("\r\n", "\n")
+    if not text.strip():
+        return 1
+    # Hệ số < 1: ít ký tự/dòng hơn → nhiều dòng hơn → cao hàng hơn (tránh cắt nội dung).
+    chars_per_line = max(5, int(col_width * 0.88 + 0.5))
+    lines = 0
+    for para in text.split("\n"):
+        chunk = para if para else " "
+        lines += max(1, math.ceil(len(chunk) / chars_per_line))
+    return lines
+
+
+def _set_export_data_row_heights(ws, first_data_row: int = 11) -> None:
+    """openpyxl không tự autofit theo wrap — chỉnh chiều cao theo ô có nhiều dòng nhất."""
+    min_h = 36.0
+    max_h = 409.0
+    line_pt = 15.0
+    pad_pt = 8.0
+    for row_idx in range(first_data_row, ws.max_row + 1):
+        max_lines = 1
+        for col_idx in range(1, 24):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            max_lines = max(max_lines, _wrapped_line_count(cell.value, _export_col_width(ws, col_idx)))
+        ws.row_dimensions[row_idx].height = min(max_h, max(min_h, max_lines * line_pt + pad_pt))
 
 
 def _parse_int_or_none(value):
@@ -243,17 +309,18 @@ def _apply_layout(ws):
     ws.column_dimensions["A"].width = 4
     ws.column_dimensions["B"].width = 18
     ws.column_dimensions["C"].width = 16
-    ws.column_dimensions["D"].width = 16
+    ws.column_dimensions["D"].width = 30
 
     for col in ["E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]:
         ws.column_dimensions[col].width = 10
 
-    ws.column_dimensions["Q"].width = 14
-    ws.column_dimensions["R"].width = 14
-    ws.column_dimensions["S"].width = 16
-    ws.column_dimensions["T"].width = 16
-    ws.column_dimensions["U"].width = 26
-    ws.column_dimensions["V"].width = 20
+    ws.column_dimensions["Q"].width = 12  # Ngày bắt đầu
+    ws.column_dimensions["R"].width = 12  # Thời hạn
+    ws.column_dimensions["S"].width = 12  # Hoàn thành
+    ws.column_dimensions["T"].width = 16  # Trạng thái
+    ws.column_dimensions["U"].width = 16  # Chủ trì
+    ws.column_dimensions["V"].width = 26  # Thực hiện
+    ws.column_dimensions["W"].width = 20  # Tình trạng báo cáo
 
     header_alignment = Alignment(
         horizontal="center",
@@ -265,6 +332,12 @@ def _apply_layout(ws):
         vertical="top",
         wrap_text=True,
     )
+    date_cell_alignment = Alignment(
+        horizontal="center",
+        vertical="center",
+        wrap_text=False,
+    )
+    _date_data_cols = frozenset({2,17, 18, 19})  # Q,R,S — Ngày bắt đầu, Thời hạn, Hoàn thành
 
     thin_border = Border(
         left=Side(style="thin"),
@@ -273,17 +346,20 @@ def _apply_layout(ws):
         bottom=Side(style="thin"),
     )
 
-    for row in ws.iter_rows(min_row=9, max_row=ws.max_row, min_col=1, max_col=22):
+    # Hàng 9 trong mẫu là dòng trống phân cách — không gắn border; header bảng ở hàng 10.
+    for row in ws.iter_rows(min_row=10, max_row=ws.max_row, min_col=1, max_col=23):
         for cell in row:
-            if cell.row == 9:
+            cell.border = thin_border
+            if cell.row == 10:
                 cell.alignment = header_alignment
+            elif cell.column in _date_data_cols:
+                cell.alignment = date_cell_alignment
             else:
                 cell.alignment = body_alignment
-                cell.border = thin_border
 
     ws.row_dimensions[9].height = 28
-    for row_idx in range(10, ws.max_row + 1):
-        ws.row_dimensions[row_idx].height = 36
+    ws.row_dimensions[10].height = 36
+    _set_export_data_row_heights(ws, first_data_row=11)
 
 
 @require_GET
@@ -318,7 +394,7 @@ def mission_export_report(request):
 
     # Clear data cũ từ hàng 10 trở đi
     for row_idx in range(11, max(ws.max_row, 11) + 1):
-        for col_idx in range(1, 23):  # A -> V
+        for col_idx in range(1, 24):  # A -> W
             ws.cell(row=row_idx, column=col_idx).value = None
 
     mission_ids = list(mission_qs.values_list("code", flat=True))
@@ -377,25 +453,32 @@ def mission_export_report(request):
                 value=value,
             )
 
-        due_cell = ws.cell(row=row_idx, column=17, value=getattr(mission, "due_date", None))
-        done_cell = ws.cell(row=row_idx, column=18, value=getattr(mission, "completed_date", None))
+        start_cell = ws.cell(row=row_idx, column=17, value=getattr(mission, "start_date", None))       # Q
+        due_cell = ws.cell(row=row_idx, column=18, value=getattr(mission, "due_date", None))            # R
+        done_cell = ws.cell(row=row_idx, column=19, value=getattr(mission, "completed_date", None))     # S
+
+        start_cell.number_format = "dd/mm/yyyy"
         due_cell.number_format = "dd/mm/yyyy"
         done_cell.number_format = "dd/mm/yyyy"
 
         ws.cell(
             row=row_idx,
-            column=19,
+            column=20,  # T
             value=_get_mission_status_label(getattr(mission, "mission_status", None)),
         )
         ws.cell(
             row=row_idx,
-            column=20,
+            column=21,  # U
             value=mission.department.get_short_label() if getattr(mission, "department", None) else "",
         )
-        ws.cell(row=row_idx, column=21, value=assignee_names)
         ws.cell(
             row=row_idx,
-            column=22,
+            column=22,  # V
+            value=assignee_names,
+        )
+        ws.cell(
+            row=row_idx,
+            column=23,  # W
             value=_get_report_status_label(getattr(mission, "report_status", None)),
         )
 

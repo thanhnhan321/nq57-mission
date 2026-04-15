@@ -21,22 +21,23 @@ COLUMNS = [
     ) 
 ]
 
-FILTERS = [
-    FilterParam(
-        name='search',
-        label='Từ khóa',
-        placeholder='Tìm kiếm theo mã, tên',
-        type=FilterParam.Type.TEXT,
-        query=lambda value: Q(code__icontains=value) | Q(name__icontains=value),
-    ),
-]
+def table_filters():
+    return [
+        FilterParam(
+            name='search',
+            label='Từ khóa',
+            placeholder='Tìm kiếm theo mã, tên',
+            type=FilterParam.Type.TEXT,
+            query=lambda value: Q(code__icontains=value) | Q(name__icontains=value),
+        ),
+    ]
 
 def table_actions(request):
     if not request.user.is_superuser:
         return []
     return  [
         TableAction(
-            label='Thêm',
+            label='Thêm mới',
             icon='plus.svg',
             icon_position=Button.IconPosition.LEFT,
             variant=Button.Variant.FILLED,
@@ -68,7 +69,8 @@ def row_actions(request):
                     title: "Cập nhật loại văn bản",
                     ariaLabel: "Cập nhật loại văn bản",
                     closeEvent: "document-type:success",
-                }});'''
+                }});''',
+                'title': 'Chỉnh sửa',
             }
         ),
         TableRowAction(
@@ -83,6 +85,7 @@ def row_actions(request):
                 'hx-get': f'{reverse("document_type_delete", query={"code": "__ROW_ID__"})}',
                 'hx-swap': 'none',
                 'hx-confirm': 'Bạn có chắc chắn muốn xóa loại văn bản này không? Dữ liệu sẽ không thể khôi phục lại sau khi xóa.',
+                'title': 'Xóa',
             }
         )
     ]
@@ -99,7 +102,7 @@ def get_common_context(request):
         request=request,
         reload_event='document-type:success',
         columns=COLUMNS,
-        filters=FILTERS,
+        filters=table_filters(),
         partial_url=reverse('document_type_list_partial'),
         actions=table_actions(request),
         row_actions=row_actions(request),
@@ -109,12 +112,19 @@ def get_common_context(request):
     }
 
 @method_decorator(permission_required('app.view_documenttype'), name='dispatch')
-class DocumentTypeListView(ListView):
+class DocumentTypeListPartialView(ListView):
     model = DocumentType
-    template_name = "categories/document_type/list.html"
+    template_name = "categories/document_type/partial.html"
 
     def get_context_data(self, **kwargs):
         return get_common_context(self.request)
 
-class DocumentTypeListPartialView(DocumentTypeListView):
-    template_name = "categories/document_type/partial.html"
+@method_decorator(permission_required('app.view_documenttype'), name='dispatch')
+class DocumentTypeListView(DocumentTypeListPartialView):
+    template_name = "categories/document_type/list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['breadcrumbs'] = f'Danh mục / <a href="{reverse("document_type_list")}" class="hover:underline">Loại văn bản</a>'
+        return context
+

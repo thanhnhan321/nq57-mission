@@ -1,6 +1,6 @@
 {% extends 'templates/layouts/index.html' %}
 {% from 'templates/components/table/table.html' import table %}
-{% from 'mission/mission_create_modal.html' import mission_create_modal %}
+{% from 'mission/mission_create_modal.html' import mission_create_modal with context %}
 {% from 'mission/mission_create_excel_modal.html' import mission_excel_modal %}
 
 {% block title %}Danh sách nhiệm vụ{% endblock %}
@@ -70,7 +70,7 @@
           return;
         }
 
-        this.excelHasErrors = !!validationEl.querySelector('.text-red-700');
+        this.excelHasErrors = !!validationEl.querySelector('.text-[#940001]');
       }
     }"
     @open-mission-create-modal.window="modalOpen = true"

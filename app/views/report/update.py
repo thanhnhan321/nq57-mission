@@ -36,7 +36,7 @@ def _next_versioned_pdf_name(current_stored_name: str, base_pdf_name: str) -> st
 
     return f"{stem}_v{next_n}{ext}"
 
-
+@method_decorator(permission_required('app.change_departmentreport'), name='dispatch')
 class DepartmentReportUpdateView(View):
     template_name = "report/update.html"
 

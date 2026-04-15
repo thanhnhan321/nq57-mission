@@ -1,16 +1,12 @@
-from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.views import method_decorator
 from django.db.models import (
     F,
     Q,
-    Case,
     Count,
-    FloatField,
-    Value,
-    When,
 )
 from django.urls import reverse
 from django.views.generic import ListView
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import method_decorator
 
 from ...models import QuotaReport, Department
 from ..templates.components.table import TableContext,  TableColumn
@@ -84,7 +80,7 @@ def get_common_context(request):
         **table_context.to_response_context(queryset)
     }
 
-@method_decorator(permission_required('app.view_department'), name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class DepartmentPerformanceListView(ListView):
     model = Department
     template_name = "dashboard/department_performance.html"
@@ -92,5 +88,6 @@ class DepartmentPerformanceListView(ListView):
     def get_context_data(self, **kwargs):
         return get_common_context(self.request)
 
+@method_decorator(login_required, name="dispatch")
 class DepartmentPerformancePartialView(DepartmentPerformanceListView):
     template_name = "dashboard/department_performance_partial.html"

@@ -1,6 +1,6 @@
 {% from 'templates/components/table/body.html' import table_body %}
 
-<div class="w-fit space-y-2{% if quota.department_id %} w-6xl{% endif %}">
+<div class="w-fit space-y-2">
     <div 
         class="grid grid-cols-[10rem_auto] gap-2 bg-slate-200 ring-1 ring-slate-300 rounded-md p-4" 
     >
@@ -29,10 +29,10 @@
             </div>
         </div>
     </div>
-    <div class="rounded-md ring ring-1 ring-blue-300 bg-blue-200 grid grid-cols-6 items-center p-12 text-lg font-bold gap-y-8 text-blue-400">
+    <div id="quota-summary-statistics" class="rounded-md ring ring-1 ring-blue-300 bg-blue-200 grid grid-cols-8 items-center p-12 text-lg font-bold gap-y-8 text-blue-400">
         {% set icon_class = 'h-10 w-10' %}
         {% set text_class = 'text-slate-800' %}
-        {% set wrapper_class = 'col-span-2 flex items-center gap-2' %}
+        {% set wrapper_class = 'col-span-3 flex items-center gap-2' %}
         <div class="{{ wrapper_class }}">
             <div class="{{ icon_class }}">
                 {% include 'chart.svg' %}
@@ -70,6 +70,4 @@
             {{ quota.completion_percent }}
         </div>
     </div>
-    
-    
 </div>

@@ -103,7 +103,7 @@
           </div>
 
           <template x-if="errorMessage">
-            <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+            <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
               <span x-text="errorMessage"></span>
             </div>
           </template>
@@ -132,7 +132,7 @@
 
             <button
               type="button"
-              class="inline-flex h-10 min-w-[96px] items-center justify-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex h-10 min-w-[96px] items-center justify-center rounded-lg bg-[#940001] px-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               @click="confirmDelete()"
               :disabled="deleteSubmitting"
             >

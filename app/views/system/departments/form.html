@@ -5,11 +5,14 @@
 <form
     id="department-form"
     x-data="{
+    departmentId: {{ jsonify(values.department_id|default('')) }},
         parentOpen: false,
         parentId: {{ jsonify(values.parent_id) }},
         parentName: {{ jsonify(values.parent_name) }},
         parentSearchQuery: {{ jsonify(values.parent_name if values.parent_id else '') }},
+    parentCleared: {{ jsonify(values.parent_cleared|default(false)) }},
         parentHasMatches: true,
+    isActive: {{ jsonify(values.is_active|default('active')) }},
         parentPanelPlaced: false,
         parentPlacement: 'bottom',
         parentCoords: { top: 0, left: 0, width: 0, minWidth: 0 },
@@ -50,6 +53,7 @@
             this.parentId = '';
             this.parentName = {{ jsonify(parent_tree_placeholder) }};
             this.parentSearchQuery = '';
+            this.parentCleared = true;
         },
         repositionParentDropdown() {
             if (!this.$refs || !this.$refs.parentTrigger || !this.$refs.parentPanel) return;
@@ -147,14 +151,17 @@
     @keydown.escape.window="closeParentDropdown()">
     {{ csrf_input }}
 
+    <input type="hidden" name="department_id" :value="departmentId" />
     <input type="hidden" name="parent_id" :value="parentId" />
+    <input type="hidden" name="parent_cleared" :value="parentCleared ? '1' : ''" />
 
     {{ input(
         name='short_name',
         label='Mã đơn vị',
         placeholder='Nhập mã đơn vị',
         value=values.short_name,
-        required=false,
+        required=short_name_required|default(false),
+        disabled=short_name_disabled|default(false),
         error_message=errors.get('short_name', ''),
     ) }}
     {{ input(
@@ -162,23 +169,43 @@
         label='Tên đơn vị',
         placeholder='Nhập tên đơn vị',
         value=values.name,
-        required=true,
+        required=name_required|default(true),
         error_message=errors.get('name', ''),
     ) }}
-    {{ select(
-        name='type',
-        label='Loại đơn vị',
-        placeholder='Chọn loại đơn vị',
-        options_url=url('department_type_options'),
-        value=values.type,
-        required=true,
-        error_message=errors.get('type', ''),
-    ) }}
 
-    <div>
-      <label class="mb-1 flex items-center gap-1.5 text-sm font-bold text-slate-700">
-        <span>Đơn vị cha</span>
-      </label>
+    <div class="col-span-2">
+      {{ select(
+          name='is_active',
+          label='Trạng thái',
+          placeholder='Chọn trạng thái',
+          options_url=url('department_status_options'),
+          value=values.is_active|default('active'),
+          required=true,
+          error_message=errors.get('is_active', ''),
+          extra_attributes={
+            '@change': 'isActive = $event.target.value',
+          },
+      ) }}
+      <p x-show="isActive === 'inactive'" x-cloak class="mt-1 text-xs text-amber-700">
+        Khóa đơn vị này sẽ khóa toàn bộ đơn vị con và tất cả user thuộc cây đơn vị.
+      </p>
+    </div>
+
+    <div class="col-span-2 grid grid-cols-2 gap-3">
+      {{ select(
+          name='type',
+          label='Loại đơn vị',
+          placeholder='Chọn loại đơn vị',
+          options_url=url('department_type_options'),
+          value=values.type,
+          required=type_required|default(true),
+          error_message=errors.get('type', ''),
+      ) }}
+
+      <div>
+        <label class="mb-1 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+          <span>Đơn vị cha</span>
+        </label>
       <div class="relative">
         <div
           x-ref="parentTrigger"

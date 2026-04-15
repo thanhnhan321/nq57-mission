@@ -8,6 +8,7 @@
   x-data='{
     uploadedFiles: {},
     uploading: {},
+    dragging: {},
     reportOrder: {{ report_type_sequence | tojson }},
     selectedPeriod: {{ selected_period_value | tojson }},
     selectedDepartmentId: {{ department_id | tojson }},
@@ -60,6 +61,45 @@ init() {
       if (!this.canUpload(type)) return;
       const input = this.$refs["file_" + type];
       if (input) input.click();
+    },
+
+        onDragOver(type) {
+      if (!this.canUpload(type) || this.isUploading(type)) return;
+      this.dragging[type] = true;
+    },
+
+    async onDrop(type, event) {
+      this.dragging[type] = false;
+
+      if (!this.canUpload(type) || this.isUploading(type)) {
+        return;
+      }
+
+      const file = event?.dataTransfer?.files?.[0];
+      if (!file) return;
+
+      const isPdf =
+        (file.name || "").toLowerCase().endsWith(".pdf") ||
+        file.type === "application/pdf";
+
+      if (!isPdf) {
+        this.pushToast("Chỉ chấp nhận file PDF", 40);
+        return;
+      }
+
+      if (file.size > 20 * 1024 * 1024) {
+        this.pushToast("Dung lượng file tối đa 20MB", 40);
+        return;
+      }
+
+      const input = this.$refs["file_" + type];
+      if (!input) return;
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+
+      await this.onFileChange(type, { target: input });
     },
 
    async reloadModal() {
@@ -378,7 +418,15 @@ init() {
               x-cloak
               class="border-t border-[#f1f5f9] px-4 py-4"
             >
-              <div class="rounded-[8px] border border-dashed border-[#d1d5db] bg-[#fcfcfd] px-4 py-8 text-center">
+              <div
+                class="rounded-[8px] border border-dashed bg-[#fcfcfd] px-4 py-8 text-center transition-colors"
+                :class="dragging['{{ item.report_type }}']
+                ? 'border-[#b30000] bg-[#fff5f5]'
+                : 'border-[#d1d5db]'"
+                @dragover.prevent="onDragOver('{{ item.report_type }}')"
+                @dragleave.prevent="dragging['{{ item.report_type }}'] = false"
+                @drop.prevent="onDrop('{{ item.report_type }}', $event)"
+              >
                 <div class="text-[14px] font-medium text-[#ef4444]">
                   Kéo thả tệp PDF vào đây hoặc click để chọn
                 </div>

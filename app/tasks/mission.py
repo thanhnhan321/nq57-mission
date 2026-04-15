@@ -3,11 +3,13 @@ from datetime import timedelta
 from django.db.models import Q
 from django.db import transaction
 from django.utils import timezone
+from huey import crontab
+from huey.contrib import djhuey
 from huey.contrib.djhuey import lock_task, task, signal
 from huey.signals import SIGNAL_CANCELED, SIGNAL_ERROR, SIGNAL_LOCKED, SIGNAL_REVOKED
 
 import env
-from app.models import Mission, MissionReport
+from app.models import Mission, MissionReport, Period
 from utils.log import logger
 
 
@@ -210,6 +212,15 @@ def _parse_base_date_or_today(base_date_str: str = None):
         raise ValueError("base_date must be in format YYYY-MM-DD")
 
 
+@djhuey.db_periodic_task(crontab(hour="4", minute="0"))
+@djhuey.lock_task("cron-update-mission-overdue-status-daily")
+def cron_update_mission_overdue_status_daily():
+    """
+    Tự động chạy mỗi ngày lúc 04:00 sáng.
+    """
+    return _update_mission_overdue_status_for_date(timezone.localdate())
+
+
 def _update_mission_overdue_status_for_date(base_date):
     target_due_date = base_date - timedelta(days=1)
 
@@ -290,5 +301,99 @@ def _update_mission_overdue_status_for_date(base_date):
         "message": (
             f"Checked {checked_count} missions, updated {updated_count} latest reports "
             f"for target_due_date={target_due_date}"
+        ),
+    }
+
+@task()
+@lock_task("manual-update-mission-report-period")
+def enqueue_update_mission_report_period(report_year: int, report_month: int):
+    """
+    Task async:
+    - quét mission_report
+    - lấy các report chưa có period_id
+    - chỉ xử lý report có report_year/report_month đúng kỳ truyền vào
+    - dò Period để gán period_id; nếu không có Period thì set null
+    """
+    return _update_mission_report_period(report_year, report_month)
+
+
+def run_update_mission_report_period_sync(report_year: int, report_month: int):
+    """
+    Hàm sync để API debug/test chạy ngay.
+    """
+    return _update_mission_report_period(report_year, report_month)
+
+
+def _update_mission_report_period(report_year: int, report_month: int):
+    _validate_period(report_year, report_month)
+
+    logger.info(
+        f"Updating mission_report.period_id for {report_year}-{report_month:02d}"
+    )
+
+    period = (
+        Period.objects.filter(year=report_year, month=report_month)
+        .only("id")
+        .first()
+    )
+
+    if not period:
+        logger.info(
+            f"No period found for {report_year}-{report_month:02d}, skip updating mission_report"
+        )
+        return {
+            "updated": 0,
+            "checked": 0,
+            "period_id": None,
+            "report_year": report_year,
+            "report_month": report_month,
+            "message": (
+                f"No period found for {report_year}-{report_month:02d}, skip update"
+            ),
+        }
+    target_period_id = period.id if period else None
+
+    report_qs = MissionReport.objects.filter(
+        period_id__isnull=True,
+        report_year=report_year,
+        report_month=report_month,
+    )
+
+    checked = report_qs.count()
+
+    if checked == 0:
+        logger.info(
+            f"No mission reports need period update for {report_year}-{report_month:02d}"
+        )
+        return {
+            "updated": 0,
+            "checked": 0,
+            "period_id": target_period_id,
+            "report_year": report_year,
+            "report_month": report_month,
+            "message": (
+                f"No mission reports need period update for "
+                f"{report_year}-{report_month:02d}"
+            ),
+        }
+
+    with transaction.atomic():
+        updated = report_qs.update(period_id=target_period_id)
+
+    logger.info(
+        f"Updated mission_report.period_id done. "
+        f"year={report_year}, month={report_month}, "
+        f"checked={checked}, updated={updated}, period_id={target_period_id}"
+    )
+
+    return {
+        "updated": updated,
+        "checked": checked,
+        "period_id": target_period_id,
+        "report_year": report_year,
+        "report_month": report_month,
+        "message": (
+            f"Checked {checked} mission reports, updated {updated} records "
+            f"for {report_year}-{report_month:02d}"
         ),
     }

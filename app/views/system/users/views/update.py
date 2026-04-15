@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import render
@@ -13,8 +13,7 @@ from ..extractors import get_full_name
 from ..validators import validate_password
 
 
-@method_decorator(login_required, name='dispatch')
-@method_decorator(permission_required('auth.change_user', raise_exception=True), name='dispatch')
+@method_decorator(permission_required('auth.change_user'), name='dispatch')
 class UserUpdateView(View):
     template_name = 'system/users/update.html'
 

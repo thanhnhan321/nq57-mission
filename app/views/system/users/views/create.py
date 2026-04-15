@@ -44,9 +44,7 @@ class UserCreateView(View):
         if not full_name:
             errors['full_name'] = 'Họ tên là bắt buộc'
 
-        if not email:
-            errors['email'] = 'Email là bắt buộc'
-        elif '@' not in email:
+        if email and '@' not in email:
             errors['email'] = 'Email không hợp lệ'
 
         phone_error = validate_phone(phone)

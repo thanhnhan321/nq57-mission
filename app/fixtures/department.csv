@@ -1,0 +1,215 @@
+﻿STT,Tên đơn vị,Tên viết tắt,Nhóm đơn vị,Phiên hiệu
+0,Công an Thành phố Hồ Chí Minh,CATP,CAP,
+1,Phòng An ninh đối ngoại,PA01,CAP,PA01
+2,Phòng An ninh đối nội,PA02,CAP,PA02
+3,Phòng An ninh chính trị nội bộ,PA03,CAP,PA03
+4,Phòng An ninh kinh tế,PA04,CAP,PA04
+5,"Phòng An ninh mạng và Phòng, chống tội phạm sử dụng Công nghệ cao",PA05,CAP,PA05
+6,Phòng Kỹ thuật nghiệp vụ,PA06,CAP,PA06
+7,Phòng Ngoại tuyến,PA07,CAP,PA07
+8,Phòng Quản lý xuất nhập cảnh,PA08,CAP,PA08
+9,Phòng An ninh điều tra,PA09,CAP,PA09
+10,Văn phòng Cơ quan cảnh sát điều tra,PC01,CAP,PC01
+11,Phòng Cảnh sát điều tra tội phạm về trật tự xã hội,PC02,CAP,PC02
+12,"Phòng Cảnh sát điều tra tội phạm về tham nhũng, kinh tế, buôn lậu, môi trường",PC03,CAP,PC03
+13,Phòng Cảnh sát điều tra tội phạm về Ma tuý,PC04,CAP,PC04
+14,Phòng Cảnh sát Quản lý hành chính về Trật tự xã hội,PC06,CAP,PC06
+15,Phòng Cảnh sát Phòng cháy chữa cháy và Cứu nạn cứu hộ,PC07,CAP,PC07
+16,Phòng Cảnh sát Giao thông,PC08,CAP,PC08
+17,Phòng Kỹ thuật hình sự,PC09,CAP,PC09
+18,Phòng Cảnh sát Thi hành án hình sựu và Hỗ trợ tư pháp,PC10,CAP,PC10
+19,Trại tạm giam Chí hoà,PC11A,CAP,PC11A
+20,Trại tạm giam Bố Lá,PC11B,CAP,PC11B
+21,Trại tạm giam Số 1,PC11C,CAP,PC11C
+22,Trại tạm giam Số 2,PC11D,CAP,PC11D
+23,Phòng Cảnh sát cơ động,PK02,CAP,PK02
+24,Phòng Tham mưu,PV01,CAP,PV01
+25,Phòng Hồ sơ nghiệp vụ,PV06,CAP,PV06
+26,Phòng Tổ chức cán bộ,PX01,CAP,PX01
+27,Phòng Công tác Đảng và Công tác Chính trị,PX03,CAP,PX03
+28,Ban Chuyên đề Công an thành phố (Báo Công an Thành phố),PX04,CAP,PX04
+29,Thanh tra Công an Thành phố,PX05,CAP,PX05
+30,Cơ quan Uỷ ban kiểm tra Đảng uỷ,PX06,CAP,PX06
+31,Phòng Tài chính,PH01,CAP,PH01
+32,"Phòng Viễn Thông, Tin học và Cơ yếu",PH04,CAP,PH04
+33,Bệnh viện Công an Thành phố,PH06,CAP,PH06
+34,Phòng Hậu cần,PH10,CAP,PH10
+35,Công ty Trách nhiệm hữu hạn Một thành viên 990,CTY990,CAP,CTY990
+36,Công an Đặc khu Côn Đảo,CADKConDao,CAX,Bà Rịa - Vũng Tàu
+37,Đồn Công an Cảng hàng không Tân Sơn Nhất,DCACHKTanSonNhat,CAX,Thành phố Hồ Chí Minh
+38,Đồn Công an Khu công nghiệp Kim Huy,DCAKCNKimHuy,CAX,Bình Dương
+39,Đồn Công an Khu công nghiệp Tân Uyên,DCAKCNTanUyen,CAX,Bình Dương
+40,Đồn Công an Khu công nghiệp Sóng Thần,DCAKCNSongThan,CAX,Bình Dương
+41,Đồn Công an Khu công nghiệp Tân Đông Hiệp,DCAKCNTanDongHiep,CAX,Bình Dương
+42,Đồn Công an Khu công nghiệp Mỹ Phước,DCAKCNMyPhuoc,CAX,Bình Dương
+43,Đồn Công an Khu công nghiệp VSIP,DCAKCNVSIP,CAX,Bình Dương
+44,Đồn Công an Khu công nghiệp Đồng An,DCAKCNDongAn,CAX,Bình Dương
+45,Đồn Công an Khu công nghiệp Bàu Bàng,DCAKCNBauBang,CAX,Bình Dương
+46,Đồn Công an Khu công nghiệp Tân Thành,DCAKCNTanThanh,CAX,Bà Rịa - Vũng Tàu
+47,Công an phường An Đông,CAPAnDong,CAX,Thành phố Hồ Chí Minh
+48,Công an phường An Hội Đông,CAPAnHoiDong,CAX,Thành phố Hồ Chí Minh
+49,Công an phường An Hội Tây,CAPAnHoiTay,CAX,Thành phố Hồ Chí Minh
+50,Công an phường An Khánh,CAPAnKhanh,CAX,Thành phố Hồ Chí Minh
+51,Công an phường An Lạc,CAPAnLac,CAX,Thành phố Hồ Chí Minh
+52,Công an phường An Nhơn,CAPAnNhon,CAX,Thành phố Hồ Chí Minh
+53,Công an phường An Phú,CAPAnPhu,CAX,Bình Dương
+54,Công an phường An Phú Đông,CAPAnPhuDong,CAX,Thành phố Hồ Chí Minh
+55,Công an phường Bà Rịa,CAPBaRia,CAX,Bà Rịa - Vũng Tàu
+56,Công an phường Bàn Cờ,CAPBanCo,CAX,Thành phố Hồ Chí Minh
+57,Công an phường Bảy Hiền,CAPBayHien,CAX,Thành phố Hồ Chí Minh
+58,Công an phường Bến Cát,CAPBenCat,CAX,Bình Dương
+59,Công an phường Bến Thành,CAPBenThanh,CAX,Thành phố Hồ Chí Minh
+60,Công an phường Bình Cơ,CAPBinhCo,CAX,Bình Dương
+61,Công an phường Bình Dương,CAPBinhDuong,CAX,Bình Dương
+62,Công an phường Bình Đông,CAPBinhDong,CAX,Thành phố Hồ Chí Minh
+63,Công an phường Bình Hòa,CAPBinhHoa,CAX,Bình Dương
+64,Công an phường Bình Hưng Hòa,CAPBinhHungHoa,CAX,Thành phố Hồ Chí Minh
+65,Công an phường Bình Lợi Trung,CAPBinhLoiTrung,CAX,Thành phố Hồ Chí Minh
+66,Công an phường Bình Phú,CAPBinhPhu,CAX,Thành phố Hồ Chí Minh
+67,Công an phường Bình Quới,CAPBinhQuoi,CAX,Thành phố Hồ Chí Minh
+68,Công an phường Bình Tân,CAPBinhTan,CAX,Thành phố Hồ Chí Minh
+69,Công an phường Bình Tây,CAPBinhTay,CAX,Thành phố Hồ Chí Minh
+70,Công an phường Bình Thạnh,CAPBinhThanh,CAX,Thành phố Hồ Chí Minh
+71,Công an phường Bình Thới,CAPBinhThoi,CAX,Thành phố Hồ Chí Minh
+72,Công an phường Bình Tiên,CAPBinhTien,CAX,Thành phố Hồ Chí Minh
+73,Công an phường Bình Trị Đông,CAPBinhTriDong,CAX,Thành phố Hồ Chí Minh
+74,Công an phường Bình Trưng,CAPBinhTrung,CAX,Thành phố Hồ Chí Minh
+75,Công an phường Cát Lái,CAPCatLai,CAX,Thành phố Hồ Chí Minh
+76,Công an phường Cầu Kiệu,CAPCauKieu,CAX,Thành phố Hồ Chí Minh
+77,Công an phường Cầu Ông Lãnh,CAPCauOngLanh,CAX,Thành phố Hồ Chí Minh
+78,Công an phường Chánh Hiệp,CAPChanhHiep,CAX,Bình Dương
+79,Công an phường Chánh Hưng,CAPChanhHung,CAX,Thành phố Hồ Chí Minh
+80,Công an phường Chánh Phú Hòa,CAPChanhPhuHoa,CAX,Bình Dương
+81,Công an phường Chợ Lớn,CAPChoLon,CAX,Thành phố Hồ Chí Minh
+82,Công an phường Chợ Quán,CAPChoQuan,CAX,Thành phố Hồ Chí Minh
+83,Công an phường Dĩ An,CAPDiAn,CAX,Bình Dương
+84,Công an phường Diên Hồng,CAPDienHong,CAX,Thành phố Hồ Chí Minh
+85,Công an phường Đông Hòa,CAPDongHoa,CAX,Bình Dương
+86,Công an phường Đông Hưng Thuận,CADDongHungThuan,CAX,Thành phố Hồ Chí Minh
+87,Công an phường Đức Nhuận,CAPDucNhuan,CAX,Thành phố Hồ Chí Minh
+88,Công an phường Gia Định,CAPGiaDinh,CAX,Thành phố Hồ Chí Minh
+89,Công an phường Gò Vấp,CAPGoVap,CAX,Thành phố Hồ Chí Minh
+90,Công an phường Hạnh Thông,CAPHanhThong,CAX,Thành phố Hồ Chí Minh
+91,Công an phường Hiệp Bình,CAPHiepBinh,CAX,Thành phố Hồ Chí Minh
+92,Công an phường Hòa Bình,CAPHoaBinh,CAX,Thành phố Hồ Chí Minh
+93,Công an phường Hòa Hưng,CAPHoaHung,CAX,Thành phố Hồ Chí Minh
+94,Công an phường Hòa Lợi,CAPHoaLoi,CAX,Bình Dương
+95,Công an phường Khánh Hội,CAPKhanhHoi,CAX,Thành phố Hồ Chí Minh
+96,Công an phường Lái Thiêu,CAPLaiThieu,CAX,Bình Dương
+97,Công an phường Linh Xuân,CAPLinhXuan,CAX,Thành phố Hồ Chí Minh
+98,Công an phường Long Bình,CAPLongBinh,CAX,Thành phố Hồ Chí Minh
+99,Công an phường Long Hương,CAPLongHuong,CAX,Bà Rịa - Vũng Tàu
+100,Công an phường Long Nguyên,CAPLongNguyen,CAX,Bình Dương
+101,Công an phường Long Phước,CAPLongPhuoc,CAX,Thành phố Hồ Chí Minh
+102,Công an phường Long Trường,CAPLongTruong,CAX,Thành phố Hồ Chí Minh
+103,Công an phường Minh Phụng,CAPMinhPhung,CAX,Thành phố Hồ Chí Minh
+104,Công an phường Nhiêu Lộc,CAPNhieuLoc,CAX,Thành phố Hồ Chí Minh
+105,Công an phường Phú An,CAPPhuAn,CAX,Bình Dương
+106,Công an phường Phú Định,CAPPhuDinh,CAX,Thành phố Hồ Chí Minh
+107,Công an phường Phú Lâm,CAPPhuLam,CAX,Thành phố Hồ Chí Minh
+108,Công an phường Phú Lợi,CAPPhuLoi,CAX,Bình Dương
+109,Công an phường Phú Mỹ,CAPPhuMy,CAX,Bà Rịa - Vũng Tàu
+110,Công an phường Phú Nhuận,CAPPhuNhuan,CAX,Thành phố Hồ Chí Minh
+111,Công an phường Phú Thạnh,CAPPhuThanh,CAX,Thành phố Hồ Chí Minh
+112,Công an phường Phú Thọ,CAPPhuTho,CAX,Thành phố Hồ Chí Minh
+113,Công an phường Phú Thọ Hòa,CAPPhuThoHoa,CAX,Thành phố Hồ Chí Minh
+114,Công an phường Phú Thuận,CAPPhuThuan,CAX,Thành phố Hồ Chí Minh
+115,Công an phường Phước Long,CAPPhuocLong,CAX,Thành phố Hồ Chí Minh
+116,Công an phường Phước Thắng,CAPPhuocThang,CAX,Bà Rịa - Vũng Tàu
+117,Công an phường Rạch Dừa,CAPRachDua,CAX,Bà Rịa - Vũng Tàu
+118,Công an phường Sài Gòn,CAPSaiGon,CAX,Thành phố Hồ Chí Minh
+119,Công an phường Tam Bình,CAPTamBinh,CAX,Thành phố Hồ Chí Minh
+120,Công an phường Tam Long,CAPTamLong,CAX,Bà Rịa - Vũng Tàu
+121,Công an phường Tam Thắng,CAPTamThang,CAX,Bà Rịa - Vũng Tàu
+122,Công an phường Tăng Nhơn Phú,CAPTangNhonPhu,CAX,Thành phố Hồ Chí Minh
+123,Công an phường Tân Bình,CAPTanBinh,CAX,Thành phố Hồ Chí Minh
+124,Công an phường Tân Định,CAPTanDinh,CAX,Thành phố Hồ Chí Minh
+125,Công an phường Tân Đông Hiệp,CAPTanDongHiep,CAX,Bình Dương
+126,Công an phường Tân Hải,CAPTanHai,CAX,Bà Rịa - Vũng Tàu
+127,Công an phường Tân Hiệp,CAPTanHiep,CAX,Bình Dương
+128,Công an phường Tân Hòa,CAPTanHoa,CAX,Thành phố Hồ Chí Minh
+129,Công an phường Tân Hưng,CAPTanHung,CAX,Thành phố Hồ Chí Minh
+130,Công an phường Tân Khánh,CAPTanKhanh,CAX,Bình Dương
+131,Công an phường Tân Mỹ,CAPTanMy,CAX,Thành phố Hồ Chí Minh
+132,Công an phường Tân Phú,CAPTanPhu,CAX,Thành phố Hồ Chí Minh
+133,Công an phường Tân Phước,CAPTanPhuoc,CAX,Bà Rịa - Vũng Tàu
+134,Công an phường Tân Sơn,CAPTanSon,CAX,Thành phố Hồ Chí Minh
+135,Công an phường Tân Sơn Hòa,CAPTanSonHoa,CAX,Thành phố Hồ Chí Minh
+136,Công an phường Tân Sơn Nhất,CAPTanSonNhat,CAX,Thành phố Hồ Chí Minh
+137,Công an phường Tân Sơn Nhì,CAPTanSonNhi,CAX,Thành phố Hồ Chí Minh
+138,Công an phường Tân Tạo,CAPTanTao,CAX,Thành phố Hồ Chí Minh
+139,Công an phường Tân Thành,CAPTanThanh,CAX,Bà Rịa - Vũng Tàu
+140,Công an phường Tân Thới Hiệp,CAPTanThoiHiep,CAX,Thành phố Hồ Chí Minh
+141,Công an phường Tân Thuận,CAPTanThuan,CAX,Thành phố Hồ Chí Minh
+142,Công an phường Tân Uyên,CAPTanUyen,CAX,Bình Dương
+143,Công an phường Tây Nam,CAPTayNam,CAX,Bình Dương
+144,Công an phường Tây Thạnh,CAPTayThanh,CAX,Thành phố Hồ Chí Minh
+145,Công an phường Thạnh Mỹ Tây,CAPThanhMyTay,CAX,Thành phố Hồ Chí Minh
+146,Công an phường Thông Tây Hội,CAPThongTayHoi,CAX,Thành phố Hồ Chí Minh
+147,Công an phường Thới An,CAPThoiAn,CAX,Thành phố Hồ Chí Minh
+148,Công an phường Thới Hòa,CAPThoiHoa,CAX,Bình Dương
+149,Công an phường Thủ Dầu Một,CAPThuDauMot,CAX,Bình Dương
+150,Công an phường Thủ Đức,CAPThuDuc,CAX,Thành phố Hồ Chí Minh
+151,Công an phường Thuận An,CAPThuanAn,CAX,Bình Dương
+152,Công an phường Thuận Giao,CAPThuanGiao,CAX,Bình Dương
+153,Công an phường Trung Mỹ Tây,CAPTrungMyTay,CAX,Thành phố Hồ Chí Minh
+154,Công an phường Vĩnh Hội,CAPVinhHoi,CAX,Thành phố Hồ Chí Minh
+155,Công an phường Vĩnh Tân,CAPVinhTan,CAX,Bình Dương
+156,Công an phường Vũng Tàu,CAPVungTau,CAX,Bà Rịa - Vũng Tàu
+157,Công an phường Vườn Lài,CAPVuonLai,CAX,Thành phố Hồ Chí Minh
+158,Công an phường Xóm Chiếu,CAPXomChieu,CAX,Thành phố Hồ Chí Minh
+159,Công an phường Xuân Hòa,CAPXuanHoa,CAX,Thành phố Hồ Chí Minh
+160,Công an xã An Long,CAXAnLong,CAX,Bình Dương
+161,Công an xã An Nhơn Tây,CAXAnNhonTay,CAX,Thành phố Hồ Chí Minh
+162,Công an xã An Thới Đông,CAXAnThoiDong,CAX,Thành phố Hồ Chí Minh
+163,Công an xã Bà Điểm,CAXBaDiem,CAX,Thành phố Hồ Chí Minh
+164,Công an xã Bàu Bàng,CAXBauBang,CAX,Bình Dương
+165,Công an xã Bàu Lâm,CAXBauLam,CAX,Bà Rịa - Vũng Tàu
+166,Công an xã Bắc Tân Uyên,CAXBacTanUyen,CAX,Bình Dương
+167,Công an xã Bình Chánh,CAXBinhChanh,CAX,Thành phố Hồ Chí Minh
+168,Công an xã Bình Châu,CAXBinhChau,CAX,Bà Rịa - Vũng Tàu
+169,Công an xã Bình Giã,CAXBinhGia,CAX,Bà Rịa - Vũng Tàu
+170,Công an xã Bình Hưng,CAXBinhHung,CAX,Thành phố Hồ Chí Minh
+171,Công an xã Bình Khánh,CAXBinhKhanh,CAX,Thành phố Hồ Chí Minh
+172,Công an xã Bình Lợi,CAXBinhLoi,CAX,Thành phố Hồ Chí Minh
+173,Công an xã Bình Mỹ,CAXBinhMy,CAX,Thành phố Hồ Chí Minh
+174,Công an xã Cần Giờ,CAXCanGio,CAX,Thành phố Hồ Chí Minh
+175,Công an xã Châu Đức,CAXChauDuc,CAX,Bà Rịa - Vũng Tàu
+176,Công an xã Châu Pha,CAXChauPha,CAX,Bà Rịa - Vũng Tàu
+177,Công an xã Củ Chi,CAXCuChi,CAX,Thành phố Hồ Chí Minh
+178,Công an xã Dầu Tiếng,CAXDauTieng,CAX,Bình Dương
+179,Công an xã Đất Đỏ,CAXDatDo,CAX,Bà Rịa - Vũng Tàu
+180,Công an xã Đông Thạnh,CAXDongThanh,CAX,Thành phố Hồ Chí Minh
+181,Công an xã Hiệp Phước,CAXHiepPhuoc,CAX,Thành phố Hồ Chí Minh
+182,Công an xã Hòa Hiệp,CAXHoaHiep,CAX,Bà Rịa - Vũng Tàu
+183,Công an xã Hòa Hội,CAXHoaHoi,CAX,Bà Rịa - Vũng Tàu
+184,Công an xã Hóc Môn,CAXHocMon,CAX,Thành phố Hồ Chí Minh
+185,Công an xã Hồ Tràm,CAXHoTram,CAX,Bà Rịa - Vũng Tàu
+186,Công an xã Hưng Long,CAXHungLong,CAX,Thành phố Hồ Chí Minh
+187,Công an xã Kim Long,CAXKimLong,CAX,Bà Rịa - Vũng Tàu
+188,Công an xã Long Điền,CAXLongDien,CAX,Bà Rịa - Vũng Tàu
+189,Công an xã Long Hải,CAXLongHai,CAX,Bà Rịa - Vũng Tàu
+190,Công an xã Long Hòa,CAXLongHoa,CAX,Bình Dương
+191,Công an xã Long Sơn,CAXLongSon,CAX,Bà Rịa - Vũng Tàu
+192,Công an xã Minh Thạnh,CAXMinhThanh,CAX,Bình Dương
+193,Công an xã Ngãi Giao,CAXNgaiGiao,CAX,Bà Rịa - Vũng Tàu
+194,Công an xã Nghĩa Thành,CAXNghiaThanh,CAX,Bà Rịa - Vũng Tàu
+195,Công an xã Nhà Bè,CAXNhaBe,CAX,Thành phố Hồ Chí Minh
+196,Công an xã Nhuận Đức,CAXNhuanDuc,CAX,Thành phố Hồ Chí Minh
+197,Công an xã Phú Giáo,CAXPhuGiao,CAX,Bình Dương
+198,Công an xã Phú Hòa Đông,CAXPhuHoaDong,CAX,Thành phố Hồ Chí Minh
+199,Công an xã Phước Hải,CAXPhuocHai,CAX,Bà Rịa - Vũng Tàu
+200,Công an xã Phước Hòa,CAXPhuocHoa,CAX,Bình Dương
+201,Công an xã Phước Thành,CAXPhuocThanh,CAX,Bình Dương
+202,Công an xã Tân An Hội,CAXTanAnHoi,CAX,Thành phố Hồ Chí Minh
+203,Công an xã Tân Nhựt,CAXTanNhut,CAX,Thành phố Hồ Chí Minh
+204,Công an xã Tân Vĩnh Lộc,CAXTanVinhLoc,CAX,Thành phố Hồ Chí Minh
+205,Công an xã Thái Mỹ,CAXThaiMy,CAX,Thành phố Hồ Chí Minh
+206,Công an xã Thanh An,CAXThanhAn_1,CAX,Bình Dương
+207,Công an xã Thạnh An,CAXThanhAn_2,CAX,Thành phố Hồ Chí Minh
+208,Công an xã Thường Tân,CAXThuongTan,CAX,Bình Dương
+209,Công an xã Trừ Văn Thố,CAXTruVanTho,CAX,Bình Dương
+210,Công an xã Vĩnh Lộc,CAXVinhLoc,CAX,Thành phố Hồ Chí Minh
+211,Công an xã Xuân Sơn,CAXXuanSon,CAX,Bà Rịa - Vũng Tàu
+212,Công an xã Xuân Thới Sơn,CAXXuanThoiSon,CAX,Thành phố Hồ Chí Minh
+213,Công an xã Xuyên Mộc,CAXXuyenMoc,CAX,Bà Rịa - Vũng Tàu

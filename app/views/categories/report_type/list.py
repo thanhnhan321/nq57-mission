@@ -3,10 +3,12 @@ from collections import OrderedDict
 from django.urls import reverse
 from django.views.generic import ListView
 from django.utils.html import format_html, format_html_join
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.views import method_decorator
 
-from app.models.report import ReportPeriodMonth
+from ....models.report import ReportPeriodMonth
 from ...templates.components.button import Button
-from ...templates.components.table import TableContext, TableRowAction, FilterParam, TableColumn
+from ...templates.components.table import TableContext, TableRowAction, TableColumn
 
 
 REPORT_TYPE_LABELS = {
@@ -59,7 +61,8 @@ def row_actions():
                     title: "Cập nhật loại báo cáo theo tháng",
                     ariaLabel: "Cập nhật loại báo cáo theo tháng",
                     closeEvent: "report-period-month:success",
-                }});'''
+                }});''',
+                'title': 'Chỉnh sửa',
             }
         ),
     ]
@@ -121,18 +124,20 @@ def get_common_context(request):
 
     return table_context.to_response_context(base_query)
 
-
-class ReportPeriodMonthListView(ListView):
-    model = ReportPeriodMonth
-    template_name = "categories/report_type/list.html"
-
-    def get_context_data(self, **kwargs):
-        return get_common_context(self.request)
-
-
+@method_decorator(permission_required('app.view_reportperiodmonth'), name='dispatch')
 class ReportPeriodMonthListPartialView(ListView):
     model = ReportPeriodMonth
     template_name = "categories/report_type/partial.html"
 
     def get_context_data(self, **kwargs):
         return get_common_context(self.request)
+
+@method_decorator(permission_required('app.view_reportperiodmonth'), name='dispatch')
+class ReportPeriodMonthListView(ReportPeriodMonthListPartialView):
+    template_name = "categories/report_type/list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['breadcrumbs'] = f'Danh mục / <a href="{reverse("report_period_month_list")}" class="hover:underline">Loại báo cáo theo tháng</a>'
+        return context
+

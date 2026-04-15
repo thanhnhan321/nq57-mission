@@ -1,13 +1,22 @@
-from django.db.models import F, Q, BooleanField, Case, Count, FloatField, JSONField, OuterRef, Subquery, Sum, Value, When
-from django.db.models.fields.json import KeyTextTransform
-from django.db.models.functions import JSONObject
-from django.db.models.query import Cast
-from django.db.models.sql.query import RawSQL
+from django.db.models import (
+    BigIntegerField,
+    F,
+    Q,
+    BooleanField,
+    Case,
+    Count,
+    OuterRef,
+    Subquery,
+    Sum,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.views.generic import ListView
 
 from ....constants import OPTION_COLOR_CLASS_MAP
-from ....models import Quota, QuotaAssignment, QuotaReport
+from ....models import Quota, QuotaReport
 from ...templates.components.button import Button
 from ...templates.components.table import TableContext, TableRowAction, FilterParam, TableColumn
 from ....utils.format import format_number
@@ -50,7 +59,7 @@ COLUMNS = [
         align='left',
     ),
     TableColumn(
-        name='lead_department_name',
+        name='department__name',
         label='Đơn vị chủ trì',
     ),
     TableColumn(
@@ -81,13 +90,17 @@ COLUMNS = [
 ]
 
 def table_filters():
+    def evaluation_result_query(value):
+        if value:
+            return Q(total_actual__gte=F('target_percent') * F('total_expected'))
+        return Q(total_actual__isnull=True) | Q(total_actual__lt=F('target_percent') * F('total_expected'))
     return [
         FilterParam(
             name='lead_department',
             label='Đơn vị chủ trì',
             type=FilterParam.Type.SELECT,
             inner_type=FilterParam.Type.NUMBER,
-            query=lambda value: Q(lead_department_id=value),
+            query=lambda value: Q(department_id=value),
             placeholder='Tất cả',
             extra_attributes={
                 'options_url': reverse('department_options'),
@@ -98,7 +111,7 @@ def table_filters():
             label='Đánh giá',
             type=FilterParam.Type.SELECT,
             inner_type=FilterParam.Type.BOOLEAN,
-            query=lambda value: Q(evaluation_result=value),
+            query=lambda value: evaluation_result_query(value),
             placeholder='Tất cả',
             extra_attributes={
                 'options_url': reverse('quota_evaluation_result_options'),
@@ -118,7 +131,8 @@ def row_actions():
                     url: "{reverse("public_quota_detail", query={"id": "__ROW_ID__"})}",
                     title: "Xem chi tiết chỉ tiêu",
                     ariaLabel: "Xem chi tiết chỉ tiêu"
-                }});'''
+                }});''',
+                'title': 'Xem chi tiết chỉ tiêu',
             }
         ),
         TableRowAction(
@@ -131,118 +145,69 @@ def row_actions():
                     url: "{reverse("public_quota_summary", query={"id": "__ROW_ID__"})}",
                     title: "Xem báo cáo chỉ tiêu",
                     ariaLabel: "Xem báo cáo chỉ tiêu"
-                }});'''
+                }});''',
+                'title': 'Xem báo cáo chỉ tiêu',
             }
         ),
     ]
     return actions
 
-REPORT_SUMMARY_SQL_TEMPLATE = """
-(
-    SELECT report_json FROM (
-        -- BRANCH 1: Cumulative
-        SELECT 
-            jsonb_build_object(
-                'total_expected', SUM(sub.expected_value),
-                'total_actual', SUM(sub.actual_value),
-                'reported_departments', STRING_AGG(DISTINCT sub.short_name, ', '),
-                {dynamic_status_sql} -- <--- Inject dynamic counts here
-            ) AS report_json
-        FROM (
-            SELECT DISTINCT ON (qr.department_id)
-                qr.expected_value, qr.actual_value, qr.status, d.short_name
-            FROM quota_report qr
-            JOIN department d ON qr.department_id = d.id
-            WHERE qr.quota_id = quota.id 
-              AND qr.status != 'not_sent'
-            ORDER BY qr.department_id, qr.period_id DESC
-        ) sub
-        WHERE quota.type = 'cumulative'
-        HAVING COUNT(*) > 0
+COUNT_PREFIX = 'count-'
 
-        UNION ALL
-
-        -- BRANCH 2: Standard
-        SELECT 
-            jsonb_build_object(
-                'total_expected', SUM(qr.expected_value),
-                'total_actual', SUM(qr.actual_value),
-                'reported_departments', STRING_AGG(DISTINCT d.short_name, ', '),
-                {dynamic_status_sql} -- <--- And here
-            )
-        FROM quota_report qr
-        JOIN department d ON qr.department_id = d.id
-        WHERE quota.type != 'cumulative'
-          AND qr.quota_id = quota.id
-        HAVING COUNT(*) > 0
-    ) r LIMIT 1
-)
-"""
 
 def get_common_context(request):
-    queryset = Quota.objects
-    dept_queryset = QuotaAssignment.objects.filter(
-        quota=OuterRef('pk'),
-    )
-    lead_dept_query = dept_queryset.filter(
-        is_leader=True
-    )
-    # Lead department & assigned departments
-    queryset = queryset.annotate(
-        lead_department_id=Subquery(lead_dept_query.values('department_id')[:1]),
-        lead_department_name=Subquery(lead_dept_query.values('department__short_name')[:1]),
-    )
+    queryset = Quota.objects.select_related('department')
 
-    COUNT_PREFIX = 'count-'
-    status_sql_fragments = [
-        f"'{COUNT_PREFIX}{val}', COUNT(*) FILTER (WHERE status = '{val}')"
+    # Public totals follow the same rule as internal views:
+    #   total = Σ(value - previous_report.value)
+    def scoped_reports(quota_id_outer_ref=None):
+        ref = OuterRef('pk') if quota_id_outer_ref is None else quota_id_outer_ref
+        return QuotaReport.objects.filter(quota_id=ref)
+
+    def delta_total_subquery(value_field: str, prev_value_field: str) -> Subquery:
+        delta_expr = F(value_field) - Coalesce(F(prev_value_field), 0)
+        return Subquery(
+            scoped_reports()
+            .exclude(status=QuotaReport.Status.NOT_SENT)
+            .values('quota_id')
+            .annotate(_s=Sum(delta_expr))
+            .values('_s')[:1],
+            output_field=BigIntegerField(),
+        )
+
+    report_status_annotations = {
+        f'{COUNT_PREFIX}{val}': Count(
+            'department_reports',
+            filter=Q(department_reports__status=val),
+        )
         for val, _ in QuotaReport.Status.choices
-    ]
-    report_summary_sql = REPORT_SUMMARY_SQL_TEMPLATE.format(
-        dynamic_status_sql=', '.join(status_sql_fragments),
-    )
+    }
 
-    
     queryset = queryset.annotate(
-        report_data=RawSQL(
-            report_summary_sql,
-            [],
-            output_field=JSONField(),
-        )
-    )
-    queryset = queryset.alias(
-        total_actual=Cast(KeyTextTransform('total_actual', 'report_data'), FloatField()),
-        total_expected=Cast(KeyTextTransform('total_expected', 'report_data'), FloatField()),
-    ).annotate(
-        evaluation_result=Case(
-            When(
-                total_actual__gte=F('target_percent') * F('total_expected'),
-                then=Value(True),
-            ),
-            default=Value(False),
-            output_field=BooleanField()
-        )
+        total_expected=delta_total_subquery('expected_value', 'previous_report__expected_value'),
+        total_actual=delta_total_subquery('actual_value', 'previous_report__actual_value'),
+        **report_status_annotations,
     )
 
     query_fields = [
         'id',
         'name',
         'target_percent',
-        'lead_department_id',
-        'lead_department_name',
-        'report_data',
-        'evaluation_result',
+        'department__id',
+        'department__name',
+        'total_expected',
+        'total_actual',
     ]
+    query_fields.extend(report_status_annotations.keys())
 
     queryset = queryset.values(*query_fields)
 
     def transformer(row):
-        row['total_expected'] = row['report_data']['total_expected'] if row['report_data'] else None
-        row['total_actual'] = row['report_data']['total_actual'] if row['report_data'] else None
-        row['completion_percent'] = row['total_actual'] / row['total_expected'] if row['total_expected'] else 0
+        row['completion_percent'] = row['total_actual'] / row['total_expected'] if row['total_expected'] and row['total_actual'] else 0
+        row['evaluation_result'] = True if row['total_expected'] and row['completion_percent'] >= row['target_percent'] else False
         row['report_statuses'] = {}
         for status in QuotaReport.Status:
-            row['report_statuses'][status] = row['report_data'][f"{COUNT_PREFIX}{status}"] if row['report_data'] else 0
+            row['report_statuses'][status] = row[f'{COUNT_PREFIX}{status}']
         return row
 
     table_context = TableContext(

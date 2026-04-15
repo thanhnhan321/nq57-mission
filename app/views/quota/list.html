@@ -1,7 +1,6 @@
 {% extends 'templates/layouts/index.html' %}
 {% from 'templates/components/table/table.html' import table %}
 {% block title %}Danh sách chỉ tiêu{% endblock %}
-
 {% block content %}
 <div class="p-4">
     <div class="space-y-4">
@@ -59,7 +58,6 @@
         {% endif %}
     {{
         table(
-            header='<h1 class="text-4xl font-semibold my-4">Danh sách chỉ tiêu</h1>',
             filters=filters,
             columns=columns,
             rows=rows,

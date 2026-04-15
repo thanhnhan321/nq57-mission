@@ -6,22 +6,20 @@ from django.shortcuts import get_object_or_404, render, reverse
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.views import method_decorator
 
-from app.models.department import UserProfile
-from app.models.mission import Mission, MissionReport
-from app.models.period import Period
-from app.utils.format import format_date
-from app.views.templates.components.button import Button
-from ...views.templates.components.table import (
+from ...models.department import UserProfile
+from ...models.mission import Mission, MissionReport
+from ...utils.format import format_date
+from ..templates.components.button import Button
+from ..templates.components.table import (
     FilterParam,
     TableAction,
     TableRowAction,
     TableColumn,
     TableContext,
 )
-
-from .export import resolve_report_period_to_year_month
-
 
 def _render_badge(text: str | None, tone: str = "gray") -> str:
     if not text or text == "—":
@@ -219,7 +217,6 @@ def get_mission_table_context(request):
     force_department_ids: list[int] = []
 
     report_period_raw = (request.GET.get("report_period") or "").strip()
-    directive_level = request.GET.get("directive_level", "")
     directive_document = request.GET.get("directive_document", "")
     department_values = _parse_multi_values(request, "department")
     status_values = _parse_multi_values(request, "status")
@@ -244,25 +241,13 @@ def get_mission_table_context(request):
     # =========================
     # KỲ BÁO CÁO: default = TẤT CẢ
     # =========================
-    selected_year = None
-    selected_month = None
+    selected_period_id = None
     report_period = ""
 
     if report_period_raw:
-        selected_year, selected_month = resolve_report_period_to_year_month(report_period_raw)
-
-        if selected_year is not None and selected_month is not None:
-            period_obj = (
-                Period.objects.filter(year=selected_year, month=selected_month)
-                .only("pk")
-                .first()
-            )
-            report_period = period_obj.pk if period_obj else report_period_raw
-        else:
-            # giá trị filter không hợp lệ thì coi như "Tất cả"
-            selected_year = None
-            selected_month = None
-            report_period = ""
+        selected_period_id = _parse_int_or_none(report_period_raw)
+        if selected_period_id is not None:
+            report_period = str(selected_period_id)
 
     # =========================
     # SUBQUERY REPORT
@@ -271,10 +256,9 @@ def get_mission_table_context(request):
     # =========================
     report_base = MissionReport.objects.filter(mission_id=OuterRef("pk"))
 
-    if selected_year is not None and selected_month is not None:
+    if selected_period_id is not None:
         report_base = report_base.filter(
-            report_year=selected_year,
-            report_month=selected_month,
+            period_id=selected_period_id,
         ).order_by("-created_at", "-id")
     else:
         report_base = report_base.order_by(
@@ -297,7 +281,11 @@ def get_mission_table_context(request):
         )
         .prefetch_related("assignee_departments")
         .distinct()
-        .order_by("-created_at", "-code")
+        .order_by(
+            "start_date",
+            F("completed_date").desc(nulls_last=True),
+            "-code",
+        )
     )
 
     if force_department_ids:
@@ -308,11 +296,11 @@ def get_mission_table_context(request):
             # TẤT CẢ => không filter theo kỳ báo cáo
             return Q()
 
-        year, month = resolve_report_period_to_year_month(value)
-        if year is None or month is None:
+        period_id = _parse_int_or_none(value)
+        if period_id is None:
             return Q()
 
-        return Q(reports__report_year=year, reports__report_month=month)
+        return Q(reports__period_id=period_id)
 
     def directive_document_query(value: str):
         pk = (value or "").strip()
@@ -400,7 +388,7 @@ def get_mission_table_context(request):
                 label="Cấp chỉ đạo",
                 placeholder="Tất cả",
                 type=FilterParam.Type.SELECT,
-                value=directive_level,
+                inner_type=FilterParam.Type.NUMBER,
                 extra_attributes={
                     "options_url": reverse("directive_level_options"),
                     "@change": (
@@ -464,7 +452,7 @@ def get_mission_table_context(request):
                 variant=Button.Variant.OUTLINED,
                 disabled=False,
                 loading_text="Đang xuất.",
-                klass="!border-red-700 !bg-white !text-red-800 hover:!border-red-800 hover:!bg-red-50 hover:!text-red-900 active:!bg-red-100",
+                klass="!border-[#940001] !bg-white !text-red-700 hover:!border-red-700 hover:!bg-red-50 hover:!text-red-900 active:!bg-red-100",
                 extra_attributes={
                     "@click": f"(() => {{ const baseUrl='{reverse('mission_export_report')}'; const container=$event.currentTarget.closest('[x-id]'); const form=container?.querySelector('form'); if(!form) {{ window.location=baseUrl + window.location.search; return; }} const fd=new FormData(form); const params=new URLSearchParams(); for(const [k,v] of fd.entries()) params.append(k,v); const qs=params.toString(); window.location=baseUrl + (qs ? '?' + qs : ''); }})()",
                 },
@@ -538,7 +526,8 @@ def get_mission_table_context(request):
                                 title: "Xóa nhiệm vụ",
                                 ariaLabel: "Xóa nhiệm vụ",
                                 closeEvent: "mission:success",
-                            }});"""
+                            }});""",
+                            "title": "Xóa",
                         },
                     )
                 ]
@@ -554,9 +543,11 @@ def get_mission_table_context(request):
 
     context["title"] = ""
     context["header"] = ""
+    context["breadcrumbs"] = f'<a href="{reverse("mission_list")}" class="hover:underline">Nhiệm vụ</a>'
 
     return context
 
+@method_decorator(permission_required('app.view_mission'), name='dispatch')
 class MissionListPageView(ListView):
     model = Mission
     template_name = "mission/mission.html"
@@ -565,6 +556,7 @@ class MissionListPageView(ListView):
         return get_mission_table_context(self.request)
 
 
+@method_decorator(permission_required('app.view_mission'), name='dispatch')
 class MissionListPartialView(ListView):
     model = Mission
     template_name = "mission/mission_partial.html"

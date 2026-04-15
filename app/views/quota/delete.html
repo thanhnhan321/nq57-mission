@@ -1,0 +1,25 @@
+{% from 'templates/components/button/button.html' import button %}
+
+<div class="min-w-[420px] space-y-4">
+    <div class="text-sm text-slate-700">
+        Bạn có chắc chắn muốn xóa chỉ tiêu <strong>{{ name }}</strong> không?
+    </div>
+
+    <div class="flex justify-end gap-2">
+        {{ button(
+            text='Xóa',
+            variant='filled',
+            htmx_event_prefix='quota',
+            extra_attributes={
+                'hx-get': url('quota_delete', query={'id': id}),
+                'hx-swap': 'none',
+                '@htmx:after-request': '''
+                    if ($event.detail.successful) {
+                        window.dispatchEvent(new CustomEvent("modal:close-top"));
+                        document.body.dispatchEvent(new CustomEvent("quota:success", { bubbles: true }));
+                    }
+                ''',
+            }
+        ) }}
+    </div>
+</div>

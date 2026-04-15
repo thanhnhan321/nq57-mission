@@ -100,6 +100,7 @@
         "
         @htmx:response-error="submitting = false"
       >
+      {{ csrf_input }}
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
           <div>
             {{ select(
@@ -217,7 +218,7 @@
 
           <button
             type="submit"
-            class="inline-flex h-10 min-w-[88px] items-center justify-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex h-10 min-w-[88px] items-center justify-center rounded-lg bg-[#940001] px-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="submitting"
           >
             <span x-show="!submitting">Lưu</span>

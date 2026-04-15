@@ -1,20 +1,30 @@
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.views import method_decorator
-from django.db.models import F, Q, BooleanField, Case, Count, Exists, FloatField, JSONField, OuterRef, Subquery, Sum, Value, When
+from django.db.models import (
+    BigIntegerField,
+    F,
+    Q,
+    Count,
+    Exists,
+    OuterRef,
+    Subquery,
+    Sum,
+    TextField,
+)
+from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates import StringAgg
-from django.db.models.fields.json import KeyTextTransform
-from django.db.models.functions import JSONObject
-from django.db.models.query import Cast
-from django.db.models.sql.query import RawSQL
+# from django.db import connection
 from django.urls import reverse
 from django.views.generic import ListView
 
 from ...constants import OPTION_COLOR_CLASS_MAP
-from ...models import Period, Quota, QuotaAssignment, QuotaReport
+from ...models import Period, Quota, QuotaReport
 from ..templates.components.button import Button
 from ..templates.components.table import TableContext, TableAction, TableRowAction, FilterParam, TableColumn, MISSING
 from ...utils.format import format_number
-from ...handlers.period import get_report_deadline
+from ...handlers.period import get_quota_report_deadline
+
+COUNT_PREFIX = 'count-'
 
 def evaluation_result_formatter(value):
     color_map = {
@@ -54,7 +64,7 @@ COLUMNS = [
         align=TableColumn.Align.LEFT,
     ),
     TableColumn(
-        name='lead_department_name',
+        name='department__short_name',
         label='Đơn vị chủ trì',
     ),
     TableColumn(
@@ -99,10 +109,14 @@ COLUMNS = [
 ]
 
 def table_filters(request, **kwargs):
-    year = request.GET.get('year', '')
-    period_ids = MISSING
-    if year:
-        period_ids = [int(id) for id in Period.objects.filter(year=year).values_list('id', flat=True)]
+    period_ids = kwargs.get('period_ids', [])
+    if not period_ids:
+        period_ids = MISSING
+    def evaluation_result_query(value):
+        if value:
+            return Q(total_actual__gte=F('target_percent') * F('total_expected'))
+        return Q(total_actual__isnull=True) | Q(total_actual__lt=F('target_percent') * F('total_expected'))
+    
     filters = [
         FilterParam(
             name='search',
@@ -118,7 +132,7 @@ def table_filters(request, **kwargs):
             type=FilterParam.Type.MULTISELECT,
             inner_type=FilterParam.Type.NUMBER,
             value=period_ids,
-            query=lambda value: Exists(QuotaReport.objects.filter(quota=OuterRef('pk'), period_id__in=value)),
+            query=lambda value: Exists(Q(department_reports__period_id__in=value)),
             extra_attributes={
                 'options_url': reverse('period_options'),
             },
@@ -128,7 +142,7 @@ def table_filters(request, **kwargs):
             label='Đơn vị chủ trì',
             type=FilterParam.Type.SELECT,
             inner_type=FilterParam.Type.NUMBER,
-            query=lambda value: Q(lead_department_id=value),
+            query=lambda value: Q(department_id=value),
             placeholder='Tất cả',
             extra_attributes={
                 'options_url': reverse('department_options', query={'scope': 'lead'}),
@@ -140,8 +154,8 @@ def table_filters(request, **kwargs):
             type=FilterParam.Type.SELECT,
             inner_type=FilterParam.Type.NUMBER,
             query=lambda value: (
-                Exists(QuotaReport.objects.filter(quota=OuterRef('pk'), department_id=value)) | 
-                Exists(QuotaAssignment.objects.filter(quota=OuterRef('pk'), department_id=value, is_leader=False))
+                Q(department_reports__department_id=value) | 
+                Q(department_assignments__department_id=value)
             ),
             placeholder='Tất cả',
             extra_attributes={
@@ -153,7 +167,7 @@ def table_filters(request, **kwargs):
             label='Đánh giá',
             type=FilterParam.Type.SELECT,
             inner_type=FilterParam.Type.BOOLEAN,
-            query=lambda value: Q(evaluation_result=value),
+            query=lambda value: evaluation_result_query(value),
             placeholder='Tất cả',
             extra_attributes={
                 'options_url': reverse('quota_evaluation_result_options'),
@@ -161,12 +175,10 @@ def table_filters(request, **kwargs):
         ),
     ]
     def status_query(value):
-        report_filter = Q(quota=OuterRef('pk'), status__in=value)
-        if request.user.is_superuser:
-            return Exists(QuotaReport.objects.filter(report_filter))
-        is_leader_filter = Exists(QuotaAssignment.objects.filter(quota=OuterRef('pk'), department_id=request.user.profile.department_id, is_leader=True))
-        return Exists(QuotaReport.objects.filter(report_filter & Q(department_id=request.user.profile.department_id))) | (is_leader_filter & Exists(QuotaReport.objects.filter(report_filter)))
-
+        filter = Q()
+        for val in value:
+            filter |= Q(**{f'{COUNT_PREFIX}{val}__gte': 1})
+        return filter
     filters.append(
         FilterParam(
             name='report_statuses',
@@ -183,17 +195,15 @@ def table_filters(request, **kwargs):
     return filters
 
 def table_actions(request):
-    actions = []
-    if request.user.is_superuser:
-        actions = [
-            TableAction(
+    actions = [
+        TableAction(
                 label="Xuất báo cáo",
                 icon="download.svg",
                 icon_position=Button.IconPosition.LEFT,
                 variant=Button.Variant.OUTLINED,
                 disabled=False,
                 loading_text="Đang xuất...",
-                klass="!border-red-700 !bg-white !text-red-800 hover:!border-red-800 hover:!bg-red-50 hover:!text-red-900 active:!bg-red-100",
+                klass="!border-[#940001] !bg-white !text-red-700 hover:!border-red-700 hover:!bg-red-50 hover:!text-red-900 active:!bg-red-100",
                 extra_attributes={
                     "menu": {
                         "groups": [
@@ -225,8 +235,11 @@ def table_actions(request):
                     },
                 },
             ),
+    ]
+    if request.user.is_superuser:
+        actions.extend([
             TableAction(
-                label='Thêm',
+                label='Thêm mới',
                 icon='plus.svg',
                 icon_position=Button.IconPosition.LEFT,
                 variant=Button.Variant.FILLED,
@@ -234,9 +247,9 @@ def table_actions(request):
                 extra_attributes={
                     'menu': {
                         'groups': [
-                             [
+                            [
                                 {
-                                    'label': 'Thêm đơn lẻ',
+                                    'label': 'Thêm mới',
                                     'icon': 'plus.svg',
                                     'extra_attributes': { 
                                         '@click': f'''$dispatch("modal:open", {{
@@ -248,13 +261,13 @@ def table_actions(request):
                                     }
                                 },
                                 {
-                                    'label': 'Thêm hàng loạt',
+                                    'label': 'Thêm mới Excel',
                                     'icon': 'file.svg',
                                     'extra_attributes': { 
                                         '@click': f'''$dispatch("modal:open", {{
                                         url: "{reverse("quota_import")}",
-                                        title: "Thêm mới chỉ tiêu hàng loạt",
-                                        ariaLabel: "Thêm mới chỉ tiêu hàng loạt",
+                                        title: "Thêm mới từ Excel",
+                                        ariaLabel: "Thêm mới từ Excel",
                                         closeEvent: "quota:success",
                                     }});'''
                                     }
@@ -265,7 +278,21 @@ def table_actions(request):
                     }
                 }
             ),
-        ]
+            TableAction(
+                label='Mở/Khóa báo cáo',
+                icon='lock.svg',
+                icon_position=Button.IconPosition.LEFT,
+                variant=Button.Variant.OUTLINED,
+                disabled=False,
+                extra_attributes={
+                    '@click': f'''$dispatch("modal:open", {{
+                        url: "{reverse("quota_period_toggle_confirm")}",
+                        title: "Mở/Khóa kỳ báo cáo",
+                        ariaLabel: "Mở/Khóa kỳ báo cáo"
+                    }});'''
+                }
+            ),
+        ])
     return actions
 
 def row_actions(request):
@@ -280,7 +307,8 @@ def row_actions(request):
                     url: "{reverse("quota_detail", query={"id": "__ROW_ID__"})}",
                     title: "Xem chi tiết chỉ tiêu",
                     ariaLabel: "Xem chi tiết chỉ tiêu"
-                }});'''
+                }});''',
+                'title': 'Xem chi tiết',
             }
         ),
         TableRowAction(
@@ -293,7 +321,8 @@ def row_actions(request):
                     url: "{reverse("quota_summary", query={"id": "__ROW_ID__"})}",
                     title: "Xem báo cáo chỉ tiêu",
                     ariaLabel: "Xem báo cáo chỉ tiêu"
-                }});'''
+                }});''',
+                'title': 'Xem báo cáo chỉ tiêu',
             }
         ),
     ]
@@ -310,7 +339,8 @@ def row_actions(request):
                         title: "Cập nhật chỉ tiêu",
                         ariaLabel: "Cập nhật chỉ tiêu",
                         closeEvent: "quota:success",
-                    }});'''
+                    }});''',
+                    'title': 'Chỉnh sửa',
                 }
             ),
             TableRowAction(
@@ -321,151 +351,136 @@ def row_actions(request):
                 render_predicate=lambda row: not row['cannot_delete'],
                 htmx_event_prefix='quota',
                 extra_attributes={
-                    'hx-get': f'{reverse("quota_delete", query={"id": "__ROW_ID__"})}',
-                    'hx-swap': 'none',
-                    'hx-confirm': 'Bạn có chắc chắn muốn xóa chỉ tiêu này không? Dữ liệu sẽ không thể khôi phục lại sau khi xóa.',
+                    '@click': f'''$dispatch("modal:open", {{
+                        url: "{reverse("quota_delete_confirm", query={"id": "__ROW_ID__"})}",
+                        title: "Xóa chỉ tiêu",
+                        ariaLabel: "Xóa chỉ tiêu"
+                    }});''',
+                    'title': 'Xóa',
                 }
             )
         ])
     return actions
 
-REPORT_SUMMARY_SQL_TEMPLATE = """
-(
-    SELECT report_json FROM (
-        -- BRANCH 1: Cumulative
-        SELECT 
-            jsonb_build_object(
-                'total_expected', SUM(sub.expected_value),
-                'total_actual', SUM(sub.actual_value),
-                'reported_departments', STRING_AGG(DISTINCT sub.short_name, ', '),
-                {dynamic_status_sql} -- <--- Inject dynamic counts here
-            ) AS report_json
-        FROM (
-            SELECT DISTINCT ON (qr.department_id)
-                qr.expected_value, qr.actual_value, qr.status, d.short_name
-            FROM quota_report qr
-            JOIN department d ON qr.department_id = d.id
-            WHERE qr.quota_id = quota.id 
-              AND qr.status != 'not_sent'
-              AND (%s OR qr.department_id = %s)
-              {period_filter_sql}
-            ORDER BY qr.department_id, qr.period_id DESC
-        ) sub
-        WHERE quota.type = 'cumulative'
-        HAVING COUNT(*) > 0
-
-        UNION ALL
-
-        -- BRANCH 2: Standard
-        SELECT 
-            jsonb_build_object(
-                'total_expected', SUM(qr.expected_value),
-                'total_actual', SUM(qr.actual_value),
-                'reported_departments', STRING_AGG(DISTINCT d.short_name, ', '),
-                {dynamic_status_sql} -- <--- And here
-            )
-        FROM quota_report qr
-        JOIN department d ON qr.department_id = d.id
-        WHERE quota.type != 'cumulative'
-          AND qr.quota_id = quota.id
-          AND (%s OR qr.department_id = %s)
-          {period_filter_sql}
-        HAVING COUNT(*) > 0
-    ) r LIMIT 1
-)
-"""
-
 def get_common_context(request):
-    queryset = Quota.objects
-    # Filter quotas for non-superusers
+    queryset = (
+        Quota.objects
+        .select_related('department')
+        .prefetch_related('department_assignments')
+    )
     department_id = request.user.profile.department_id
-    if not request.user.is_superuser:
-        queryset=queryset.filter(
-            Exists(QuotaReport.objects.filter(quota=OuterRef('pk'), department_id=department_id)) | 
-            Exists(QuotaAssignment.objects.filter(quota=OuterRef('pk'), department_id=department_id))
+    is_superuser = request.user.is_superuser
+    if not is_superuser:
+        queryset = queryset.filter(
+            Q(department_id=department_id) | 
+            Q(department_reports__department_id=department_id) | 
+            Q(department_assignments__department_id=department_id)
         )
 
-    dept_queryset = QuotaAssignment.objects.filter(
-        quota=OuterRef('pk'),
-    )
-    lead_dept_query = dept_queryset.filter(
-        is_leader=True
-    )
     DELIMITER = ', '
-    # Lead department & assigned departments
     queryset = queryset.annotate(
-        lead_department_id=Subquery(lead_dept_query.values('department_id')[:1]),
-        lead_department_name=Subquery(lead_dept_query.values('department__short_name')[:1]),
-        assigned_departments=Subquery(
-            (
-                dept_queryset.filter(is_leader=False)
-                .values('quota_id')
-                .annotate(assigned_departments=StringAgg('department__short_name', delimiter=DELIMITER, distinct=True))
-                .values('assigned_departments')[:1]
-            )
-        ),
-        cannot_delete=Exists(QuotaReport.objects.filter(quota=OuterRef('pk')).exclude(status=QuotaReport.Status.NOT_SENT))
-    )
-
-    COUNT_PREFIX = 'count-'
-
-    period_ids = request.GET.getlist('period_ids', [])
-    report_period_filter_sql = ''
-    if period_ids:
-        report_period_filter_sql = f"AND qr.period_id IN ({', '.join((int(id) for id in period_ids))})"
-
-    status_sql_fragments = [
-        f"'{COUNT_PREFIX}{val}', COUNT(*) FILTER (WHERE status = '{val}')"
-        for val, _ in QuotaReport.Status.choices
-    ]
-    report_summary_sql = REPORT_SUMMARY_SQL_TEMPLATE.format(
-        dynamic_status_sql=', '.join(status_sql_fragments),
-        period_filter_sql=report_period_filter_sql
-    )
-    
-    queryset = queryset.annotate(
-        report_data=RawSQL(
-            report_summary_sql,
-            [request.user.is_superuser, department_id, request.user.is_superuser, department_id],
-            output_field=JSONField(),
+        assigned_departments=StringAgg(
+            'department_assignments__department__short_name', 
+            delimiter=DELIMITER,
+            distinct=True,
         )
     )
+
+    raw_period_ids = request.GET.getlist('period_ids', [])
+    if raw_period_ids:
+        period_ids = [int(x) for x in raw_period_ids]
+    else:
+        year = request.GET.get('year', '')
+
+        period_ids = list(Period.objects.filter(year=year).values_list('id', flat=True)) if year else []
+    # scoped_reports() is built on QuotaReport; OuterRef('pk') there is the report id, not quota id.
+    user_is_quota_lead_for_report = Exists(
+        Quota.objects.filter(
+            id=OuterRef('quota_id'),
+            department_id=department_id,
+        )
+    )
+
+    def scoped_reports(quota_id_outer_ref=None):
+        # Outer query is usually Quota → OuterRef('pk'). When nested under another
+        # QuotaReport subquery (e.g. max_period_sq inside cum_*), pass OuterRef('quota_id').
+        ref = OuterRef('pk') if quota_id_outer_ref is None else quota_id_outer_ref
+        qs = QuotaReport.objects.filter(quota_id=ref)
+        if period_ids:
+            qs = qs.filter(period_id__in=period_ids)
+        if not is_superuser:
+            qs = qs.filter(Q(department_id=department_id) | user_is_quota_lead_for_report)
+        return qs
+
+    # Totals are computed as sum of deltas vs previous_report for *all* quota types:
+    #   total = Σ (value - previous_report.value)
+    # This makes cumulative and discrete quotas consistent when previous_report is populated.
+    def delta_total_subquery(value_field: str, prev_value_field: str) -> Subquery:
+        delta_expr = F(value_field)- Coalesce(F(prev_value_field), 0)
+        return Subquery(
+            scoped_reports()
+            .exclude(status=QuotaReport.Status.NOT_SENT)
+            .values('quota_id')
+            .annotate(_s=Sum(delta_expr))
+            .values('_s')[:1],
+            output_field=BigIntegerField(),
+        )
+
+    total_expected_sq = delta_total_subquery('expected_value', 'previous_report__expected_value')
+    total_actual_sq = delta_total_subquery('actual_value', 'previous_report__actual_value')
+
+    reported = Subquery(
+        scoped_reports()
+        .values('quota_id')
+        .annotate(_n=StringAgg('department__short_name', delimiter=DELIMITER, distinct=True))
+        .values('_n')[:1],
+        output_field=TextField(),
+    )
+
+    report_status_annotations = {}
+    for val, _ in QuotaReport.Status.choices:
+        status_filter = Q(department_reports__status=val)
+        if period_ids:
+            status_filter &= Q(department_reports__period_id__in=period_ids)
+        status_filter &= Q() if is_superuser else (
+            Q(department_reports__department_id=department_id) | Q(department_id=department_id)
+        )
+        report_status_annotations[f'{COUNT_PREFIX}{val}'] = Count('department_reports', filter=status_filter, distinct=True)
+
     queryset = queryset.alias(
-        total_actual=Cast(KeyTextTransform('total_actual', 'report_data'), FloatField()),
-        total_expected=Cast(KeyTextTransform('total_expected', 'report_data'), FloatField()),
+        temp_expected=total_expected_sq,
+        temp_actual=total_actual_sq,
     ).annotate(
-        evaluation_result=Case(
-            When(
-                total_actual__gte=F('target_percent') * F('total_expected'),
-                then=Value(True),
-            ),
-            default=Value(False),
-            output_field=BooleanField()
-        )
+        total_expected=F('temp_expected'),
+        total_actual=F('temp_actual'),
+        reported_departments=reported,
+        **report_status_annotations,
     )
 
     query_fields = [
         'id',
         'name',
         'target_percent',
-        'lead_department_id',
-        'lead_department_name',
+        'department_id',
+        'department__short_name',
         'assigned_departments',
-        'report_data',
-        'evaluation_result',
-        'cannot_delete',
+        'total_expected',
+        'total_actual',
+        'reported_departments',
     ]
+    query_fields.extend(report_status_annotations.keys())
 
     queryset = queryset.values(*query_fields)
 
     def transformer(row):
-        row['total_expected'] = row['report_data']['total_expected'] if row['report_data'] else None
-        row['total_actual'] = row['report_data']['total_actual'] if row['report_data'] else None
-        row['reported_departments'] = row['report_data']['reported_departments'] if row['report_data'] else ''
-        row['completion_percent'] = row['total_actual'] / row['total_expected'] if row['total_expected'] else 0
+        row['completion_percent'] = row['total_actual'] / row['total_expected'] if row['total_expected'] and row['total_actual'] else 0
+        row['evaluation_result'] = True if row['total_expected'] and row['completion_percent'] >= row['target_percent'] else False
         row['report_statuses'] = {}
+        row['cannot_delete'] = False
         for status in QuotaReport.Status:
-            row['report_statuses'][status] = row['report_data'][f"{COUNT_PREFIX}{status}"] if row['report_data'] else 0
+            row['report_statuses'][status] = row[f'{COUNT_PREFIX}{status}']
+            if status != QuotaReport.Status.NOT_SENT and row[f'{COUNT_PREFIX}{status}'] > 0:
+                row['cannot_delete'] = True
         # Full assigned departments
         row['assigned_departments_full'] = row['assigned_departments']
         
@@ -479,27 +494,31 @@ def get_common_context(request):
         request=request,
         reload_event='quota:success',
         columns=COLUMNS,
-        filters=table_filters(request),
+        filters=table_filters(request, period_ids=period_ids),
         partial_url=reverse('quota_list_partial'),
         actions=table_actions(request),
         row_actions=row_actions(request),
         show_ordinal=True,
     )
-
-    deadline_alert = get_report_deadline()
-
-    return {
-        **table_context.to_response_context(queryset, transformer=transformer),
-        'deadline_alert': deadline_alert,
-    }
+    ctx = table_context.to_response_context(queryset, transformer=transformer)
+    # print(connection.queries[-1]['sql'])
+    return ctx
 
 @method_decorator(permission_required('app.view_quota'), name='dispatch')
-class QuotaListView(ListView):
+class QuotaListPartialView(ListView):
     model = Quota
-    template_name = "quota/list.html"
+    template_name = "quota/partial.html"
 
     def get_context_data(self, **kwargs):
         return get_common_context(self.request)
 
-class QuotaListPartialView(QuotaListView):
-    template_name = "quota/partial.html"
+@method_decorator(permission_required('app.view_quota'), name='dispatch')
+class QuotaListView(QuotaListPartialView):
+    template_name = "quota/list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['breadcrumbs'] = f'<a href="{reverse("quota_list")}" class="hover:underline">Chỉ tiêu</a>'
+        deadline_alert = get_quota_report_deadline()
+        context['deadline_alert'] = deadline_alert
+        return context

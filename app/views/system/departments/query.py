@@ -4,10 +4,12 @@ from typing import Any, Callable
 from django.urls import reverse
 
 from ....models import Department
+from ....constants import OPTION_COLOR_CLASS_MAP
 from ..utils.text import normalize_text
 from ..utils.tree import build_tree, filter_tree, iter_tree
+from ...options.department import department_status_label
 from ...templates.components.button import Button
-from ...templates.components.table import FilterParam, TableAction
+from ...templates.components.table import FilterParam, TableAction, TableRowAction
 
 
 PAGE_TITLE = 'Danh sách đơn vị'
@@ -42,31 +44,47 @@ def _get_type_label(department):
     return f'<div class="flex justify-center w-full">{department.get_type_display()}</div>'
 
 
+def _get_status_label(value):
+    color = 'green' if value else 'red'
+    badge = f'<div class="w-fit rounded-full {OPTION_COLOR_CLASS_MAP[color]} text-xs px-2 py-1">{department_status_label(value)}</div>'
+    return f'<div class="flex justify-center w-full">{badge}</div>'
+
+
 COLUMNS = [
     DepartmentTableColumn(name='stt', label='STT', width='72px', sortable=True),
     DepartmentTableColumn(name='short_name', label='Mã đơn vị', width='140px', formatter=_center_formatter, sortable=True),
     DepartmentTableColumn(name='name', label='Tên đơn vị', width='45%', formatter=lambda value: value, align='left'),
+    DepartmentTableColumn(name='is_active', label='Trạng thái', width='120px', formatter=_get_status_label),
     DepartmentTableColumn(name='type', label='Loại đơn vị', width='140px', formatter=_get_type_label),
 ]
 
 
-FILTERS = [
-    FilterParam(
-        name='search',
-        label='Từ khóa',
-        placeholder='Tìm kiếm theo mã, tên, đơn vị cha',
-        type=FilterParam.Type.TEXT,
-        query=lambda value: value,
-    ),
-    FilterParam(
-        name='type',
-        label='Loại đơn vị',
-        placeholder='Tất cả',
-        type=FilterParam.Type.SELECT,
-        extra_attributes={'options_url': '/app/options/department-types/'},
-        query=lambda value: value,
-    ),
-]
+def table_filters():
+    return [
+        FilterParam(
+            name='search',
+            label='Từ khóa',
+            placeholder='Tìm kiếm theo mã, tên, đơn vị cha',
+            type=FilterParam.Type.TEXT,
+            query=lambda value: value,
+        ),
+        FilterParam(
+            name='type',
+            label='Loại đơn vị',
+            placeholder='Tất cả',
+            type=FilterParam.Type.SELECT,
+            extra_attributes={'options_url': '/app/options/department-types/'},
+            query=lambda value: value,
+        ),
+        FilterParam(
+            name='is_active',
+            label='Trạng thái',
+            placeholder='Tất cả',
+            type=FilterParam.Type.SELECT,
+            extra_attributes={'options_url': '/app/options/department-status-options/'},
+            query=lambda value: value,
+        ),
+    ]
 
 
 def _matches_department(department, search_query):
@@ -91,8 +109,12 @@ def _matches_department(department, search_query):
     return any(normalized_query in value.casefold() for value in values if value)
 
 
-def _matches_department_filters(department, search_query, type_value):
+def _matches_department_filters(department, search_query, type_value, is_active_value):
     if type_value and department.type != type_value:
+        return False
+    if is_active_value == 'active' and not department.is_active:
+        return False
+    if is_active_value == 'inactive' and department.is_active:
         return False
     return _matches_department(department, search_query)
 
@@ -134,6 +156,7 @@ def _tree_row(node, depth, ancestor_ids):
         'stt': 0,
         'short_name': department.short_name,
         'name': department.name,
+        'is_active': department.is_active,
         'type': department,
         'depth': depth,
         'has_children': bool(node.children),
@@ -163,6 +186,7 @@ def _decorate_tree_search_text(node):
 def _build_department_tree(request):
     search_query = request.GET.get('search', '').strip()
     type_value = request.GET.get('type', '').strip()
+    is_active_value = request.GET.get('is_active', '').strip()
     sort = _normalize_sort_field(request.GET.get('sort', '').strip())
     sort_direction = _normalize_sort_direction(request.GET.get('sort_direction', 'asc'))
     page_index = _parse_positive_int(request.GET.get('page_index', '0'), 0)
@@ -170,10 +194,10 @@ def _build_department_tree(request):
 
     queryset = Department.objects.select_related('parent').order_by('id')
     tree_nodes = build_tree(list(queryset))
-    if search_query or type_value:
+    if search_query or type_value or is_active_value:
         tree_nodes = filter_tree(
             tree_nodes,
-            lambda department: _matches_department_filters(department, search_query, type_value),
+            lambda department: _matches_department_filters(department, search_query, type_value, is_active_value),
         )
 
     tree_nodes = _sort_department_tree(tree_nodes, sort, sort_direction)
@@ -196,6 +220,7 @@ def _build_department_tree(request):
     return {
         'search_query': search_query,
         'type_value': type_value,
+        'is_active_value': is_active_value,
         'page_index': page_index,
         'page_size': page_size,
         'total_count': total_count,
@@ -210,7 +235,7 @@ def _build_department_tree(request):
 def table_actions():
     return [
         TableAction(
-            label='Thêm',
+            label='Thêm mới',
             icon='plus.svg',
             icon_position=Button.IconPosition.LEFT,
             variant=Button.Variant.FILLED,
@@ -227,18 +252,40 @@ def table_actions():
     ]
 
 
+def row_actions():
+    return [
+        TableRowAction(
+            label='',
+            icon='edit.svg',
+            icon_position=Button.IconPosition.LEFT,
+            variant=Button.Variant.OUTLINED,
+            disabled=False,
+            extra_attributes={
+                '@click': (
+                    'window.dispatchEvent(new CustomEvent("modal:open", { detail: { url: "'
+                    + reverse('department_update', query={'id': '__ROW_ID__'})
+                    + '", title: "Cập nhật đơn vị", ariaLabel: "Cập nhật đơn vị", closeEvent: "department:success" } }))'
+                ),
+                'title': 'Cập nhật đơn vị',
+                'aria-label': 'Cập nhật đơn vị',
+            },
+        ),
+    ]
+
+
 def get_department_tree_context(request):
     data = _build_department_tree(request)
+    filter_values = {
+        'search': data['search_query'],
+        'type': data['type_value'],
+        'is_active': data['is_active_value'],
+    }
     return {
         'page_title': PAGE_TITLE,
         'partial_url': reverse('department_list_partial'),
         'filters': [
-            *[
-                filter_param.copy(update={'value': data['search_query']})
-                if filter_param.name == 'search'
-                else filter_param.copy(update={'value': data['type_value']})
-                for filter_param in FILTERS
-            ]
+            filter_param.copy(update={'value': filter_values.get(filter_param.name, '')})
+            for filter_param in table_filters()
         ],
         'columns': COLUMNS,
         'rows': data['rows'],
@@ -249,6 +296,7 @@ def get_department_tree_context(request):
         'tree_expanded_ids': data['tree_expanded_ids'],
         'search_query': data['search_query'],
         'type_value': data['type_value'],
+        'is_active_value': data['is_active_value'],
         'type_options': Department.Type.choices,
         'tree_nodes': data['tree_nodes'],
         'empty_message': EMPTY_MESSAGE,
@@ -256,6 +304,7 @@ def get_department_tree_context(request):
         'sort_direction': data['sort_direction'],
         'reload_event': 'department:success',
         'actions': table_actions(),
+        'row_actions': row_actions(),
     }
 
 

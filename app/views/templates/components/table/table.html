@@ -97,9 +97,10 @@
             </div>
             {% endfor %}
         </form>
-        {% if actions %}
+        
         {# Table Actions (Buttons below search/filters) - chỉ hiển thị actions có scope='table' #}
-        <div class="mb-2 flex flex-wrap gap-2 justify-end">
+        <div class="flex flex-wrap gap-2 justify-end {% if actions or bulk_actions %}mb-2{% endif %}">
+            {% if actions %}
             {% for action in actions %}
             {% set ctx_menu = get_attribute(action.extra_attributes, 'menu', {}) %}
             {% call menu(groups=ctx_menu.groups, position=ctx_menu.position) %}
@@ -119,6 +120,8 @@
             }}
             {% endcall %}
             {% endfor %}
+            {% endif %}
+            {% if bulk_actions %}
             {% for action in bulk_actions|default([]) %}
             {% set extra_attributes = dict(action.extra_attributes, **{'@bulk-actions.window': "if ($event.target.id === $id('table')) { disabled = !$event.detail;}"}) %}
             {{
@@ -136,8 +139,9 @@
                 )
             }}
             {% endfor %}
+            {% endif %}
         </div>
-        {% endif %}
+        
 
     </div>
     {{ table_body(

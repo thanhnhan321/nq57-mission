@@ -24,7 +24,7 @@
         {% set extra_attributes = get_attribute(item, 'extra_attributes') or {} %}
         {% set extra_classes = 'w-full justify-start gap-3 px-3 py-2 h-auto rounded-none text-left ' %}
         {% if is_danger %}
-        {% set extra_classes = extra_classes + 'text-red-600 hover:text-red-700' %}
+        {% set extra_classes = extra_classes + 'text-red-600 hover:text-[#940001]' %}
         {% else %}
         {% set extra_classes = extra_classes + 'text-gray-800' %}
         {% endif %}

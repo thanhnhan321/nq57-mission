@@ -4,6 +4,12 @@ from django.views.decorators.http import require_GET
 from ...models.department import Department
 
 
+DEPARTMENT_STATUS_OPTIONS = [
+    {"value": "active", "label": "Hoạt động"},
+    {"value": "inactive", "label": "Tạm khóa"},
+]
+
+
 def _quota_department_label(short_name: str | None, name: str | None) -> str:
     """Ví dụ: PA01 - Phòng A. Thiếu một phần thì chỉ hiển thị phần còn lại."""
     sn = (short_name or "").strip()
@@ -81,10 +87,22 @@ def department_type_options(request):
 
 
 @require_GET
+def department_status_options(request):
+    return JsonResponse(DEPARTMENT_STATUS_OPTIONS, safe=False)
+
+
+def department_status_label(value: bool | str | None) -> str:
+    if value in (True, "active"):
+        return "Hoạt động"
+    return "Tạm khóa"
+
+
+@require_GET
 def department_report_status_options(request):
     data = [
         {"value": "SENT", "label": "Đã gửi"},
-        {"value": "NO_REPORT", "label": "Không gửi"},
+        {"value": "NO_REPORT", "label": "Chưa gửi"}, 
+        #thay thế không gửi bằng chưa gửi vì yêu cầu, để hạn chế sai thông tin nên chỉ thay thế label
     ]
     return JsonResponse(data, safe=False)
 

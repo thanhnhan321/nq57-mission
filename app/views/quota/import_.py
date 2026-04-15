@@ -65,19 +65,13 @@ class QuotaImportView(View):
                                 target_percent=row['target_percent'] / 100,
                                 issued_at=row['issued_at'],
                                 expired_at=row['expired_at'],
+                                department_id=row['lead_department_id'],
                             ).on_behalf_of(request.user)
                             quotas.append(quota)
-                            lead_assignment = QuotaAssignment(
-                                quota_id=quota_uid,
-                                department_id=row['lead_department_id'],
-                                is_leader=True,
-                            ).on_behalf_of(request.user)
-                            quota_assignments.append(lead_assignment)
                             for assigned_department_id in row['assigned_department_ids']:
                                 assignment = QuotaAssignment(
                                     quota_id=quota_uid,
                                     department_id=assigned_department_id,
-                                    is_leader=False,
                                 ).on_behalf_of(request.user)
                                 quota_assignments.append(assignment)
                             period = Period.objects.filter(year=row['issued_at'].year, month=row['issued_at'].month).first()
@@ -142,11 +136,14 @@ class QuotaImportView(View):
         def validate_target_percent(v):
             if not v:
                 return None, "Tỉ lệ được giao không được để trống"
-            if not v.isdigit():
-                return None, "Tỉ lệ được giao phải là số tự nhiên"
-            v = int(v)
-            if v < 1 or v > 100:
-                return None, "Tỉ lệ được giao phải từ 1 đến 100"
+            try:
+                v = float(v)  # cho phép số thập phân
+            except ValueError:
+                return None, "Tỉ lệ được giao phải là số"
+
+            if v <= 1 or v > 100:
+                return None, "Tỉ lệ được giao phải > 1 và <= 100"
+
             return v, None
 
         def validate_issued_at(v):
@@ -306,6 +303,4 @@ class QuotaImportView(View):
         if not data:
             raise ImportException('File không có dữ liệu')
         return data, None
-            
-    
-    
+

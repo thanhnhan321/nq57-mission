@@ -5,7 +5,8 @@ from django.urls import reverse
 
 from ....models import Department
 from ...templates.components.button import Button
-from ...templates.components.table import FilterParam, TableAction, TableColumn, TableContext
+from ...templates.components.table import FilterParam, TableAction, TableColumn, TableContext, TableRowAction
+from .context import build_department_tree_context
 from .extractors import to_row
 from .formatters import department_formatter, role_badge_formatter, status_badge_formatter
 
@@ -15,7 +16,6 @@ DEFAULT_GROUP_NAME = 'Member'
 
 COLUMNS = [
     TableColumn(name='stt', label='STT', sortable=True),
-    TableColumn(name='id', label='ID', sortable=True),
     TableColumn(name='full_name', label='Họ tên', sortable=True),
     TableColumn(name='username', label='Username', sortable=True),
     TableColumn(name='email', label='Email', sortable=False),
@@ -34,6 +34,21 @@ COLUMNS = [
 
 def table_filters():
     return [
+        FilterParam(
+            name='search',
+            label='Tìm kiếm',
+            placeholder='Họ tên, username, email, số điện thoại',
+            type=FilterParam.Type.TEXT,
+            extra_attributes={
+                'autocomplete': 'off',
+            },
+            query=lambda value: (
+                Q(username__icontains=value)
+                | Q(email__icontains=value)
+                | Q(profile__phone__icontains=value)
+                | Q(profile__full_name__icontains=value)
+            ) if value else Q(),
+        ),
         FilterParam(
             name='department',
             label='Đơn vị',
@@ -78,18 +93,7 @@ def table_filters():
 def table_actions():
     return [
         TableAction(
-            label='Xuất danh sách',
-            icon='download.svg',
-            icon_position=Button.IconPosition.LEFT,
-            variant=Button.Variant.OUTLINED,
-            disabled=False,
-            extra_attributes={
-                'hx-get': reverse('user_export'),
-                'hx-swap': 'none',
-            },
-        ),
-        TableAction(
-            label='Thêm',
+            label='Thêm mới',
             icon='plus.svg',
             icon_position=Button.IconPosition.LEFT,
             variant=Button.Variant.FILLED,
@@ -108,7 +112,7 @@ def table_actions():
 
 def row_actions():
     return [
-        TableAction(
+        TableRowAction(
             label='',
             icon='edit.svg',
             icon_position=Button.IconPosition.LEFT,
@@ -128,6 +132,12 @@ def row_actions():
 
 
 def get_user_table_context(request):
+    tree_context = build_department_tree_context()
+    department_id = (request.GET.get('department') or '').strip()
+    department = Department.objects.filter(id=department_id).first() if department_id.isdigit() else None
+    department_filter_label = department.name if department else tree_context['department_tree_placeholder']
+    department_filter_value = str(department.id) if department else ''
+
     table_context = TableContext(
         request=request,
         title='Danh sách người dùng',
@@ -153,9 +163,20 @@ def get_user_table_context(request):
         .order_by('id')
     )
     context = table_context.to_response_context(queryset)
+    search_filter = next((filter_param for filter_param in context['filters'] if filter_param.name == 'search'), None)
+    context['filters'] = [
+        filter_param for filter_param in context['filters']
+        if filter_param.name not in {'search', 'department'}
+    ]
     start_index = context['page_index'] * context['page_size']
     context['rows'] = [
         {**to_row(row), 'stt': start_index + index + 1}
         for index, row in enumerate(context['rows'])
     ]
-    return context
+    return {
+        **tree_context,
+        **context,
+        'search_filter': search_filter,
+        'department_filter_value': department_filter_value,
+        'department_filter_label': department_filter_label,
+    }

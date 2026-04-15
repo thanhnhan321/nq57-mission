@@ -28,6 +28,19 @@
             const lastDay = String(new Date(y, now.getMonth() + 1, 0).getDate()).padStart(2, '0');
             return `${y}-${m}-${lastDay}`;
         })(),
+        pushToast(message, level = 40) {
+            if (window.htmx) {
+                htmx.trigger(document.body, 'new-message', {
+                    value: [
+                        {
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                            message: message || '',
+                            level: level,
+                        }
+                    ]
+                });
+            }
+        },
     }"
     class="min-w-lg grid grid-cols-2 gap-3"
     @submit.prevent
@@ -150,6 +163,7 @@
             if (!isPdf) {
                 if ($refs.documentObjectInput) $refs.documentObjectInput.value = '';
                 object = null;
+                pushToast('Chỉ hỗ trợ định dạng PDF', 40);
                 return;
             }
 
@@ -173,6 +187,7 @@
                     if (!isPdf) {
                         $event.target.value = '';
                         object = null;
+                        pushToast('Chỉ hỗ trợ định dạng PDF', 40);
                         return;
                     }
                     object = file;

@@ -8,7 +8,7 @@ from django.utils import timezone
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side
 
-from ...models import Period, QuotaAssignment, QuotaReport
+from ...models import Period, Quota, QuotaReport
 from .list import get_common_context
 
 
@@ -108,10 +108,9 @@ def export_quota_excel(request):
         else:
             dept_id = request.user.profile.department_id
             leader_quota_ids = set(
-                QuotaAssignment.objects.filter(
-                    quota_id__in=quota_ids,
+                Quota.objects.filter(
+                    id__in=quota_ids,
                     department_id=dept_id,
-                    is_leader=True,
                 ).values_list("quota_id", flat=True)
             )
 

@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import permission_required
 from ....models.document import DirectiveLevel
 from ....handlers.directive_level import DIRECTIVE_LEVELS_KEY
 from ....utils.cache import cache
+
 @method_decorator(permission_required('app.add_directivelevel'), name='dispatch')
 class DirectiveLevelCreateView(View):
     template_name = 'categories/directive_level/create.html'

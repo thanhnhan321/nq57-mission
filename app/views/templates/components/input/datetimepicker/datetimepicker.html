@@ -1312,7 +1312,7 @@
               <div class="flex justify-end gap-3 pt-1">
                 <button
                   type="button"
-                  class="h-9 rounded-lg border border-red-700 bg-white px-4 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  class="h-9 rounded-lg border border-[#940001] bg-white px-4 text-sm font-semibold text-[#940001] hover:bg-red-50 disabled:opacity-50"
                   :disabled="disabled"
                   @click="cancel()"
                 >
@@ -1321,7 +1321,7 @@
 
                 <button
                   type="button"
-                  class="h-9 rounded-lg bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50"
+                  class="h-9 rounded-lg bg-[#940001] px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                   :disabled="disabled || (
                     (variant === 'date' && !draftDate) ||
                     (variant === 'time' && (draftHour === null || draftMinute === null)) ||

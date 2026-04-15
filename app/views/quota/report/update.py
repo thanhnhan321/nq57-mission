@@ -3,17 +3,17 @@ from http import HTTPStatus
 from django.contrib import messages
 from django.contrib.auth import PermissionDenied
 from django.db import transaction
-from django.db.models import F, Case, Exists, OuterRef, Subquery, Value, When
+from django.db.models import F, Case, OuterRef, Subquery, Value, When
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils.timezone import datetime, now
+from django.utils import timezone
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 
-from ....models import QuotaAssignment, Quota, QuotaReport
-from ....handlers.period import get_report_deadline
+from ....models import Quota, QuotaReport
+from ....handlers.period import get_quota_report_deadline
 
 EDIT_STATUSES = [QuotaReport.Status.NOT_SENT, QuotaReport.Status.PENDING, QuotaReport.Status.REJECTED]
 @method_decorator(permission_required('app.change_quotareport'), name='dispatch')
@@ -32,30 +32,22 @@ class QuotaReportUpdateView(View):
             .select_related('quota')
             .select_related('period')
             .filter(id=id)
-            .annotate(
-                is_leader=Exists(
-                    QuotaAssignment.objects.filter(
-                        quota=OuterRef('quota_id'),
-                        department_id=request.user.profile.department_id,
-                        is_leader=True
-                    )
-                )
-            )
             .first()
         )
         if not quota_report:
             messages.warning(request, 'Báo cáo chỉ tiêu không tồn tại')
             return response
+        is_leader = quota_report.quota.department_id == request.user.profile.department_id
         if (
             not request.user.is_superuser and 
-            not quota_report.is_leader and 
+            not is_leader and 
             quota_report.department_id != request.user.profile.department_id
         ):
             raise PermissionDenied()
-        cutoff_datetime = get_report_deadline(quota_report.period)
+        cutoff_datetime = get_quota_report_deadline(quota_report.period)
         can_edit = quota_report.status in EDIT_STATUSES and (
             request.user.is_superuser or (
-                (not cutoff_datetime or cutoff_datetime >= now())
+                (not cutoff_datetime or cutoff_datetime >= timezone.now())
                 and quota_report.department_id == request.user.profile.department_id
             )
         )
@@ -66,6 +58,7 @@ class QuotaReportUpdateView(View):
                 'id': quota_report.id,
                 'version': quota_report.version,
                 'name': quota_report.quota.name,
+                'type': Quota.Type(quota_report.quota.type).label,
                 'register_guide': quota_report.quota.register_guide,
                 'submit_guide': quota_report.quota.submit_guide,
                 'expected_value': quota_report.expected_value,
@@ -73,7 +66,7 @@ class QuotaReportUpdateView(View):
                 'note': quota_report.note,
                 'reason': quota_report.reason,
                 'status': quota_report.status,
-                'is_leader': quota_report.is_leader,
+                'is_leader': is_leader,
                 'can_edit': can_edit,
                 'errors': {},
             }
@@ -93,20 +86,12 @@ class QuotaReportUpdateView(View):
             QuotaReport.objects
             .select_related('quota')
             .filter(id=id)
-            .annotate(
-                is_leader=Exists(
-                    QuotaAssignment.objects.filter(
-                        quota=OuterRef('quota_id'),
-                        department_id=request.user.profile.department_id,
-                        is_leader=True
-                    )
-                )
-            )
             .first()
         )
         if not quota_report:
             messages.warning(request, 'Báo cáo chỉ tiêu không tồn tại')
             return response
+        is_leader = quota_report.quota.department_id == request.user.profile.department_id
         if quota_report.version != int(version):
             messages.warning(request, 'Báo cáo chỉ tiêu có cập nhật mới, vui lòng xem lại')
             return render(
@@ -116,6 +101,7 @@ class QuotaReportUpdateView(View):
                     'id': id,
                     'version': quota_report.version,
                     'name': quota_report.quota.name,
+                    'type': Quota.Type(quota_report.quota.type).label,
                     'register_guide': quota_report.quota.register_guide,
                     'submit_guide': quota_report.quota.submit_guide,
                     'expected_value': quota_report.expected_value,
@@ -123,7 +109,7 @@ class QuotaReportUpdateView(View):
                     'note': quota_report.note,
                     'status': quota_report.status,
                     'reason': quota_report.reason,
-                    'is_leader': quota_report.is_leader,
+                    'is_leader': is_leader,
                     'errors': {},
                 },
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -134,7 +120,7 @@ class QuotaReportUpdateView(View):
         reason = quota_report.reason
         action = request.POST.get('action', "").strip()
         is_submit = action == 'submit' and (request.user.is_superuser or request.user.profile.department_id == quota_report.department_id)
-        is_review = action != 'submit' and (request.user.is_superuser or quota_report.is_leader)
+        is_review = action != 'submit' and (request.user.is_superuser or is_leader)
         if is_submit:
             if quota_report.status not in EDIT_STATUSES:
                 messages.error(request, 'Không có quyền thao tác')
@@ -174,19 +160,20 @@ class QuotaReportUpdateView(View):
                     'note': note,
                     'reason': reason,
                     'status': quota_report.status,
+                    'type': Quota.Type(quota_report.quota.type).label,
                     'register_guide': quota_report.quota.register_guide,
                     'submit_guide': quota_report.quota.submit_guide,
-                    'is_leader': quota_report.is_leader,
+                    'is_leader': is_leader,
                     'errors': errors,
                 },
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
         try:
             if is_submit:
-                cutoff_datetime = get_report_deadline(quota_report.period)
+                cutoff_datetime = get_quota_report_deadline(quota_report.period)
                 can_edit = quota_report.status in EDIT_STATUSES and (
                     request.user.is_superuser or (
-                        (not cutoff_datetime or cutoff_datetime >= now())
+                        (not cutoff_datetime or cutoff_datetime >= timezone.now())
                         and quota_report.department_id == request.user.profile.department_id
                     )
                 )
@@ -213,9 +200,10 @@ class QuotaReportUpdateView(View):
                 'note': note,
                 'reason': reason,
                 'status': quota_report.status,
+                'type': Quota.Type(quota_report.quota.type).label,
                 'register_guide': quota_report.quota.register_guide,
                 'submit_guide': quota_report.quota.submit_guide,
-                'is_leader': quota_report.is_leader,
+                'is_leader': is_leader,
                 'errors': errors,
             },
             status=status,
@@ -224,7 +212,7 @@ class QuotaReportUpdateView(View):
     def handle_submitting(self, request, id, **kwargs):
         expected_value = kwargs.get('expected_value')
         actual_value = kwargs.get('actual_value')
-        note = kwargs.get('note')
+        note = kwargs.get('note') or None
         with transaction.atomic():
             QuotaReport.objects.filter(id=id).update(
                 expected_value=expected_value,
@@ -232,7 +220,7 @@ class QuotaReportUpdateView(View):
                 note=note,
                 status=QuotaReport.Status.PENDING,
                 version=F('version') + 1,
-                submit_at=datetime.now(),
+                submit_at=timezone.now(),
                 submit_by=request.user.username,
             )
             messages.success(request, 'Báo cáo chỉ tiêu đã được gửi đi, vui lòng chờ duyệt')
@@ -256,9 +244,9 @@ class QuotaReportUpdateView(View):
             QuotaReport.objects.select_related('quota').filter(id=id).update(
                 status=new_status,
                 reason=reason if rejected else None,
-                actual_value=0 if rejected else F('actual_value'),
+                actual_value=None if rejected else F('actual_value'),
                 version=F('version') + 1,
-                reviewed_at=datetime.now(),
+                reviewed_at=timezone.now(),
                 reviewed_by=request.user.username,
             )
             if rejected:

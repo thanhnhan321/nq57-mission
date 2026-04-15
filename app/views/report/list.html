@@ -6,17 +6,52 @@
 <div class="p-4">
     <div class="space-y-4">
         {% if deadline_alert and deadline_alert.show %}
-        <div class="rounded-[8px] border border-[#f3c98b] bg-[#fff7ed] px-4 py-3">
-            <div class="flex items-center gap-2 text-[14px] text-[#c2410c]">
-                <span class="text-[16px]">⏰</span>
+        <div
+            class="rounded-lg border border-amber-300 bg-amber-100 px-4 py-3"
+            x-cloak
+            x-data='{
+                deadlineIso: {{ jsonify(deadline_alert.deadline) }},
+                deadlineText: "",
+                remainingParts: "",
+                isOverdue: false,
+                init() {
+                    const d = new Date(this.deadlineIso);
+                    const pad = (n) => String(n).padStart(2, "0");
+                    const w = ["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","Chủ nhật"];
+                    const wd = (d.getDay() + 6) % 7;
+                    this.deadlineText = `${pad(d.getHours())}:${pad(d.getMinutes())} ${w[wd]} ngày ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+                    this.tick();
+                    setInterval(() => this.tick(), 60000);
+                },
+                tick() {
+                    const end = new Date(this.deadlineIso).getTime();
+                    const diff = end - Date.now();
+                    if (diff <= 0) {
+                        this.isOverdue = true;
+                        this.remainingParts = "";
+                        return;
+                    }
+                    this.isOverdue = false;
+                    const days = Math.floor(diff / 86400000);
+                    let r = diff % 86400000;
+                    const hours = Math.floor(r / 3600000);
+                    r %= 3600000;
+                    const minutes = Math.floor(r / 60000);
+                    const parts = [];
+                    if (days > 0) parts.push(`${days} ngày`);
+                    if (hours > 0) parts.push(`${hours} giờ`);
+                    if (minutes > 0) parts.push(`${minutes} phút`);
+                    this.remainingParts = parts.length ? parts.join(" ") : "0 phút";
+                }
+            }'
+        >
+            <div class="flex items-center gap-2 text-sm text-amber-600">
+                <span class="text-lg" aria-hidden="true">⏰</span>
                 <div>
                     Hạn cập nhật báo cáo là
-                    <span class="font-semibold">{{ deadline_alert.deadline_text }}</span>
-                    {% if not deadline_alert.is_overdue %}
-                        <span>(còn lại {{ deadline_alert.remaining_text }})</span>
-                    {% else %}
-                        <span>(đã quá hạn)</span>
-                    {% endif %}
+                    <span class="font-bold" x-text="deadlineText"></span>
+                    <span x-show="!isOverdue">(còn lại <span x-text="remainingParts"></span>)</span>
+                    <span x-show="isOverdue">(đã quá hạn)</span>
                 </div>
             </div>
         </div>

@@ -9,23 +9,23 @@
           open: $persist(true).as('sidebarOpen')
       }"
       x-cloak
-      class="min-h-screen bg-red-700 transition-all ease-in-out overflow-hidden text-white shrink-0" 
+      class="min-h-screen bg-[#940001] transition-all ease-in-out duration-300 overflow-hidden text-white shrink-0" 
       :class="open ? 'w-64' : 'w-16'">
   
     {# Logo Section #}
     <div class="flex items-center h-16 shadow-sm gap-2">
       <button @click="open = !open"
         class="flex items-center">
-        <div class="w-12 rounded-md ms-2 p-2 hover:bg-red-800 overflow-hidden">
+        <div class="w-12 rounded-md ms-2 p-2 hover:bg-red-700 overflow-hidden">
           {% if logo_src %}
-          <img src="{{ logo_src }}" alt="{{ title or 'Logo' }}">
+          <img src="{{ logo_src }}">
           {% else %}
           {% include 'menu.svg' %}
           {% endif %}
         </div>
       </button>
   
-      <div class="transition-all" x-show="open" x-cloak>
+      <div x-show="open">
         <div class="flex items-center justify-center cursor-default font-bold">
           {{ title }}
         </div>
@@ -56,8 +56,8 @@
               } else {
                 $data.submenuOpen = !$data.submenuOpen;
               }"
-            class="w-full flex items-center px-3 rounded-lg transition-all h-14 hover:bg-red-800"
-            :class="(!open || !submenuOpen) && activeSubmenu ? 'bg-red-800' : ''">
+            class="w-full flex items-center px-3 rounded-lg transition-all h-14 hover:bg-red-700"
+            :class="(!open || !submenuOpen) && activeSubmenu ? 'bg-red-700' : ''">
             <div class="flex-shrink-0 w-6 h-6">
                 {% include submenu.icon %}
             </div>
@@ -71,7 +71,7 @@
             
             <a href="{{ submenu_item.url }}"
               class="flex items-center px-3 rounded-lg transition-all h-12"
-              :class="activeSubmenu == '{{ submenu_item.url }}' ? 'bg-red-800' : 'hover:bg-red-800'">
+              :class="activeSubmenu == '{{ submenu_item.url }}' ? 'bg-red-700' : 'hover:bg-red-700'">
               {% set icon = get_attribute(submenu_item, 'icon') %}
               {% if icon %}
               <div class="flex-shrink-0 w-6 h-6">
@@ -92,6 +92,9 @@
                   <p class="text-xs text-gray-500 leading-tight mt-1.5 truncate">{{ submenu_item.description }}</p>
                 {% endif %}
               </div>
+              <div class="h-4 w-4 htmx-indicator">
+                {% include 'spinner.svg' %}
+              </div>
             </a>
             {% endfor %}
           </div>
@@ -100,11 +103,21 @@
         <a href="{{ item.url }}"
           x-data="{
             isCurrentItem: window.location.pathname.startsWith('{{item.url}}'),
+            loading: false,
           }"
+          @click="loading = true"
           class="flex items-center px-3 rounded-lg transition-all h-14"
-          :class="isCurrentItem ? 'bg-red-800' : 'hover:bg-red-800'">
+          :class="isCurrentItem ? 'bg-red-700' : 'hover:bg-red-700'">
           <div class="flex-shrink-0 w-6 h-6">
-            {% include item.icon %}
+            <template x-if="!loading || open">
+              {% include item.icon %}
+            </template>
+            <template x-if="loading && !open">
+              <div class="htmx-indicator">
+                {% include 'spinner.svg' %}
+              </div>
+              
+            </template>
           </div>
           <div class="transition-all min-w-0 px-2" :class="open ? 'opacity-100' : 'opacity-0'">
             <div class="flex items-center">
@@ -119,6 +132,9 @@
             {% if item.description %}
               <p class="text-xs text-gray-500 leading-tight mt-1.5 truncate">{{ item.description }}</p>
             {% endif %}
+          </div>
+          <div class="ml-auto h-4 w-4 htmx-indicator">
+            {% include 'spinner.svg' %}
           </div>
         </a>
       {% endif %}

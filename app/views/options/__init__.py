@@ -8,6 +8,7 @@ from .department import (
     department_report_status_options,
     department_report_type_options,
     department_options,
+    department_status_options,
 )
 from .quota import quota_report_status_options, quota_evaluation_result_options, quota_type_options
 from .document import (
@@ -23,6 +24,7 @@ urlpatterns = [
     path('directive-levels/', directive_level_options, name='directive_level_options'),
     path('report-departments/', department_report_department_options, name='department_report_department_options'),
     path('department-types/', department_type_options, name='department_type_options'),
+    path('department-status-options/', department_status_options, name='department_status_options'),
     path('report-status/', department_report_status_options, name='department_report_status_options'),
     path('report-types/', department_report_type_options, name='department_report_type_options'),
     path('departments/', department_options, name='department_options'),

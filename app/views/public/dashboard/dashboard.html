@@ -27,6 +27,7 @@
           extra_attributes={
             'hx-get': url('public_dashboard_panel', query={'panel': 'mission'}),
             'hx-target': '#dashboard-panel',
+            'hx-include': '[name="year"]',
             '@click': 'active = "mission"',
             ':class': 'active === "mission" ? "text-white" : "bg-slate-200 text-slate-700! border border-slate-200"',
           }
@@ -39,6 +40,7 @@
           extra_attributes={
             'hx-get': url('public_dashboard_panel', query={'panel': 'quota'}),
             'hx-target': '#dashboard-panel',
+            'hx-include': '[name="year"]',
             '@click': 'active = "quota"',
             ':class': 'active === "quota" ? "text-white" : "bg-slate-200 text-slate-700! hover:text-white! border border-slate-200"',
           }
@@ -46,10 +48,11 @@
       }}
     </div>
   <input type="hidden" name="panel" :value="active">
+  <input type="hidden" name="year" value="{{ year }}">
   <div
     id="dashboard-panel"
     hx-get="{{ url('public_dashboard_panel') }}"
-    :hx-include="'[name='panel']'"
+    hx-include="[name='panel']"
     hx-trigger="load once"
     hx-swap="innerHTML"
   >

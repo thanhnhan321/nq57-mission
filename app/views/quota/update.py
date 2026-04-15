@@ -18,6 +18,7 @@ from ...models import (
     QuotaReport,
     Period,
 )
+from utils.validate import isfloat
 @method_decorator(permission_required('app.change_quota'), name='dispatch')
 class QuotaUpdateView(View):
     template_name = 'quota/update.html'
@@ -33,8 +34,8 @@ class QuotaUpdateView(View):
         if not quota:
             messages.warning(request, 'Chỉ tiêu không tồn tại')
             return response
-        lead_department_id = next(assignment.department_id for assignment in quota.department_assignments.filter(is_leader=True))
-        assigned_department_ids = [assignment.department_id for assignment in quota.department_assignments.filter(is_leader=False)]
+        lead_department_id = quota.department_id
+        assigned_department_ids = [assignment.department_id for assignment in quota.department_assignments.all()]
         has_submitted_reports = quota.department_reports.filter(~Q(status=QuotaReport.Status.NOT_SENT)).exists()
         return render(
             request,
@@ -88,9 +89,10 @@ class QuotaUpdateView(View):
         target_percent = request.POST.get('target_percent', "").strip()
         if not target_percent:
             errors['target_percent'] = 'Tỉ lệ được giao là bắt buộc'
-        elif not target_percent.isdigit():
-            errors['target_percent'] = 'Tỉ lệ được giao phải là số tự nhiên'
-        target_percent = int(target_percent)
+        elif not isfloat(target_percent):
+            errors['target_percent'] = 'Tỉ lệ được giao phải là số thập phân'
+        else:
+            target_percent = float(target_percent)
         if has_submitted_reports and target_percent != quota.target_percent * 100:
             errors['target_percent'] = 'Tỉ lệ được giao không được thay đổi khi đã có báo cáo đã gửi'
         elif target_percent > 100:
@@ -153,7 +155,6 @@ class QuotaUpdateView(View):
                 current_assigned_department_ids = {
                     assignment.department_id
                     for assignment in quota.department_assignments.all()
-                    if not assignment.is_leader
                 }
                 with transaction.atomic():
                     target_percent = target_percent / 100
@@ -164,18 +165,11 @@ class QuotaUpdateView(View):
                     quota.target_percent = target_percent
                     quota.issued_at = issued_at
                     quota.expired_at = expired_at
+                    quota.department = lead_department
                     quota.save(user=request.user)
-                    QuotaAssignment.objects.filter(
-                        quota=quota,
-                        is_leader=True,
-                    ).update(
-                        department=lead_department,
-                        updated_by=request.user.username,
-                    )
                     QuotaAssignment.objects.filter(
                         ~Q(department__in=assigned_departments),
                         quota=quota,
-                        is_leader=False,
                     ).delete()
                     # Get current period
                     period = Period.objects.order_by('-year', '-month').first()
@@ -190,7 +184,6 @@ class QuotaUpdateView(View):
                         QuotaAssignment(
                             quota=quota,
                             department=assigned_department,
-                            is_leader=False,
                         ).on_behalf_of(request.user)
                         for assigned_department in assigned_departments
                         if assigned_department.id not in current_assigned_department_ids

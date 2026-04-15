@@ -14,6 +14,7 @@ sort='',
 sort_direction='',
 partial_url='',
 actions=[],
+row_actions=[],
 page_index=0,
 page_size=10,
 total_count=0,
@@ -132,6 +133,7 @@ table_class='w-full table-fixed'
         total_count=total_count,
         statistics_block=statistics_block,
         tree_expanded_ids=tree_expanded_ids,
+        row_actions=row_actions,
         table_class=table_class,
     ) }}
 </div>
@@ -148,6 +150,7 @@ page_size=10,
 total_count=0,
 statistics_block='',
 tree_expanded_ids=[],
+row_actions=[],
 table_class='w-full table-fixed'
 ) %}
 <div
@@ -199,6 +202,10 @@ table_class='w-full table-fixed'
             {% endif %}
           </th>
           {% endfor %}
+
+          {% if row_actions %}
+          <th scope="col" class="sticky right-0 py-3 px-6 text-start min-w-[90px] w-[90px] whitespace-nowrap" style="background-color: #F1F3F9;">Thao tác</th>
+          {% endif %}
         </tr>
       </thead>
 
@@ -256,11 +263,40 @@ table_class='w-full table-fixed'
             {% endif %}
           </td>
           {% endfor %}
+
+          {% if row_actions %}
+          <td class="px-6 py-4 sticky right-0 min-w-[90px] w-[90px] {{ row_bg_color }} group-has-hover:bg-gray-200">
+            <div class="flex items-center justify-start gap-2">
+              {% for action in row_actions %}
+              {% set render = true %}
+              {% if action.render_predicate %}
+              {% set render = action.render_predicate(row) %}
+              {% endif %}
+              {% if render %}
+              {{
+                button(
+                  text=action.label,
+                  icon=action.icon,
+                  icon_position=action.icon_position,
+                  variant=action.variant,
+                  disabled=action.disabled,
+                  loading_text=action.loading_text,
+                  href=action.href|substitute_row_attrs(row, action.key),
+                  htmx_event_prefix=action.htmx_event_prefix,
+                  class=action.klass,
+                  extra_attributes=action.extra_attributes|substitute_row_attrs(row, action.key)
+                )
+              }}
+              {% endif %}
+              {% endfor %}
+            </div>
+          </td>
+          {% endif %}
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-          <td colspan="{{ columns|length }}" class="px-6 py-12 text-center text-gray-500">Không có dữ liệu</td>
+          <td colspan="{{ columns|length + (1 if row_actions else 0) }}" class="px-6 py-12 text-center text-gray-500">Không có dữ liệu</td>
         </tr>
         {% endif %}
       </tbody>
@@ -269,7 +305,7 @@ table_class='w-full table-fixed'
 
   <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
     <div class="flex items-center space-x-2">
-      <p class="text-sm text-red-700">
+      <p class="text-sm text-[#940001]">
         Hiển thị
         <span class="font-medium">{{ (page_index * page_size + 1) if rows else 0 }}</span> -
         <span class="font-medium">{{ page_index * page_size + [page_size, rows|length]|min }}</span> trong tổng số

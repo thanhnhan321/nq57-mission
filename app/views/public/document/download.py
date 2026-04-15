@@ -2,9 +2,6 @@ from django.contrib import messages
 from django.http import FileResponse, HttpResponse
 from django.urls import reverse
 from django.views import View
-
-import env
-
 from ....models import Document
 from utils import minio
 

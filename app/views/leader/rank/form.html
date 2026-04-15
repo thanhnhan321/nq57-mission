@@ -1,0 +1,64 @@
+{% from 'templates/components/input/base/input.html' import input %}
+
+<form
+    id="ranking-form"
+    class="grid grid-cols-1 md:grid-cols-2 gap-4"
+    @submit.prevent
+>
+    {{ csrf_input }}
+
+    {{ input(
+        name='code',
+        label='Xếp loại',
+        value=code,
+        required=true,
+        disabled=true if request.path == url('ranking_update') else false,
+        error_message=errors.get('code', '')
+    ) }}
+
+    {{ input(
+        name='name',
+        label='Tên xếp loại',
+        value=name,
+        required=true,
+        error_message=errors.get('name', '')
+    ) }}
+
+    {{ input(
+        name='score_from',
+        label='Điểm từ',
+        type='number',
+        value=score_from,
+        required=true,
+        extra_attributes={
+            'min': '0',
+            'max': '100',
+            'step': '0.01'
+        },
+        error_message=errors.get('score_from', '')
+    ) }}
+
+    {{ input(
+        name='score_to',
+        label='Điểm đến',
+        type='number',
+        value=score_to,
+        required=true,
+        extra_attributes={
+            'min': '0',
+            'step': '0.01'
+        },
+        error_message=errors.get('score_to', '')
+    ) }}
+
+    <!-- description full width -->
+    <div class="md:col-span-2">
+        {{ input(
+            name='description',
+            label='Mô tả',
+            value=description,
+            error_message=errors.get('description', '')
+        ) }}
+    </div>
+
+</form>

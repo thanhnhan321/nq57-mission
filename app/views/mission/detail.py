@@ -1,11 +1,10 @@
-from datetime import date, datetime, time
+from datetime import date
 from types import SimpleNamespace
-from django.db.models import Q
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, render
@@ -17,8 +16,10 @@ from app.models import Mission
 from app.models.department import UserProfile
 from app.models.document import DirectiveDocument
 from app.models.mission import MissionReport
+from app.models.period import Period
 
 from .create import MissionCreateView
+from ...handlers.period import get_mission_deadline, get_mission_cutoff_day
 
 
 def _truncate_words(text: str, limit: int = 20) -> tuple[str, bool]:
@@ -61,38 +62,49 @@ def _can_complete_mission(user, mission: Mission) -> bool:
     return _is_system_admin(user) or _user_belongs_to_mission_department(user, mission)
 
 
+def _mission_reporting_visible(mission: Mission) -> bool:
+    """Chỉ hiển thị / cho phép báo cáo khi đã tới ngày bắt đầu."""
+    if not mission.start_date:
+        return True
+    return timezone.localdate() >= mission.start_date
+
+
 def _forbidden_mission_json(message: str):
     return JsonResponse({"success": False, "message": message}, status=403)
 
 
-def _get_report_deadline_date(report_year: int, report_month: int, cutoff_day: int = 10) -> date:
-    """
-    Báo cáo tháng M có hạn đến hết ngày cutoff_day của tháng M+1.
-    VD: báo cáo tháng 3/2026 => hạn hết ngày 10/4/2026
-    """
-    if report_month == 12:
-        return date(report_year + 1, 1, cutoff_day)
-    return date(report_year, report_month + 1, cutoff_day)
+def _get_period_by_year_month(year: int, month: int):
+    return Period.objects.filter(year=year, month=month).first()
 
 
-def _get_report_deadline_datetime(report_year: int, report_month: int, cutoff_day: int = 10):
-    deadline_date = _get_report_deadline_date(report_year, report_month, cutoff_day)
-    naive = datetime.combine(deadline_date, time(23, 59, 59))
-    return timezone.make_aware(naive, timezone.get_current_timezone())
+def _get_report_deadline_datetime(report_year: int, report_month: int):
+    period = _get_period_by_year_month(report_year, report_month)
+    return get_mission_deadline(period)
+
+
+def _get_report_deadline_display(report_year: int, report_month: int) -> str:
+    deadline = _get_report_deadline_datetime(report_year, report_month)
+    if not deadline:
+        return ""
+    return timezone.localtime(deadline).strftime("%d/%m/%Y")
+
 
 
 def _get_current_reporting_period(today: date | None = None) -> tuple[int, int]:
     """
     Quy tắc:
-    - Từ ngày 10 của tháng M đến hết ngày 9 của tháng M+1 => kỳ báo cáo là tháng M
-    Ví dụ:
-    - 09/04 => tháng 03
-    - 10/04 => tháng 04
-    - 27/03 => tháng 03
+    - Từ ngày cutoff_day của tháng M đến trước ngày cutoff_day của tháng M+1
+      => kỳ báo cáo là tháng M
+
+    Ví dụ nếu cutoff_day = 5:
+    - 04/04 => kỳ tháng 03
+    - 05/04 => kỳ tháng 04
+    - 20/04 => kỳ tháng 04
     """
     today = today or timezone.localdate()
+    cutoff_day = get_mission_cutoff_day()
 
-    if today.day >= 10:
+    if today.day >= cutoff_day:
         return today.year, today.month
 
     if today.month == 1:
@@ -102,6 +114,9 @@ def _get_current_reporting_period(today: date | None = None) -> tuple[int, int]:
 
 
 def _format_remaining_time(deadline_dt):
+    if not deadline_dt:
+        return ""
+
     now = timezone.localtime()
     if now >= deadline_dt:
         return "đã hết hạn"
@@ -115,14 +130,20 @@ def _format_remaining_time(deadline_dt):
 
 
 def _can_edit_mission_report(user, mission: Mission, report: MissionReport) -> bool:
+    if not _mission_reporting_visible(mission):
+        return False
+
     if _is_system_admin(user):
         return True
 
     if not _user_belongs_to_mission_department(user, mission):
         return False
 
+    deadline = _get_report_deadline_datetime(int(report.report_year), int(report.report_month))
+    if deadline is None:
+        return True
+
     now = timezone.localtime()
-    deadline = _get_report_deadline_datetime(int(report.report_year), int(report.report_month), 10)
     return now <= deadline
 
 
@@ -132,14 +153,20 @@ def _current_period_report_already_submitted(report: MissionReport | None) -> bo
 
 
 def _can_submit_mission_report(user, mission: Mission, report_year: int, report_month: int) -> bool:
+    if not _mission_reporting_visible(mission):
+        return False
+
     if _is_system_admin(user):
         return True
 
     if not _user_belongs_to_mission_department(user, mission):
         return False
 
+    deadline = _get_report_deadline_datetime(report_year, report_month)
+    if deadline is None:
+        return True
+
     now = timezone.localtime()
-    deadline = _get_report_deadline_datetime(report_year, report_month, 10)
     return now <= deadline
 
 
@@ -148,7 +175,7 @@ def _resolve_submitted_status_value():
     Cố gắng tìm 1 status đại diện cho 'đã gửi/đã có báo cáo'
     để không hard-code mù tên enum.
     """
-    no_report_value = getattr(MissionReport.Status, "NO_REPORT", None)
+    no_report_value = getattr(MissionReport.Status, "NOT_SENT", None)
 
     preferred_names = [
         "APPROVED",
@@ -185,7 +212,7 @@ def _build_mission_reports_for_modal(mission: Mission, user=None) -> list:
         if not content_stripped and not locked and not no_work:
             continue
 
-        show_no_submit = r.status == MissionReport.Status.NO_REPORT
+        show_no_submit = r.status == MissionReport.Status.NOT_SENT
         has_report_activity = bool(content_stripped) or no_work
 
         who = ""
@@ -222,9 +249,9 @@ def _build_mission_reports_for_modal(mission: Mission, user=None) -> list:
                 can_edit=can_edit_report,
                 created_by=who,
                 created_at_display=dt_display,
-                edit_deadline_display=_get_report_deadline_date(
-                    int(r.report_year), int(r.report_month), 10
-                ).strftime("%d/%m/%Y"),
+                edit_deadline_display=_get_report_deadline_display(
+                    int(r.report_year), int(r.report_month)
+                ),
             )
         )
 
@@ -235,7 +262,6 @@ def _build_mission_reports_for_modal(mission: Mission, user=None) -> list:
 
 
 def _report_period_filter_options(rows: list) -> list[dict]:
-    """Các kỳ (năm/tháng) có báo cáo hiển thị trong modal, mới nhất trước."""
     pairs = sorted({(int(r.year), int(r.month)) for r in rows}, reverse=True)
     return [
         {"value": f"{y}-{m:02d}", "label": f"Tháng {m:02d}/{y}"} for y, m in pairs
@@ -245,7 +271,6 @@ def _report_period_filter_options(rows: list) -> list[dict]:
 @login_required
 @require_GET
 def mission_result_report_period_filter_options(request, pk):
-    """JSON cho select lọc kỳ báo cáo trong khối Kết quả thực hiện (có tìm kiếm)."""
     mission = get_object_or_404(
         Mission.objects.filter(is_active=True).prefetch_related(
             Prefetch(
@@ -265,8 +290,6 @@ def mission_result_report_period_filter_options(request, pk):
 
 @login_required
 def mission_detail_modal(request, pk):
-    # Backward compatibility: if old UI still opens delete confirm via query param
-    # (open_delete_confirm=1), serve the dedicated table delete modal instead.
     open_delete_confirm_raw = (request.GET.get("open_delete_confirm") or "").strip().lower()
     if open_delete_confirm_raw in {"1", "true", "on", "yes"}:
         return mission_delete_table_modal(request, pk)
@@ -297,7 +320,6 @@ def mission_detail_modal(request, pk):
     assignees = list(mission.assignee_departments.all())
     has_report_content = _mission_has_report_with_content(mission.pk)
     is_admin = _is_system_admin(request.user)
-
     can_delete = is_admin and not has_report_content
 
     current_report_year, current_report_month = _get_current_reporting_period()
@@ -310,26 +332,32 @@ def mission_detail_modal(request, pk):
         .first()
     )
 
-    deadline_dt = _get_report_deadline_datetime(current_report_year, current_report_month, 10)
-
+    deadline_dt = _get_report_deadline_datetime(current_report_year, current_report_month)
     mission_reports = _build_mission_reports_for_modal(mission, user=request.user)
+    show_mission_report_section = _mission_reporting_visible(mission)
+    has_report_activity = _mission_has_report_with_content(mission.pk)
+
+    start_date_min = date.today().replace(day=1).strftime("%Y-%m-%d")
+    has_any_report = MissionReport.objects.filter(
+        mission_id=mission.pk,
+        is_sent=True
+    ).exists()
 
     context = {
         "mission": mission,
         "assignee_departments": assignees,
-        # Giữ kiểu int để match với `department_options` (JSON trả id dạng number).
         "assignee_department_value_ids": [d.id for d in assignees],
         "can_edit": is_admin,
         "can_delete": can_delete,
-        "can_complete": _can_complete_mission(request.user, mission),
+        "can_complete": has_report_activity and _can_complete_mission(request.user, mission),
         "csrf_input": csrf_input,
         "mission_reports": mission_reports,
-
+        "show_mission_report_section": show_mission_report_section,
         "current_report_year": current_report_year,
         "current_report_month": current_report_month,
         "current_report_label": f"Tháng {current_report_month:02d}/{current_report_year}",
-        "current_report_deadline_display": timezone.localtime(deadline_dt).strftime("%Hh%M ngày %d/%m/%Y"),
-        "current_report_deadline_iso": timezone.localtime(deadline_dt).isoformat(),
+        "current_report_deadline_display": timezone.localtime(deadline_dt).strftime("%Hh%M ngày %d/%m/%Y") if deadline_dt else "",
+        "current_report_deadline_iso": timezone.localtime(deadline_dt).isoformat() if deadline_dt else "",
         "current_report_remaining": _format_remaining_time(deadline_dt),
         "current_report_content": (current_report.content or "") if current_report else "",
         "current_report_no_report": bool(current_report.no_work_generated) if current_report else False,
@@ -337,6 +365,8 @@ def mission_detail_modal(request, pk):
         "can_submit_current_report": (not mission.completed_date) and _can_submit_mission_report(
             request.user, mission, current_report_year, current_report_month
         ),
+        "start_date_min": start_date_min,
+        "has_any_report": has_any_report,
     }
     return render(request, "mission/mission_detail_modal.html", context)
 
@@ -367,13 +397,16 @@ def mission_delete_table_modal(request, pk: str):
 
 def _resolve_latest_report_mission_status(mission: Mission) -> str:
     """
-    Xác định mission_status cho báo cáo tháng gần nhất của mission
-    dựa trên:
-    - mission.due_date
-    - có tồn tại báo cáo đã gửi ở các tháng trước hay không
-      (điều kiện: sent_at IS NOT NULL)
+    Nếu nhiệm vụ đã hoàn thành thì trả về trạng thái hoàn thành.
+    Nếu chưa hoàn thành thì xác định theo due_date và lịch sử gửi báo cáo.
     """
     today = timezone.localdate()
+
+    if mission.completed_date:
+        if mission.due_date and mission.completed_date > mission.due_date:
+            return MissionReport.MissionStatus.COMPLETED_LATE
+        return MissionReport.MissionStatus.COMPLETED_ON_TIME
+
     is_late = bool(mission.due_date and today > mission.due_date)
 
     has_previous_submitted_report = MissionReport.objects.filter(
@@ -394,6 +427,7 @@ def _resolve_latest_report_mission_status(mission: Mission) -> str:
         else MissionReport.MissionStatus.NOT_COMPLETED_ON_TIME
     )
 
+
 @login_required
 @require_POST
 def mission_update(request, mission_id):
@@ -411,6 +445,7 @@ def mission_update(request, mission_id):
         directive_document_pk = (request.POST.get("directive_document") or "").strip()
         if not directive_document_pk:
             raise ValueError("Văn bản chỉ đạo là bắt buộc.")
+
         doc = (
             DirectiveDocument.objects.filter(pk=directive_document_pk)
             .select_related("directive_level")
@@ -426,6 +461,21 @@ def mission_update(request, mission_id):
             request.POST.get("start_date"),
             "Ngày bắt đầu",
         )
+
+        today = date.today()
+        min_start_date = today.replace(day=1)
+        if start_date < min_start_date:
+            raise ValueError(
+                f"Ngày bắt đầu không được nhỏ hơn {min_start_date.strftime('%d/%m/%Y')}."
+            )
+
+        has_any_report = MissionReport.objects.filter(
+            mission_id=mission.pk,
+            is_sent=True
+        ).exists()
+        if has_any_report and mission.start_date != start_date:
+            raise ValueError("Nhiệm vụ đã có báo cáo nên không được sửa ngày bắt đầu.")
+
         due_date = v._parse_optional_date(
             request.POST.get("due_date"),
             "Hạn xử lý",
@@ -433,7 +483,11 @@ def mission_update(request, mission_id):
         completed_date_raw = (request.POST.get("completed_date") or "").strip()
 
         if mission.completed_date:
-            completed_date = v._parse_required_date(completed_date_raw, "Ngày hoàn thành") if completed_date_raw else None
+            completed_date = (
+                v._parse_required_date(completed_date_raw, "Ngày hoàn thành")
+                if completed_date_raw
+                else None
+            )
         else:
             completed_date = None
 
@@ -463,6 +517,8 @@ def mission_update(request, mission_id):
         )
 
         with transaction.atomic():
+            old_start_date = mission.start_date
+
             mission.name = name
             mission.start_date = start_date
             mission.due_date = due_date
@@ -472,6 +528,29 @@ def mission_update(request, mission_id):
             mission.completed_date = completed_date
             mission.save()
             mission.assignee_departments.set(validated["assignee_departments"])
+
+            if (
+                old_start_date
+                and (
+                    old_start_date.year != start_date.year
+                    or old_start_date.month != start_date.month
+                )
+            ):
+                period = (
+                    Period.objects.filter(
+                        year=start_date.year,
+                        month=start_date.month,
+                    )
+                    .only("id")
+                    .first()
+                )
+
+                MissionReport.objects.filter(mission_id=mission.pk).update(
+                    period_id=period.id if period else None,
+                    report_month=start_date.month,
+                    report_year=start_date.year,
+                )
+
             latest_report = (
                 MissionReport.objects.select_for_update()
                 .filter(mission_id=mission.pk)
@@ -508,16 +587,30 @@ def mission_report_submit(request, mission_id):
             status=400,
         )
 
+    if not _mission_reporting_visible(mission):
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Chưa tới ngày bắt đầu nhiệm vụ nên chưa thể gửi báo cáo.",
+            },
+            status=400,
+        )
+
     report_year, report_month = _get_current_reporting_period()
 
     if not _can_submit_mission_report(request.user, mission, report_year, report_month):
-        deadline = _get_report_deadline_datetime(report_year, report_month, 10)
+        deadline = _get_report_deadline_datetime(report_year, report_month)
+        deadline_text = (
+            timezone.localtime(deadline).strftime("%H:%M %d/%m/%Y")
+            if deadline
+            else "theo cấu hình hệ thống"
+        )
         return JsonResponse(
             {
                 "success": False,
                 "message": (
                     "Bạn không có quyền cập nhật hoặc đã quá hạn báo cáo kỳ này "
-                    f"({timezone.localtime(deadline).strftime('%H:%M %d/%m/%Y')})."
+                    f"({deadline_text})."
                 ),
             },
             status=403,
@@ -569,24 +662,15 @@ def mission_report_submit(request, mission_id):
 
             today = timezone.localdate()
 
-            # dữ liệu báo cáo
             report.content = "" if no_report else content
             report.no_work_generated = bool(no_report)
             report.is_locked = True
             report.sent_by = request.user
             report.sent_at = timezone.now()
-
-            # nếu đã submit thì coi là đã gửi
             report.is_sent = True
 
-            # trạng thái gửi báo cáo
             if submitted_status is not None:
                 report.status = submitted_status
-
-            # mission_status theo rule mới:
-            # - chưa hoàn thành + chưa đến hạn (nếu có due_date) => IN_PROGRESS_ON_TIME
-            # - chưa hoàn thành + quá hạn (nếu có due_date) => IN_PROGRESS_LATE
-            today = timezone.localdate()
 
             if mission.due_date and today > mission.due_date:
                 report.mission_status = MissionReport.MissionStatus.IN_PROGRESS_LATE
@@ -628,6 +712,7 @@ def mission_report_submit(request, mission_id):
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
 
+
 @login_required
 @require_POST
 def mission_report_update(request, report_id):
@@ -637,12 +722,25 @@ def mission_report_update(request, report_id):
     )
     mission = report.mission
 
-    if not _can_edit_mission_report(request.user, mission, report):
-        deadline = _get_report_deadline_date(int(report.report_year), int(report.report_month), 10)
+    if not _mission_reporting_visible(mission):
         return JsonResponse(
             {
                 "success": False,
-                "message": f"Bạn không có quyền sửa báo cáo này hoặc đã quá hạn chỉnh sửa ({deadline.strftime('%d/%m/%Y')}).",
+                "message": "Chưa tới ngày bắt đầu nhiệm vụ nên chưa thể chỉnh sửa báo cáo.",
+            },
+            status=403,
+        )
+
+    if not _can_edit_mission_report(request.user, mission, report):
+        deadline_text = _get_report_deadline_display(int(report.report_year), int(report.report_month))
+        if deadline_text:
+            message = f"Bạn không có quyền sửa báo cáo này hoặc đã quá hạn chỉnh sửa ({deadline_text})."
+        else:
+            message = "Bạn không có quyền sửa báo cáo này."
+        return JsonResponse(
+            {
+                "success": False,
+                "message": message,
             },
             status=403,
         )
@@ -729,6 +827,16 @@ def mission_complete(request, mission_id):
             "Chỉ quản trị viên hệ thống hoặc người thuộc đơn vị chủ trì mới được đánh dấu hoàn thành."
         )
 
+    has_report_activity = _mission_has_report_with_content(mission.pk)
+    if not has_report_activity:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Chưa có nội dung báo cáo hoặc chưa xác nhận không phát sinh báo cáo nên chưa thể hoàn thành nhiệm vụ.",
+            },
+            status=400,
+        )
+
     if mission.completed_date:
         d = mission.completed_date
         return JsonResponse(
@@ -756,9 +864,7 @@ def mission_complete(request, mission_id):
 
             if latest_report is not None:
                 if mission.due_date:
-                    if completed_date < mission.due_date:
-                        latest_report.mission_status = MissionReport.MissionStatus.COMPLETED_ON_TIME
-                    elif completed_date > mission.due_date:
+                    if completed_date > mission.due_date:
                         latest_report.mission_status = MissionReport.MissionStatus.COMPLETED_LATE
                     else:
                         latest_report.mission_status = MissionReport.MissionStatus.COMPLETED_ON_TIME

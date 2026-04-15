@@ -266,6 +266,34 @@
         if ((!isCharacter && !isBackspace) || this.isFiltering) return;
         this.isFiltering = true;
       },
+      selectAllFiltered() {
+        if (this.disabled) return;
+        if (!this.multiple) return;
+        this.normalizeSelected();
+        const values = (this.filteredOptions || []).map(o => o.value);
+        const set = new Set(this.selected);
+        values.forEach(v => set.add(v));
+        this.selected = Array.from(set);
+        this.notifyInputChanged();
+      },
+      deselectAllFiltered() {
+        if (this.disabled) return;
+        if (!this.multiple) return;
+        this.normalizeSelected();
+        const values = new Set((this.filteredOptions || []).map(o => o.value));
+        this.selected = this.selected.filter(v => !values.has(v));
+        this.notifyInputChanged();
+      },
+      get allFilteredSelected() {
+        if (!this.multiple) return false;
+        const filtered = (this.filteredOptions || []).map(o => o.value);
+        if (!filtered.length) return false;
+        const selectedArr = Array.isArray(this.selected)
+          ? this.selected
+          : (this.selected === null || this.selected === undefined || this.selected === '' ? [] : [this.selected]);
+        const selected = new Set(selectedArr);
+        return filtered.every(v => selected.has(v));
+      },
       clear(e) {
         if (this.disabled) return;
         e.stopPropagation();
@@ -452,7 +480,7 @@
       class="relative h-full flex items-center transition"
       :class="disabled ? 'pointer-events-none' : ''"
     >
-    <div x-show="!open" class="flex px-2 pr-14 w-48 flex-1 items-center gap-1.5">
+    <div class="flex px-2 pr-14 w-48 flex-1 items-center gap-1.5">
         <template x-if="selectedLabels.length === 0">
           <span class="truncate" :class="disabled ? 'text-slate-400' : 'text-slate-500'">{{ placeholder|trim }}</span>
         </template>
@@ -496,23 +524,7 @@
         </template>
       </div>
   
-      <input
-        x-ref="searchInput"
-        x-show="open"
-        x-model="searchQuery"
-        type="text"
-        class="w-48 flex-1 px-2 pr-14 outline-none"
-        :class="disabled ? 'text-slate-400 cursor-not-allowed' : 'text-slate-900'"
-        placeholder="{{ placeholder|trim }}"
-        @mousedown.stop
-        @click.stop
-        @keydown="onSearchKeydown($event)"
-        @keyup.stop
-        @input="$nextTick(() => reposition())"
-        @change.stop
-      />
-  
-      <span class="absolute inset-y-0 right-0 flex shrink-0 items-center px-3 gap-0.5">
+      <span class="absolute inset-y-0 right-0 flex shrink-0 items-center px-3 gap-1">
         <span x-show="isLoading" x-cloak style="display: none;" class="inline-flex text-slate-400 shrink-0 max-h-[1em] w-[1em] [&>svg]:max-h-full [&>svg]:w-full [&>svg]:max-w-none animate-spin">
           {% include 'spinner.svg' %}
         </span>
@@ -552,11 +564,45 @@
           (open && !panelPlaced ? 'invisible pointer-events-none ' : '') + (open && panelPlaced ? 'opacity-100' : 'opacity-0')
         ]"
         :style="
-          'inset:0 auto auto 0;min-width:' + coords.minWidth + 'px;'
+          'scrollbar-width: thin; inset:0 auto auto 0;min-width:' + coords.minWidth + 'px;'
           + 'transform:translate(' + coords.left + 'px,' + coords.top + 'px);'
           + (coords.width > 0 ? 'width:' + coords.width + 'px;' : '')
         "
       >
+        <div class="sticky top-0 z-15 border-b border-slate-200 bg-white px-3 py-2">
+          <div class="flex items-center gap-2">
+            <input
+              x-ref="searchInput"
+              x-model="searchQuery"
+              type="text"
+              class="flex-1 min-w-0 rounded-md border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+              :class="disabled ? 'text-slate-400 cursor-not-allowed bg-slate-50' : 'text-slate-900 bg-white'"
+              placeholder="Tìm kiếm..."
+              @mousedown.stop
+              @click.stop
+              @keydown="onSearchKeydown($event)"
+              @keyup.stop
+              @input="$nextTick(() => reposition())"
+              @change.stop
+            />
+
+            <button
+              type="button"
+              x-show="multiple && filteredOptions.length > 0 && !disabled"
+              x-cloak
+              style="display: none;"
+              class="shrink-0 rounded-md border px-2 py-1.5 text-xs font-medium"
+              :class="allFilteredSelected
+                ? 'bg-[#940001] text-white hover:bg-red-700'
+                : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'"
+              @click.stop="allFilteredSelected ? deselectAllFiltered() : selectAllFiltered()"
+              x-text="allFilteredSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả'"
+            >
+              Chọn tất cả
+            </button>
+          </div>
+        </div>
+
         <template x-if="!isLoading && filteredOptions.length === 0">
           <div class="px-3 py-2 text-xs text-slate-500">
             Không tìm thấy kết quả phù hợp.

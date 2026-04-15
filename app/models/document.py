@@ -4,6 +4,7 @@ from .base import AuditModel
 from .storage import Storage
 from .period import Period
 
+
 class DocumentType(AuditModel):
     code = models.CharField(max_length=50, primary_key=True)
     name = models.CharField(max_length=255)
@@ -86,6 +87,9 @@ class Document(AuditModel):
     class Meta:
         db_table = "document"
         ordering = ["-issued_at"]
+        permissions = [
+            ("read_document", "Can read document"),
+        ]
 
     def __str__(self):
         return f"{self.code} - {self.title}"

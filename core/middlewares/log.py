@@ -17,16 +17,15 @@ class LoggingMiddleware:
         if iscoroutinefunction(self.get_response):
             markcoroutinefunction(self)
 
+    def __get_client_ip(self,request):
+        ip_addresses = request.headers.get("x-forwarded-for")
+        if ip_addresses:
+            return ip_addresses.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR")
 
-    async def __call__(self, request):
-        def get_client_ip():
-            ip_addresses = request.headers.get("x-forwarded-for")
-            if ip_addresses:
-                return ip_addresses.split(",")[0].strip()
-            return request.META.get("REMOTE_ADDR")
-        log = logger.info
+    def __extract_request_info(self,request, include_body=False):
         extra = {
-            "ip_address": get_client_ip(),
+            "ip_address": self.__get_client_ip(request),
             "path": request.path,
             "query_params": request.GET.dict(),
             "method": request.method,
@@ -34,6 +33,8 @@ class LoggingMiddleware:
             "protocol_version": request.META.get("SERVER_PROTOCOL"),
             "content_type": request.headers.get("content-type"),
         }
+        if not include_body:
+            return extra
         content_type = extra["content_type"]
         if request.method not in ["GET", "HEAD", "OPTIONS"] and content_type:
             body = request.body
@@ -70,12 +71,18 @@ class LoggingMiddleware:
                 return data
 
             extra["body"] = filter_sensitive_data(parsed_body)
+        return extra
+
+    async def __call__(self, request):
+        extra = self.__extract_request_info(request)
         start = time.perf_counter()
-        try:
-            response = await self.get_response(request)
-        except Exception:
-            log = logger.exception
+        response = await self.get_response(request)
         process_duration = time.perf_counter() - start
         extra["duration"] = process_duration
-        log("",extra=extra)
+        logger.info("",extra=extra)
         return response
+
+    def process_exception(self, request, exception):
+        extra = self.__extract_request_info(request)
+        logger.opt(exception=exception).bind(extra=extra).error(exception)
+        return None

@@ -11,7 +11,7 @@ directive_document_options_url = directive_document_options_url ~
   class="relative z-[91] flex w-full 2xl:min-w-[1300px] max-h-[85vh] flex-col rounded-2xl bg-white shadow-2xl"
 >
   <div
-    class="grid grid-cols-1 gap-6 2xl:grid-cols-12 2xl:items-start"
+    class="grid grid-cols-1 gap-4 2xl:grid-cols-12 items-stretch bg-white"
     x-data="{
     editMode: false,
     submitting: false,
@@ -41,13 +41,16 @@ directive_document_options_url = directive_document_options_url ~
 
     reportSubmitSubmitting: false,
     reportSubmitError: '',
+    reportDeadlineUiActive: {{ 'true' if show_mission_report_section else 'false' }},
     reportDeadlineIso: '{{ current_report_deadline_iso }}',
     reportDeadlineLabel: '{{ current_report_deadline_display }}',
     reportCountdownText: '{{ current_report_remaining }}',
 
     reportResultFilterValue: '',
+    startDateValue: {{ jsonify(mission.start_date.strftime('%Y-%m-%d') if mission.start_date else '') }},
 
     startReportCountdown() {
+      if (!this.reportDeadlineUiActive) return;
       if (!this.reportDeadlineIso) return;
 
       const tick = () => {
@@ -114,7 +117,6 @@ directive_document_options_url = directive_document_options_url ~
       if (!ok) {
         const msg = this.extractErrorMessage(parsed);
         this.reportSubmitError = msg;
-        this.pushToast(msg, 40);
         return;
       }
 
@@ -521,7 +523,7 @@ directive_document_options_url = directive_document_options_url ~
         <div class="px-5 py-5">
           <div class="mb-4 flex items-start justify-between gap-3">
             <div class="flex items-center gap-2">
-              <span class="inline-block h-5 w-1 rounded bg-red-700"></span>
+              <span class="inline-block h-5 w-1 rounded bg-[#940001]"></span>
               <h4 class="text-base font-bold uppercase text-slate-800">
                 Thông tin nhiệm vụ
               </h4>
@@ -554,6 +556,7 @@ directive_document_options_url = directive_document_options_url ~
                   @htmx:send-error="handleCompleteSendError()"
                 >
                   {{ csrf_input }}
+                  {% if show_mission_report_section %}
                   <button
                     type="button"
                     class="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50"
@@ -566,6 +569,7 @@ directive_document_options_url = directive_document_options_url ~
                       {% include 'check.svg' %}
                     </span>
                   </button>
+                  {% endif %}
                 </form>
               </div>
               {% endif %} {% if can_edit %}
@@ -641,6 +645,9 @@ directive_document_options_url = directive_document_options_url ~
                 detail: { directive_level: directiveLevel }
               }));
             }
+            if ($event.target.name === 'start_date') {
+              startDateValue = ($event.target.value || '').trim();
+            }
           "
             @htmx:before-request="
             submitting = true;
@@ -655,7 +662,7 @@ directive_document_options_url = directive_document_options_url ~
             <div
               x-show="saveError"
               x-cloak
-              class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
               role="alert"
             >
               <span x-text="saveError"></span>
@@ -855,10 +862,21 @@ directive_document_options_url = directive_document_options_url ~
                   :key="'mission-start-date-edit-' + t"
                 >
                   <div class="w-full min-w-0">
-                    {{ datetimepicker( name='start_date', label='Ngày bắt đầu',
-                    variant='date', placeholder='dd/mm/yyyy', required=true,
-                    value=mission.start_date, class='w-full', extra_attributes={
-                    'clearable': false } ) }}
+                    {{ datetimepicker(
+                      name='start_date',
+                      label='Ngày bắt đầu',
+                      variant='date',
+                      placeholder='dd/mm/yyyy',
+                      required=true,
+                      value=mission.start_date,
+                      disabled=has_any_report,
+                      min=start_date_min,
+                      max=mission.due_date.strftime('%Y-%m-%d') if mission.due_date else '',
+                      class='w-full',
+                      extra_attributes={
+                        'clearable': false
+                      }
+                    ) }}
                   </div>
                 </template>
               </div>
@@ -866,11 +884,20 @@ directive_document_options_url = directive_document_options_url ~
               <div>
                 <template x-for="t in [0]" :key="'mission-due-date-edit-' + t">
                   <div class="w-full min-w-0">
-                    {{ datetimepicker( name='due_date', label='Hạn xử lý',
-                    variant='date', placeholder='dd/mm/yyyy', required=false,
-                    value=mission.due_date if mission.due_date else '',
-                    hint='Nhiệm vụ thường xuyên không có Hạn xử lý',
-                    class='w-full', ) }}
+                    {{ datetimepicker(
+                      name='due_date',
+                      label='Hạn xử lý',
+                      variant='date',
+                      placeholder='dd/mm/yyyy',
+                      required=false,
+                      value=mission.due_date if mission.due_date else '',
+                      hint='Nhiệm vụ thường xuyên không có Hạn xử lý',
+                      class='w-full',
+                      extra_attributes={
+                        'clearable': true,
+                        'min': 'startDateValue'
+                      }
+                    ) }}
                   </div>
                 </template>
               </div>
@@ -909,7 +936,7 @@ directive_document_options_url = directive_document_options_url ~
 
               <button
                 type="submit"
-                class="inline-flex h-10 min-w-[88px] items-center justify-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                class="inline-flex h-10 min-w-[88px] items-center justify-center rounded-lg bg-[#940001] px-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="submitting"
               >
                 <span x-show="!submitting">Lưu</span>
@@ -939,6 +966,7 @@ directive_document_options_url = directive_document_options_url ~
               <h4 class="text-base font-bold uppercase text-slate-800">
                 Cập nhật báo cáo
               </h4>
+              {% if show_mission_report_section %}
               <span class="text-sm text-orange-600">
                 🔔 Hạn cập nhật báo cáo là
                 <strong x-text="reportDeadlineLabel"></strong>
@@ -947,6 +975,7 @@ directive_document_options_url = directive_document_options_url ~
                   x-text="`(${reportCountdownText})`"
                 ></span>
               </span>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -954,25 +983,42 @@ directive_document_options_url = directive_document_options_url ~
         <div class="px-5 py-5">
           <form
             method="post"
+            class="space-y-4"
+            {% if show_mission_report_section %}
             hx-post="{{ url('mission_report_submit', kwargs={'mission_id': mission.pk}) }}"
             hx-swap="none"
-            class="space-y-4"
             @htmx:before-request="handleReportSubmitBeforeRequest()"
             @htmx:after-request="handleReportSubmitAfterRequest($event)"
             @htmx:response-error="handleReportSubmitAfterRequest($event)"
             @htmx:send-error="handleReportSubmitSendError()"
+            {% else %}
+            onsubmit="return false"
+            {% endif %}
           >
             {{ csrf_input }}
 
+            {% if not show_mission_report_section %}
             <div
-              x-show="reportSubmitError"
-              x-cloak
-              class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+              role="status"
             >
-              <span x-text="reportSubmitError"></span>
+              <p class="font-medium">Chưa tới ngày bắt đầu nhiệm vụ</p>
+              <p class="mt-1 text-amber-900/90">
+                {% if mission.start_date %}
+                Ngày bắt đầu:
+                <span class="font-semibold"
+                  >{{ mission.start_date.strftime('%d/%m/%Y') }}</span
+                >. Phần gửi báo cáo tạm khóa cho đến khi tới ngày này.
+                {% else %}
+                Chưa có ngày bắt đầu trên nhiệm vụ — không thể gửi báo cáo.
+                {% endif %}
+              </p>
             </div>
+            {% endif %}
 
-            <div class="rounded-lg border border-slate-200">
+            <div
+              class="rounded-lg border border-slate-200 {% if not show_mission_report_section %}opacity-75{% endif %}"
+            >
               <div
                 class="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 xl:flex-row xl:items-center xl:justify-between"
               >
@@ -982,7 +1028,7 @@ directive_document_options_url = directive_document_options_url ~
                   >
                   <button
                     type="button"
-                    class="inline-flex items-center gap-1 text-sm font-medium text-red-700"
+                    class="inline-flex items-center gap-1 text-sm font-medium text-[#940001]"
                   >
                     <span
                       class="inline-flex h-4 w-4 shrink-0 text-red-600 [&>svg]:h-full [&>svg]:w-full"
@@ -994,13 +1040,13 @@ directive_document_options_url = directive_document_options_url ~
                 </div>
 
                 <label
-                  class="inline-flex items-center gap-2 text-sm text-slate-700 {% if can_submit_current_report and current_period_report_submitted %}cursor-not-allowed opacity-60{% endif %}"
+                  class="inline-flex items-center gap-2 text-sm text-slate-700 {% if not show_mission_report_section or (can_submit_current_report and current_period_report_submitted) %}cursor-not-allowed opacity-60{% endif %}"
                 >
                   <input
                     type="checkbox"
                     name="no_report"
                     value="1"
-                    class="h-4 w-4 rounded border-slate-300 text-red-700 focus:ring-red-700"
+                    class="h-4 w-4 rounded border-slate-300 text-[#940001] focus:ring-[#940001]"
                     {%
                     if
                     current_report_no_report
@@ -1009,9 +1055,14 @@ directive_document_options_url = directive_document_options_url ~
                     %}
                     {%
                     if
+                    not
+                    show_mission_report_section
+                    or
+                    (
                     can_submit_current_report
                     and
                     current_period_report_submitted
+                    )
                     %}disabled{%
                     endif
                     %}
@@ -1045,12 +1096,17 @@ directive_document_options_url = directive_document_options_url ~
                   name="content"
                   rows="8"
                   placeholder="Nhập nội dung báo cáo tiến độ thực hiện nhiệm vụ..."
-                  class="w-full resize-none rounded-md border border-slate-200 px-3 py-3 text-sm outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100 {% if can_submit_current_report and current_period_report_submitted %}cursor-default bg-slate-50 text-slate-700{% endif %}"
+                  class="w-full resize-none rounded-md border border-slate-200 px-3 py-3 text-sm outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100 {% if not show_mission_report_section or (can_submit_current_report and current_period_report_submitted) %}cursor-default bg-slate-50 text-slate-700{% endif %}"
                   {%
                   if
+                  not
+                  show_mission_report_section
+                  or
+                  (
                   can_submit_current_report
                   and
                   current_period_report_submitted
+                  )
                   %}readonly{%
                   endif
                   %}
@@ -1062,11 +1118,24 @@ directive_document_options_url = directive_document_options_url ~
               <div
                 class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 px-4 py-3"
               >
-                {% if can_submit_current_report and not
+                {% if not show_mission_report_section %}
+                <button
+                  type="button"
+                  disabled
+                  class="inline-flex cursor-not-allowed items-center gap-2 rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400"
+                  title="Chưa tới ngày bắt đầu nhiệm vụ"
+                >
+                  <span
+                    class="inline-flex h-4 w-4 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+                    >{% include 'send.svg' %}</span
+                  >
+                  Gửi báo cáo
+                </button>
+                {% elif can_submit_current_report and not
                 current_period_report_submitted %}
                 <button
                   type="submit"
-                  class="inline-flex items-center gap-2 rounded-md bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  class="inline-flex items-center gap-2 rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="reportSubmitSubmitting"
                 >
                   <span
@@ -1109,10 +1178,10 @@ directive_document_options_url = directive_document_options_url ~
     </div>
 
     <!-- RIGHT -->
-    <aside class="2xl:col-span-4" x-cloak>
-      <div class="space-y-4 lg:sticky lg:top-4">
+    <aside class="2xl:col-span-4 h-full" x-cloak>
+      <div class="lg:sticky lg:top-4 h-full">
         <section
-          class="overflow-hidden rounded-xl border border-slate-200 bg-white"
+          class="overflow-hidden rounded-xl border border-slate-200 bg-white h-full"
         >
           <div
             class="flex items-center justify-between border-b border-slate-200 px-4 py-4"
@@ -1139,7 +1208,7 @@ directive_document_options_url = directive_document_options_url ~
             {% endif %}
           </div>
 
-          <div class="max-h-[72vh] overflow-y-auto">
+          <div class="flex-1 overflow-y-auto">
             {% if mission_reports %}
             <div class="divide-y divide-slate-100">
               {% for report in mission_reports %}
@@ -1397,7 +1466,7 @@ directive_document_options_url = directive_document_options_url ~
           <div
             x-show="reportEditError"
             x-cloak
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
             <span x-text="reportEditError"></span>
           </div>
@@ -1592,7 +1661,7 @@ directive_document_options_url = directive_document_options_url ~
 
           <button
             type="button"
-            class="inline-flex h-10 min-w-[96px] items-center justify-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex h-10 min-w-[96px] items-center justify-center rounded-lg bg-[#940001] px-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
             @click="confirmDelete()"
             :disabled="deleteSubmitting"
           >

@@ -7,6 +7,9 @@
     }" 
     class="min-w-3xl grid grid-cols-2 gap-3"
     @submit.prevent>
+    <div class="col-span-2">
+        Cách tính: <span class="font-semibold">{{ type }}</span>
+    </div>
     {{ csrf_input }}
     <input type="hidden" name="id" value="{{ id }}">
     <input type="hidden" name="version" value="{{ version }}">

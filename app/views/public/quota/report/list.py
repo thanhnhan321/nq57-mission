@@ -8,6 +8,7 @@ from django.db.models import (
     Value,
     When,
 )
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.urls import reverse
 from django.views.generic import ListView
@@ -46,6 +47,7 @@ COLUMNS = [
         name='completion_percent',
         label='Tỉ lệ thực hiện',
         type=TableColumn.Type.TEXT,
+        formatter=lambda value: format_number(value * 100) + '%',
     ),
     TableColumn(
         name='evaluation_result',
@@ -144,6 +146,7 @@ def get_common_context(request):
     queryset = queryset.annotate(
         evaluation_result=Case(
             When(
+                ~Q(status=QuotaReport.Status.NOT_SENT),
                 actual_value__gte=F('quota__target_percent') * F('expected_value'),
                 expected_value__gt=0,
                 then=Value(True),
@@ -160,13 +163,17 @@ def get_common_context(request):
         )
         for val, _ in QuotaReport.Status.choices
     }
-    # Aggregated stats
-    statistics_fields = {
-        'total_reports': Count('id'),
-        'total_departments': Count('department_id', distinct=True),
-        'total_expected': Sum('expected_value'),
-        'total_actual': Sum('actual_value'),
-    } | status_aggs
+    def aggregate_report_statistics(stats_qs):
+        base = stats_qs.aggregate(
+            total_reports=Count('id'),
+            total_departments=Count('department_id', distinct=True),
+            **status_aggs,
+        )
+        totals = stats_qs.exclude(status=QuotaReport.Status.NOT_SENT).aggregate(
+            total_expected=Sum(F('expected_value') - Coalesce(F('previous_report__expected_value'), 0)),
+            total_actual=Sum(F('actual_value') - Coalesce(F('previous_report__actual_value'), 0)),
+        )
+        return {**base, **totals}
 
     def statistics_builder(aggregated_stats):
         if aggregated_stats['total_expected'] is None:
@@ -196,12 +203,16 @@ def get_common_context(request):
         'submit_at',
         'reviewed_at',
     ]
+    statistics_source_queryset = queryset
     queryset = queryset.values(*query_fields).distinct()
 
     def transformer(row):
         row['period'] = f'Tháng {row['period__month']}/{row['period__year']}'
         row['quota_id'] = quota_id
-        row['completion_percentage'] = row['actual_value'] / row['expected_value'] if row['expected_value'] else 0
+        if row['status'] == QuotaReport.Status.NOT_SENT:
+            row['expected_value'] = None
+            row['actual_value'] = None
+        row['completion_percent'] = row['actual_value'] / row['expected_value'] if row['expected_value'] and row['actual_value'] else 0
         status_label_map = dict(QuotaReport.Status.choices)
         klass = OPTION_COLOR_CLASS_MAP[QuotaReport.Status(row['status']).color]
         row['status'] = f'<div class="w-fit rounded-full {klass} text-xs px-2 py-1 m-1">' + status_label_map[row['status']] + '</div>'
@@ -216,7 +227,12 @@ def get_common_context(request):
     )
 
     return {
-        **table_context.to_response_context(queryset, transformer=transformer, statistics_fields=statistics_fields)
+        **table_context.to_response_context(
+            queryset,
+            transformer=transformer,
+            statistics_queryset=statistics_source_queryset,
+            statistics_fn=aggregate_report_statistics,
+        )
     }
 
 class PublicQuotaReportListView(ListView):

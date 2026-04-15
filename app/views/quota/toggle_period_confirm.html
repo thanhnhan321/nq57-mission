@@ -1,0 +1,34 @@
+{% from 'templates/components/button/button.html' import button %}
+
+<div class="min-w-[420px] space-y-4">
+    <div class="text-sm text-slate-700">
+        {% if is_locked %}
+            Bạn có chắc chắn muốn <strong>mở kỳ</strong> không?
+        {% else %}
+            Bạn có chắc chắn muốn <strong>khóa kỳ</strong> không?
+        {% endif %}
+    </div>
+
+    <form id="quota-period-toggle-form">
+        {{ csrf_input }}
+
+        <div class="flex justify-end gap-2">
+            {{ button(
+                text=action_label|capitalize,
+                variant='filled',
+                htmx_event_prefix='quota',
+                extra_attributes={
+                    'hx-post': submit_url,
+                    'hx-include': '#quota-period-toggle-form',
+                    'hx-swap': 'none',
+                    '@htmx:after-request': '''
+                        if ($event.detail.successful) {
+                            window.dispatchEvent(new CustomEvent("modal:close-top"));
+                            document.body.dispatchEvent(new CustomEvent("quota:success", { bubbles: true }));
+                        }
+                    ''',
+                }
+            ) }}
+        </div>
+    </form>
+</div>

@@ -1,691 +1,2997 @@
 [
-  {
-    "model": "app.department",
-    "pk": 1,
-    "fields": {
-      "short_name": "PA01",
-      "name": "Phòng An ninh đối ngoại",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
+    {
+        "model": "app.department",
+        "pk": 1,
+        "fields": {
+            "short_name": "CATP",
+            "name": "Công an TP.HCM",
+            "type": "CAP",
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 2,
+        "fields": {
+            "short_name": "PA01",
+            "name": "Phòng An ninh đối ngoại",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 3,
+        "fields": {
+            "short_name": "PA02",
+            "name": "Phòng An ninh đối nội",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 4,
+        "fields": {
+            "short_name": "PA03",
+            "name": "Phòng An ninh chính trị nội bộ",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 5,
+        "fields": {
+            "short_name": "PA04",
+            "name": "Phòng An ninh kinh tế",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 6,
+        "fields": {
+            "short_name": "PA05",
+            "name": "Phòng An ninh mạng và Phòng, chống tội phạm sử dụng Công nghệ cao",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 7,
+        "fields": {
+            "short_name": "PA06",
+            "name": "Phòng Kỹ thuật nghiệp vụ",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 8,
+        "fields": {
+            "short_name": "PA07",
+            "name": "Phòng Ngoại tuyến",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 9,
+        "fields": {
+            "short_name": "PA08",
+            "name": "Phòng Quản lý xuất nhập cảnh",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 10,
+        "fields": {
+            "short_name": "PA09",
+            "name": "Phòng An ninh điều tra",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 11,
+        "fields": {
+            "short_name": "PC01",
+            "name": "Văn phòng Cơ quan cảnh sát điều tra",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 12,
+        "fields": {
+            "short_name": "PC02",
+            "name": "Phòng Cảnh sát điều tra tội phạm về trật tự xã hội",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 13,
+        "fields": {
+            "short_name": "PC03",
+            "name": "Phòng Cảnh sát điều tra tội phạm về tham nhũng, kinh tế, buôn lậu, môi trường",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 14,
+        "fields": {
+            "short_name": "PC04",
+            "name": "Phòng Cảnh sát điều tra tội phạm về Ma tuý",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 15,
+        "fields": {
+            "short_name": "PC06",
+            "name": "Phòng Cảnh sát Quản lý hành chính về Trật tự xã hội",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 16,
+        "fields": {
+            "short_name": "PC07",
+            "name": "Phòng Cảnh sát Phòng cháy chữa cháy và Cứu nạn cứu hộ",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 17,
+        "fields": {
+            "short_name": "PC08",
+            "name": "Phòng Cảnh sát Giao thông",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 18,
+        "fields": {
+            "short_name": "PC09",
+            "name": "Phòng Kỹ thuật hình sự",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 19,
+        "fields": {
+            "short_name": "PC10",
+            "name": "Phòng Cảnh sát Thi hành án hình sựu và Hỗ trợ tư pháp",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 20,
+        "fields": {
+            "short_name": "PC11A",
+            "name": "Trại tạm giam Chí hoà",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 21,
+        "fields": {
+            "short_name": "PC11B",
+            "name": "Trại tạm giam Bố Lá",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 22,
+        "fields": {
+            "short_name": "PC11C",
+            "name": "Trại tạm giam Số 1",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 23,
+        "fields": {
+            "short_name": "PC11D",
+            "name": "Trại tạm giam Số 2",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 24,
+        "fields": {
+            "short_name": "PK02",
+            "name": "Phòng Cảnh sát cơ động",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 25,
+        "fields": {
+            "short_name": "PV01",
+            "name": "Phòng Tham mưu",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 26,
+        "fields": {
+            "short_name": "PV06",
+            "name": "Phòng Hồ sơ nghiệp vụ",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 27,
+        "fields": {
+            "short_name": "PX01",
+            "name": "Phòng Tổ chức cán bộ",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 28,
+        "fields": {
+            "short_name": "PX03",
+            "name": "Phòng Công tác Đảng và Công tác Chính trị",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 29,
+        "fields": {
+            "short_name": "PX04",
+            "name": "Ban Chuyên đề Công an thành phố (Báo Công an Thành phố)",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 30,
+        "fields": {
+            "short_name": "PX05",
+            "name": "Thanh tra Công an Thành phố",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 31,
+        "fields": {
+            "short_name": "PX06",
+            "name": "Cơ quan Uỷ ban kiểm tra Đảng uỷ",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 32,
+        "fields": {
+            "short_name": "PH01",
+            "name": "Phòng Tài chính",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 33,
+        "fields": {
+            "short_name": "PH04",
+            "name": "Phòng Viễn Thông, Tin học và Cơ yếu",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 34,
+        "fields": {
+            "short_name": "PH06",
+            "name": "Bệnh viện Công an Thành phố",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 35,
+        "fields": {
+            "short_name": "PH10",
+            "name": "Phòng Hậu cần",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 36,
+        "fields": {
+            "short_name": "CTY990",
+            "name": "Công ty Trách nhiệm hữu hạn Một thành viên 990",
+            "type": "CAP",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 37,
+        "fields": {
+            "short_name": "CADKConDao",
+            "name": "Công an Đặc khu Côn Đảo",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 38,
+        "fields": {
+            "short_name": "DCACHKTanSonNhat",
+            "name": "Đồn Công an Cảng hàng không Tân Sơn Nhất",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 39,
+        "fields": {
+            "short_name": "DCAKCNKimHuy",
+            "name": "Đồn Công an Khu công nghiệp Kim Huy",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 40,
+        "fields": {
+            "short_name": "DCAKCNTanUyen",
+            "name": "Đồn Công an Khu công nghiệp Tân Uyên",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 41,
+        "fields": {
+            "short_name": "DCAKCNSongThan",
+            "name": "Đồn Công an Khu công nghiệp Sóng Thần",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 42,
+        "fields": {
+            "short_name": "DCAKCNTanDongHiep",
+            "name": "Đồn Công an Khu công nghiệp Tân Đông Hiệp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 43,
+        "fields": {
+            "short_name": "DCAKCNMyPhuoc",
+            "name": "Đồn Công an Khu công nghiệp Mỹ Phước",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 44,
+        "fields": {
+            "short_name": "DCAKCNVSIP",
+            "name": "Đồn Công an Khu công nghiệp VSIP",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 45,
+        "fields": {
+            "short_name": "DCAKCNDongAn",
+            "name": "Đồn Công an Khu công nghiệp Đồng An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 46,
+        "fields": {
+            "short_name": "DCAKCNBauBang",
+            "name": "Đồn Công an Khu công nghiệp Bàu Bàng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 47,
+        "fields": {
+            "short_name": "DCAKCNTanThanh",
+            "name": "Đồn Công an Khu công nghiệp Tân Thành",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 48,
+        "fields": {
+            "short_name": "CAPAnDong",
+            "name": "Công an phường An Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 49,
+        "fields": {
+            "short_name": "CAPAnHoiDong",
+            "name": "Công an phường An Hội Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 50,
+        "fields": {
+            "short_name": "CAPAnHoiTay",
+            "name": "Công an phường An Hội Tây",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 51,
+        "fields": {
+            "short_name": "CAPAnKhanh",
+            "name": "Công an phường An Khánh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 52,
+        "fields": {
+            "short_name": "CAPAnLac",
+            "name": "Công an phường An Lạc",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 53,
+        "fields": {
+            "short_name": "CAPAnNhon",
+            "name": "Công an phường An Nhơn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 54,
+        "fields": {
+            "short_name": "CAPAnPhu",
+            "name": "Công an phường An Phú",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 55,
+        "fields": {
+            "short_name": "CAPPhuDong",
+            "name": "Công an phường An Phú Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 56,
+        "fields": {
+            "short_name": "CAPBaRia",
+            "name": "Công an phường Bà Rịa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 57,
+        "fields": {
+            "short_name": "CAPBanCo",
+            "name": "Công an phường Bàn Cờ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 58,
+        "fields": {
+            "short_name": "CAPBayHien",
+            "name": "Công an phường Bảy Hiền",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 59,
+        "fields": {
+            "short_name": "CAPBenCat",
+            "name": "Công an phường Bến Cát",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 60,
+        "fields": {
+            "short_name": "CAPBenThanh",
+            "name": "Công an phường Bến Thành",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 61,
+        "fields": {
+            "short_name": "CAPBinhCo",
+            "name": "Công an phường Bình Cơ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 62,
+        "fields": {
+            "short_name": "CAPBinhDuong",
+            "name": "Công an phường Bình Dương",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 63,
+        "fields": {
+            "short_name": "CAPBinhDong",
+            "name": "Công an phường Bình Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 64,
+        "fields": {
+            "short_name": "CAPBinhHoa",
+            "name": "Công an phường Bình Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 65,
+        "fields": {
+            "short_name": "CAPHungHoa",
+            "name": "Công an phường Bình Hưng Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 66,
+        "fields": {
+            "short_name": "CALoiTrung",
+            "name": "Công an phường Bình Lợi Trung",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 67,
+        "fields": {
+            "short_name": "CAPBinhPhu",
+            "name": "Công an phường Bình Phú",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 68,
+        "fields": {
+            "short_name": "CAPBinhQuoi",
+            "name": "Công an phường Bình Quới",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 69,
+        "fields": {
+            "short_name": "CAPBinhTan",
+            "name": "Công an phường Bình Tân",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 70,
+        "fields": {
+            "short_name": "CAPBinhTay",
+            "name": "Công an phường Bình Tây",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 71,
+        "fields": {
+            "short_name": "CAPBinhThanh",
+            "name": "Công an phường Bình Thạnh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 72,
+        "fields": {
+            "short_name": "CAPBinhThoi",
+            "name": "Công an phường Bình Thới",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 73,
+        "fields": {
+            "short_name": "CAPBinhTien",
+            "name": "Công an phường Bình Tiên",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 74,
+        "fields": {
+            "short_name": "CAPTriDong",
+            "name": "Công an phường Bình Trị Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 75,
+        "fields": {
+            "short_name": "CAPBinhTrung",
+            "name": "Công an phường Bình Trưng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 76,
+        "fields": {
+            "short_name": "CAPCatLai",
+            "name": "Công an phường Cát Lái",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 77,
+        "fields": {
+            "short_name": "CAPCauKieu",
+            "name": "Công an phường Cầu Kiệu",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 78,
+        "fields": {
+            "short_name": "CAPOngLanh",
+            "name": "Công an phường Cầu Ông Lãnh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 79,
+        "fields": {
+            "short_name": "CAPChanhHiep",
+            "name": "Công an phường Chánh Hiệp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 80,
+        "fields": {
+            "short_name": "CAPChanhHung",
+            "name": "Công an phường Chánh Hưng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 81,
+        "fields": {
+            "short_name": "CAPPhuHoa",
+            "name": "Công an phường Chánh Phú Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 82,
+        "fields": {
+            "short_name": "CAPChoLon",
+            "name": "Công an phường Chợ Lớn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 83,
+        "fields": {
+            "short_name": "CAPChoQuan",
+            "name": "Công an phường Chợ Quán",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 84,
+        "fields": {
+            "short_name": "CAPDiAn",
+            "name": "Công an phường Dĩ An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 85,
+        "fields": {
+            "short_name": "CAPDienHong",
+            "name": "Công an phường Diên Hồng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 86,
+        "fields": {
+            "short_name": "CAPDongHoa",
+            "name": "Công an phường Đông Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 87,
+        "fields": {
+            "short_name": "CADHungThuan",
+            "name": "Công an phường Đông Hưng Thuận",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 88,
+        "fields": {
+            "short_name": "CAPDucNhuan",
+            "name": "Công an phường Đức Nhuận",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 89,
+        "fields": {
+            "short_name": "CAPGiaDinh",
+            "name": "Công an phường Gia Định",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 90,
+        "fields": {
+            "short_name": "CAPGoVap",
+            "name": "Công an phường Gò Vấp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 91,
+        "fields": {
+            "short_name": "CAPHanhThong",
+            "name": "Công an phường Hạnh Thông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 92,
+        "fields": {
+            "short_name": "CAPHiepBinh",
+            "name": "Công an phường Hiệp Bình",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 93,
+        "fields": {
+            "short_name": "CAPHoaBinh",
+            "name": "Công an phường Hòa Bình",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 94,
+        "fields": {
+            "short_name": "CAPHoaHung",
+            "name": "Công an phường Hòa Hưng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 95,
+        "fields": {
+            "short_name": "CAPHoaLoi",
+            "name": "Công an phường Hòa Lợi",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 96,
+        "fields": {
+            "short_name": "CAPKhanhHoi",
+            "name": "Công an phường Khánh Hội",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 97,
+        "fields": {
+            "short_name": "CAPLaiThieu",
+            "name": "Công an phường Lái Thiêu",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 98,
+        "fields": {
+            "short_name": "CAPLinhXuan",
+            "name": "Công an phường Linh Xuân",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 99,
+        "fields": {
+            "short_name": "CAPLongBinh",
+            "name": "Công an phường Long Bình",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 100,
+        "fields": {
+            "short_name": "CAPLongHuong",
+            "name": "Công an phường Long Hương",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 101,
+        "fields": {
+            "short_name": "CAPLongNguyen",
+            "name": "Công an phường Long Nguyên",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 102,
+        "fields": {
+            "short_name": "CAPLongPhuoc",
+            "name": "Công an phường Long Phước",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 103,
+        "fields": {
+            "short_name": "CAPLongTruong",
+            "name": "Công an phường Long Trường",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 104,
+        "fields": {
+            "short_name": "CAPMinhPhung",
+            "name": "Công an phường Minh Phụng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 105,
+        "fields": {
+            "short_name": "CAPNhieuLoc",
+            "name": "Công an phường Nhiêu Lộc",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 106,
+        "fields": {
+            "short_name": "CAPPhuAn",
+            "name": "Công an phường Phú An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 107,
+        "fields": {
+            "short_name": "CAPPhuDinh",
+            "name": "Công an phường Phú Định",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 108,
+        "fields": {
+            "short_name": "CAPPhuLam",
+            "name": "Công an phường Phú Lâm",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 109,
+        "fields": {
+            "short_name": "CAPPhuLoi",
+            "name": "Công an phường Phú Lợi",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 110,
+        "fields": {
+            "short_name": "CAPPhuMy",
+            "name": "Công an phường Phú Mỹ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 111,
+        "fields": {
+            "short_name": "CAPPhuNhuan",
+            "name": "Công an phường Phú Nhuận",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 112,
+        "fields": {
+            "short_name": "CAPPhuThanh",
+            "name": "Công an phường Phú Thạnh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 113,
+        "fields": {
+            "short_name": "CAPPhuTho",
+            "name": "Công an phường Phú Thọ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 114,
+        "fields": {
+            "short_name": "CAPThoHoa",
+            "name": "Công an phường Phú Thọ Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 115,
+        "fields": {
+            "short_name": "CAPPhuThuan",
+            "name": "Công an phường Phú Thuận",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 116,
+        "fields": {
+            "short_name": "CAPPhuocLong",
+            "name": "Công an phường Phước Long",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 117,
+        "fields": {
+            "short_name": "CAPPhuocThang",
+            "name": "Công an phường Phước Thắng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 118,
+        "fields": {
+            "short_name": "CAPRachDua",
+            "name": "Công an phường Rạch Dừa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 119,
+        "fields": {
+            "short_name": "CAPSaiGon",
+            "name": "Công an phường Sài Gòn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 120,
+        "fields": {
+            "short_name": "CAPTamBinh",
+            "name": "Công an phường Tam Bình",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 121,
+        "fields": {
+            "short_name": "CAPTamLong",
+            "name": "Công an phường Tam Long",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 122,
+        "fields": {
+            "short_name": "CAPTamThang",
+            "name": "Công an phường Tam Thắng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 123,
+        "fields": {
+            "short_name": "CAPNhonPhu",
+            "name": "Công an phường Tăng Nhơn Phú",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 124,
+        "fields": {
+            "short_name": "CAPTanBinh",
+            "name": "Công an phường Tân Bình",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 125,
+        "fields": {
+            "short_name": "CAPTanDinh",
+            "name": "Công an phường Tân Định",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 126,
+        "fields": {
+            "short_name": "CAPDongHiep",
+            "name": "Công an phường Tân Đông Hiệp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 127,
+        "fields": {
+            "short_name": "CAPTanHai",
+            "name": "Công an phường Tân Hải",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 128,
+        "fields": {
+            "short_name": "CAPTanHiep",
+            "name": "Công an phường Tân Hiệp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 129,
+        "fields": {
+            "short_name": "CAPTanHoa",
+            "name": "Công an phường Tân Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 130,
+        "fields": {
+            "short_name": "CAPTanHung",
+            "name": "Công an phường Tân Hưng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 131,
+        "fields": {
+            "short_name": "CAPTanKhanh",
+            "name": "Công an phường Tân Khánh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 132,
+        "fields": {
+            "short_name": "CAPTanMy",
+            "name": "Công an phường Tân Mỹ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 133,
+        "fields": {
+            "short_name": "CAPTanPhu",
+            "name": "Công an phường Tân Phú",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 134,
+        "fields": {
+            "short_name": "CAPTanPhuoc",
+            "name": "Công an phường Tân Phước",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 135,
+        "fields": {
+            "short_name": "CAPTanSon",
+            "name": "Công an phường Tân Sơn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 136,
+        "fields": {
+            "short_name": "CAPSonHoa",
+            "name": "Công an phường Tân Sơn Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 137,
+        "fields": {
+            "short_name": "CAPSonNhat",
+            "name": "Công an phường Tân Sơn Nhất",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 138,
+        "fields": {
+            "short_name": "CAPSonNhi",
+            "name": "Công an phường Tân Sơn Nhì",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 139,
+        "fields": {
+            "short_name": "CAPTanTao",
+            "name": "Công an phường Tân Tạo",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 140,
+        "fields": {
+            "short_name": "CAPTanThanh",
+            "name": "Công an phường Tân Thành",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 141,
+        "fields": {
+            "short_name": "CAPThoiHiep",
+            "name": "Công an phường Tân Thới Hiệp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 142,
+        "fields": {
+            "short_name": "CAPTanThuan",
+            "name": "Công an phường Tân Thuận",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 143,
+        "fields": {
+            "short_name": "CAPTanUyen",
+            "name": "Công an phường Tân Uyên",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 144,
+        "fields": {
+            "short_name": "CAPTayNam",
+            "name": "Công an phường Tây Nam",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 145,
+        "fields": {
+            "short_name": "CAPTayThanh",
+            "name": "Công an phường Tây Thạnh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 146,
+        "fields": {
+            "short_name": "CAPThanhMyTay",
+            "name": "Công an phường Thạnh Mỹ Tây",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 147,
+        "fields": {
+            "short_name": "CAPTayHoi",
+            "name": "Công an phường Thông Tây Hội",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 148,
+        "fields": {
+            "short_name": "CAPThoiAn",
+            "name": "Công an phường Thới An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 149,
+        "fields": {
+            "short_name": "CAPThoiHoa",
+            "name": "Công an phường Thới Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 150,
+        "fields": {
+            "short_name": "CAPDauMot",
+            "name": "Công an phường Thủ Dầu Một",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 151,
+        "fields": {
+            "short_name": "CAPThuDuc",
+            "name": "Công an phường Thủ Đức",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 152,
+        "fields": {
+            "short_name": "CAPThuanAn",
+            "name": "Công an phường Thuận An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 153,
+        "fields": {
+            "short_name": "CAPThuanGiao",
+            "name": "Công an phường Thuận Giao",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 154,
+        "fields": {
+            "short_name": "CAPTrungMyTay",
+            "name": "Công an phường Trung Mỹ Tây",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 155,
+        "fields": {
+            "short_name": "CAPVinhHoi",
+            "name": "Công an phường Vĩnh Hội",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 156,
+        "fields": {
+            "short_name": "CAPVinhTan",
+            "name": "Công an phường Vĩnh Tân",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 157,
+        "fields": {
+            "short_name": "CAPVungTau",
+            "name": "Công an phường Vũng Tàu",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 158,
+        "fields": {
+            "short_name": "CAPVuonLai",
+            "name": "Công an phường Vườn Lài",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 159,
+        "fields": {
+            "short_name": "CAPXomChieu",
+            "name": "Công an phường Xóm Chiếu",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 160,
+        "fields": {
+            "short_name": "CAPXuanHoa",
+            "name": "Công an phường Xuân Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 161,
+        "fields": {
+            "short_name": "CAXAnLong",
+            "name": "Công an xã An Long",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 162,
+        "fields": {
+            "short_name": "CAXNhonTay",
+            "name": "Công an xã An Nhơn Tây",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 163,
+        "fields": {
+            "short_name": "CAXThoiDong",
+            "name": "Công an xã An Thới Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 164,
+        "fields": {
+            "short_name": "CAXBaDiem",
+            "name": "Công an xã Bà Điểm",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 165,
+        "fields": {
+            "short_name": "CAXBauBang",
+            "name": "Công an xã Bàu Bàng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 166,
+        "fields": {
+            "short_name": "CAXBauLam",
+            "name": "Công an xã Bàu Lâm",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 167,
+        "fields": {
+            "short_name": "CAXTanUyen",
+            "name": "Công an xã Bắc Tân Uyên",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 168,
+        "fields": {
+            "short_name": "CAXBinhChanh",
+            "name": "Công an xã Bình Chánh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 169,
+        "fields": {
+            "short_name": "CAXBinhChau",
+            "name": "Công an xã Bình Châu",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 170,
+        "fields": {
+            "short_name": "CAXBinhGia",
+            "name": "Công an xã Bình Giã",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 171,
+        "fields": {
+            "short_name": "CAXBinhHung",
+            "name": "Công an xã Bình Hưng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 172,
+        "fields": {
+            "short_name": "CAXBinhKhanh",
+            "name": "Công an xã Bình Khánh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 173,
+        "fields": {
+            "short_name": "CAXBinhLoi",
+            "name": "Công an xã Bình Lợi",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 174,
+        "fields": {
+            "short_name": "CAXBinhMy",
+            "name": "Công an xã Bình Mỹ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 175,
+        "fields": {
+            "short_name": "CAXCanGio",
+            "name": "Công an xã Cần Giờ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 176,
+        "fields": {
+            "short_name": "CAXChauDuc",
+            "name": "Công an xã Châu Đức",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 177,
+        "fields": {
+            "short_name": "CAXChauPha",
+            "name": "Công an xã Châu Pha",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 178,
+        "fields": {
+            "short_name": "CAXCuChi",
+            "name": "Công an xã Củ Chi",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 179,
+        "fields": {
+            "short_name": "CAXDauTieng",
+            "name": "Công an xã Dầu Tiếng",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 180,
+        "fields": {
+            "short_name": "CAXDatDo",
+            "name": "Công an xã Đất Đỏ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 181,
+        "fields": {
+            "short_name": "CAXDongThanh",
+            "name": "Công an xã Đông Thạnh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 182,
+        "fields": {
+            "short_name": "CAXHiepPhuoc",
+            "name": "Công an xã Hiệp Phước",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 183,
+        "fields": {
+            "short_name": "CAXHoaHiep",
+            "name": "Công an xã Hòa Hiệp",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 184,
+        "fields": {
+            "short_name": "CAXHoaHoi",
+            "name": "Công an xã Hòa Hội",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 185,
+        "fields": {
+            "short_name": "CAXHocMon",
+            "name": "Công an xã Hóc Môn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 186,
+        "fields": {
+            "short_name": "CAXHoTram",
+            "name": "Công an xã Hồ Tràm",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 187,
+        "fields": {
+            "short_name": "CAXHungLong",
+            "name": "Công an xã Hưng Long",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 188,
+        "fields": {
+            "short_name": "CAXKimLong",
+            "name": "Công an xã Kim Long",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 189,
+        "fields": {
+            "short_name": "CAXLongDien",
+            "name": "Công an xã Long Điền",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 190,
+        "fields": {
+            "short_name": "CAXLongHai",
+            "name": "Công an xã Long Hải",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 191,
+        "fields": {
+            "short_name": "CAXLongHoa",
+            "name": "Công an xã Long Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 192,
+        "fields": {
+            "short_name": "CAXLongSon",
+            "name": "Công an xã Long Sơn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 193,
+        "fields": {
+            "short_name": "CAXMinhThanh",
+            "name": "Công an xã Minh Thạnh",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 194,
+        "fields": {
+            "short_name": "CAXNgaiGiao",
+            "name": "Công an xã Ngãi Giao",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 195,
+        "fields": {
+            "short_name": "CAXNghiaThanh",
+            "name": "Công an xã Nghĩa Thành",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 196,
+        "fields": {
+            "short_name": "CAXNhaBe",
+            "name": "Công an xã Nhà Bè",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 197,
+        "fields": {
+            "short_name": "CAXNhuanDuc",
+            "name": "Công an xã Nhuận Đức",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 198,
+        "fields": {
+            "short_name": "CAXPhuGiao",
+            "name": "Công an xã Phú Giáo",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 199,
+        "fields": {
+            "short_name": "CAXHoaDong",
+            "name": "Công an xã Phú Hòa Đông",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 200,
+        "fields": {
+            "short_name": "CAXPhuocHai",
+            "name": "Công an xã Phước Hải",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 201,
+        "fields": {
+            "short_name": "CAXPhuocHoa",
+            "name": "Công an xã Phước Hòa",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 202,
+        "fields": {
+            "short_name": "CAXPhuocThanh",
+            "name": "Công an xã Phước Thành",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 203,
+        "fields": {
+            "short_name": "CAXAnHoi",
+            "name": "Công an xã Tân An Hội",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 204,
+        "fields": {
+            "short_name": "CAXTanNhut",
+            "name": "Công an xã Tân Nhựt",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 205,
+        "fields": {
+            "short_name": "CAXTanVinhLoc",
+            "name": "Công an xã Tân Vĩnh Lộc",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 206,
+        "fields": {
+            "short_name": "CAXThaiMy",
+            "name": "Công an xã Thái Mỹ",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 207,
+        "fields": {
+            "short_name": "CAXThanhAn_1",
+            "name": "Công an xã Thanh An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 208,
+        "fields": {
+            "short_name": "CAXThanhAn_2",
+            "name": "Công an xã Thạnh An",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 209,
+        "fields": {
+            "short_name": "CAXThuongTan",
+            "name": "Công an xã Thường Tân",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 210,
+        "fields": {
+            "short_name": "CAXVanTho",
+            "name": "Công an xã Trừ Văn Thố",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 211,
+        "fields": {
+            "short_name": "CAXVinhLoc",
+            "name": "Công an xã Vĩnh Lộc",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 212,
+        "fields": {
+            "short_name": "CAXXuanSon",
+            "name": "Công an xã Xuân Sơn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 213,
+        "fields": {
+            "short_name": "CAXThoiSon",
+            "name": "Công an xã Xuân Thới Sơn",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
+    },
+    {
+        "model": "app.department",
+        "pk": 214,
+        "fields": {
+            "short_name": "CAXXuyenMoc",
+            "name": "Công an xã Xuyên Mộc",
+            "type": "CAX",
+            "parent": 1,
+            "created_by": 1,
+            "updated_by": 1,
+            "created_at": "2026-01-01 07:00:00.000 +0700",
+            "updated_at": "2026-01-01 07:00:00.000 +0700"
+        }
     }
-  },
-  {
-    "model": "app.department",
-    "pk": 2,
-    "fields": {
-      "short_name": "PA02",
-      "name": "Phòng An ninh đối nội",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 3,
-    "fields": {
-      "short_name": "PA03",
-      "name": "Phòng An ninh chính trị nội bộ",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 4,
-    "fields": {
-      "short_name": "PA04",
-      "name": "Phòng An ninh kinh tế",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 5,
-    "fields": {
-      "short_name": "PA05",
-      "name": "Phòng An ninh mạng và Phòng, chống tội phạm sử dụng Công nghệ cao",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 6,
-    "fields": {
-      "short_name": "PA06",
-      "name": "Phòng Kỹ thuật nghiệp vụ",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 7,
-    "fields": {
-      "short_name": "PA07",
-      "name": "Phòng Ngoại tuyến",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 8,
-    "fields": {
-      "short_name": "PA08",
-      "name": "Phòng Quản lý xuất nhập cảnh",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 9,
-    "fields": {
-      "short_name": "PA09",
-      "name": "Phòng An ninh điều tra",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 10,
-    "fields": {
-      "short_name": "PC01",
-      "name": "Văn phòng Cơ quan cảnh sát điều tra",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 11,
-    "fields": {
-      "short_name": "PC02",
-      "name": "Phòng Cảnh sát điều tra tội phạm về trật tự xã hội",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 12,
-    "fields": {
-      "short_name": "PC03",
-      "name": "Phòng Cảnh sát điều tra tội phạm về tham nhũng, kinh tế, buôn lậu, môi trường",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 13,
-    "fields": {
-      "short_name": "PC04",
-      "name": "Phòng Cảnh sát điều tra tội phạm về Ma tuý",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 14,
-    "fields": {
-      "short_name": "PC06",
-      "name": "Phòng Cảnh sát Quản lý hành chính về Trật tự xã hội",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 15,
-    "fields": {
-      "short_name": "PC07",
-      "name": "Phòng Cảnh sát Phòng cháy chữa cháy và Cứu nạn cứu hộ",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 16,
-    "fields": {
-      "short_name": "PC08",
-      "name": "Phòng Cảnh sát Giao thông",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 17,
-    "fields": {
-      "short_name": "PC09",
-      "name": "Phòng Kỹ thuật hình sự",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 18,
-    "fields": {
-      "short_name": "PC10",
-      "name": "Phòng Cảnh sát Thi hành án hình sựu và Hỗ trợ tư pháp",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 19,
-    "fields": {
-      "short_name": "PC11A",
-      "name": "Trại tạm giam Chí hoà",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 20,
-    "fields": {
-      "short_name": "PC11B",
-      "name": "Trại tạm giam Bố Lá",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 21,
-    "fields": {
-      "short_name": "PC11C",
-      "name": "Trại tạm giam Số 1",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 22,
-    "fields": {
-      "short_name": "PC11D",
-      "name": "Trại tạm giam Số 2",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 23,
-    "fields": {
-      "short_name": "PK02",
-      "name": "Phòng Cảnh sát cơ động",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 24,
-    "fields": {
-      "short_name": "PV01",
-      "name": "Phòng Tham mưu",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 25,
-    "fields": {
-      "short_name": "PV06",
-      "name": "Phòng Hồ sơ nghiệp vụ",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 26,
-    "fields": {
-      "short_name": "PX01",
-      "name": "Phòng Tổ chức cán bộ",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 27,
-    "fields": {
-      "short_name": "PX03",
-      "name": "Phòng Công tác Đảng và Công tác Chính trị",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 28,
-    "fields": {
-      "short_name": "PX04",
-      "name": "Ban Chuyên đề Công an thành phố (Báo Công an Thành phố)",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 29,
-    "fields": {
-      "short_name": "PX05",
-      "name": "Thanh tra Công an Thành phố",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 30,
-    "fields": {
-      "short_name": "PX06",
-      "name": "Cơ quan Uỷ ban kiểm tra Đảng uỷ",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 31,
-    "fields": {
-      "short_name": "PH01",
-      "name": "Phòng Tài chính",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 32,
-    "fields": {
-      "short_name": "PH04",
-      "name": "Phòng Viễn Thông, Tin học và Cơ yếu",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 33,
-    "fields": {
-      "short_name": "PH06",
-      "name": "Bệnh viện Công an Thành phố",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 34,
-    "fields": {
-      "short_name": "PH10",
-      "name": "Phòng Hậu cần",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 35,
-    "fields": {
-      "short_name": "CTY 990",
-      "name": "Công ty Trách nhiệm hữu hạn Một thành viên 990",
-      "type": "CAP",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 36,
-    "fields": {
-      "short_name": "CAXCĐ_BRVT",
-      "name": "Công an Đặc khu Côn Đảo",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 37,
-    "fields": {
-      "short_name": "CAXĐCACHKTSN_HCM",
-      "name": "Đồn Công an Cảng hàng không Tân Sơn Nhất",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 38,
-    "fields": {
-      "short_name": "CAXĐCAKCNKH_BD",
-      "name": "Đồn Công an Khu công nghiệp Kim Huy",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 39,
-    "fields": {
-      "short_name": "CAXĐCAKCNTU_BD",
-      "name": "Đồn Công an Khu công nghiệp Tân Uyên",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 40,
-    "fields": {
-      "short_name": "CAXĐCAKCNST_BD",
-      "name": "Đồn Công an Khu công nghiệp Sóng Thần",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 41,
-    "fields": {
-      "short_name": "CAXĐCAKCNTĐH_BD",
-      "name": "Đồn Công an Khu công nghiệp Tân Đông Hiệp",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 42,
-    "fields": {
-      "short_name": "CAXĐCAKCNMP_BD",
-      "name": "Đồn Công an Khu công nghiệp Mỹ Phước",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 43,
-    "fields": {
-      "short_name": "CAXĐCAKCNV_BD",
-      "name": "Đồn Công an Khu công nghiệp VSIP",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 44,
-    "fields": {
-      "short_name": "CAXĐCAKCNĐA_BD",
-      "name": "Đồn Công an Khu công nghiệp Đồng An",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 45,
-    "fields": {
-      "short_name": "CAXĐCAKCNBB_BD",
-      "name": "Đồn Công an Khu công nghiệp Bàu Bàng",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 46,
-    "fields": {
-      "short_name": "CAXĐCAKCNTT_BRVT",
-      "name": "Đồn Công an Khu công nghiệp Tân Thành",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 47,
-    "fields": {
-      "short_name": "CAXAĐ_HCM",
-      "name": "Công an phường An Đông",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 48,
-    "fields": {
-      "short_name": "CAXAHĐ_HCM",
-      "name": "Công an phường An Hội Đông",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 49,
-    "fields": {
-      "short_name": "CAXAHT_HCM",
-      "name": "Công an phường An Hội Tây",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 50,
-    "fields": {
-      "short_name": "CAXAK_HCM",
-      "name": "Công an phường An Khánh",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 51,
-    "fields": {
-      "short_name": "CAXAL_HCM",
-      "name": "Công an phường An Lạc",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 52,
-    "fields": {
-      "short_name": "CAXAN_HCM",
-      "name": "Công an phường An Nhơn",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  },
-  {
-    "model": "app.department",
-    "pk": 53,
-    "fields": {
-      "short_name": "CAXAP_BD",
-      "name": "Công an phường An Phú",
-      "type": "CAX",
-      "created_by": 1,
-      "updated_by": 1,
-      "created_at": "2026-01-01 07:00:00.000 +0700",
-      "updated_at": "2026-01-01 07:00:00.000 +0700"
-    }
-  }
 ]

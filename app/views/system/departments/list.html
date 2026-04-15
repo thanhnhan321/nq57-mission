@@ -6,7 +6,7 @@
 {% block content %}
 <div class="p-4">
   {{ department_list_panel(
-    page_title=page_title,
+    page_title='',
     filters=filters,
     partial_url=partial_url,
     actions=actions,
@@ -19,6 +19,7 @@
     sort_direction=sort_direction,
     reload_event=reload_event,
     tree_expanded_ids=tree_expanded_ids,
+    row_actions=row_actions,
   ) }}
 </div>
 {% endblock %}

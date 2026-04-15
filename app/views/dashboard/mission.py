@@ -50,10 +50,6 @@ class MissionPanelPartialView(View):
             f'count-{status}': Count('code', filter=Q(report_status=status)) 
             for status in MissionReport.Status
         }
-        department_status_map = {
-            f'count-{status}_department': Count('department_id', filter=Q(report_status=status), distinct=True) 
-            for status in MissionReport.Status
-        }
         queryset = queryset.annotate(
             mission_status=Subquery(latest_report_queryset.values('mission_status')[:1]),
             report_status=Subquery(latest_report_queryset.values('status')[:1]),
@@ -62,9 +58,10 @@ class MissionPanelPartialView(View):
             queryset
             .aggregate(
                 total_missions=Count('code'),
+                total_departments=Count('department_id', distinct=True),
+                total_submitted_departments=Count('department_id', filter=Q(report_status=MissionReport.Status.APPROVED), distinct=True),
                 **mission_status_map,
                 **status_map,
-                **department_status_map
             )
         )
         for key in status_map.keys():
@@ -72,11 +69,10 @@ class MissionPanelPartialView(View):
                 statistics[key] / statistics['total_missions'] * 100 if statistics['total_missions'] > 0 else 0,
                 2
             )
-        for key in department_status_map.keys():
-            statistics[f'{key}_ratio'] = round(
-                statistics[key] / statistics['total_missions'] * 100 if statistics['total_missions'] > 0 else 0,
-                2
-            )
+        statistics['total_submitted_departments_ratio'] = round(
+            statistics['total_submitted_departments'] / statistics['total_departments'] * 100 if statistics['total_departments'] > 0 else 0,
+            2
+        )
         return render(
             request,
             self.template_name,

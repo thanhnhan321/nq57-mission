@@ -1,0 +1,177 @@
+{% from 'templates/components/button/button.html' import button %}
+{% from 'templates/components/input/base/input.html' import input %}
+{% from 'templates/components/input/select/select.html' import select %}
+{% from 'templates/components/input/datetimepicker/datetimepicker.html' import datetimepicker %}
+{% from 'templates/components/menu/menu.html' import menu %}
+{% from 'templates/components/table/body.html' import table_body %}
+{% from 'system/users/department_tree_filter.html' import department_tree_filter %}
+
+{% macro user_list_panel(
+page_title,
+search_filter,
+department_filter_value,
+department_filter_label,
+department_tree_nodes,
+department_tree_placeholder,
+department_tree_empty_message,
+filters,
+partial_url,
+actions,
+columns,
+rows,
+page_index,
+page_size,
+total_count,
+sort,
+sort_direction,
+reload_event,
+row_actions=[],
+statistics_block=''
+) %}
+<div
+    class="bg-white shadow-sm rounded-lg border border-gray-200"
+    x-id="['table', 'filter']"
+    x-data="{}"
+    :hx-include="'#' + $id('filter')"
+>
+    <div class="px-6">
+        <h1 class="text-4xl font-semibold my-4">{{ page_title }}</h1>
+        <form
+            :id="$id('filter')"
+            class="flex flex-wrap items-end gap-x-3 gap-y-2 my-2"
+            hx-get="{{ partial_url }}"
+            :hx-target="'#' + $id('table')"
+            hx-include="[name='page_size'], [name='sort'], [name='sort_direction']"
+            hx-push-url="false"
+            hx-trigger="{% if reload_event %}{{ reload_event }} from:body, {% endif %}change, keyup changed delay:600ms"
+            hx-swap="outerHTML"
+            @submit.prevent
+        >
+            {% if search_filter %}
+            <div class="flex-1 min-w-64">
+                {{ input(
+                    name=search_filter.name,
+                    label=search_filter.label,
+                    type=search_filter.type,
+                    value=search_filter.value,
+                    disabled=search_filter.disabled,
+                    hint=search_filter.hint,
+                    placeholder=search_filter.placeholder,
+                    required=search_filter.required,
+                    class=search_filter.klass,
+                    tooltip_content=search_filter.tooltip_content,
+                    tooltip_axis=search_filter.tooltip_axis,
+                    validate=search_filter.client_validate,
+                    extra_attributes=search_filter.extra_attributes
+                ) }}
+            </div>
+            {% endif %}
+
+            <div class="flex-[1.5] min-w-80">
+                {{ department_tree_filter(
+                    name='department',
+                    label='Đơn vị',
+                    placeholder='Chọn đơn vị',
+                    value=department_filter_value,
+                    selected_label=department_filter_label,
+                    nodes=department_tree_nodes,
+                    empty_message=department_tree_empty_message,
+                    tree_placeholder=department_tree_placeholder,
+                ) }}
+            </div>
+
+            {% for filter in filters|default([]) %}
+            <div class="flex-1 min-w-48">
+                {% if filter.type == 'select' or filter.type == 'multiselect' %}
+                    {{ select(
+                        name=filter.name,
+                        label=filter.label,
+                        multiple=filter.type == 'multiselect',
+                        options_url=filter.extra_attributes.get('options_url'),
+                        value=filter.value,
+                        disabled=filter.disabled,
+                        hint=filter.hint,
+                        placeholder=filter.placeholder,
+                        required=filter.required,
+                        class=filter.klass,
+                        tooltip_content=filter.tooltip_content,
+                        tooltip_axis=filter.tooltip_axis,
+                        reload_events=filter.extra_attributes.get('reload_events'),
+                        extra_attributes=filter.extra_attributes
+                    ) }}
+                {% elif filter.type == 'datetime' or filter.type == 'date' %}
+                    {{ datetimepicker(
+                        name=filter.name,
+                        label=filter.label,
+                        variant=filter.type,
+                        value=filter.value,
+                        disabled=filter.disabled,
+                        hint=filter.hint,
+                        placeholder=filter.placeholder,
+                        required=filter.required,
+                        class=filter.klass,
+                        tooltip_content=filter.tooltip_content,
+                        tooltip_axis=filter.tooltip_axis,
+                        extra_attributes=filter.extra_attributes
+                    ) }}
+                {% else %}
+                    {{ input(
+                        name=filter.name,
+                        label=filter.label,
+                        type=filter.type,
+                        value=filter.value,
+                        disabled=filter.disabled,
+                        hint=filter.hint,
+                        placeholder=filter.placeholder,
+                        required=filter.required,
+                        class=filter.klass,
+                        tooltip_content=filter.tooltip_content,
+                        tooltip_axis=filter.tooltip_axis,
+                        validate=filter.client_validate,
+                        extra_attributes=filter.extra_attributes
+                    ) }}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </form>
+
+        {% if actions %}
+        <div class="mb-2 flex flex-wrap gap-2 justify-end">
+            {% for action in actions %}
+            {% set ctx_menu = get_attribute(action.extra_attributes, 'menu', {}) %}
+            {% call menu(groups=ctx_menu.groups, position=ctx_menu.position) %}
+            {{
+                button(
+                    text=action.label,
+                    icon=action.icon,
+                    icon_position=action.icon_position,
+                    variant=action.variant,
+                    disabled=action.disabled,
+                    loading_text=action.loading_text,
+                    href=action.href,
+                    htmx_event_prefix=action.htmx_event_prefix,
+                    class=action.klass,
+                    extra_attributes=action.extra_attributes,
+                )
+            }}
+            {% endcall %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    {{ table_body(
+        columns=columns,
+        rows=rows,
+        sort=sort,
+        sort_direction=sort_direction,
+        partial_url=partial_url,
+        bulk_actions=[],
+        row_actions=row_actions,
+        page_index=page_index,
+        page_size=page_size,
+        total_count=total_count,
+        statistics_block=statistics_block,
+    ) }}
+</div>
+{% endmacro %}

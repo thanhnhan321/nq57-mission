@@ -84,9 +84,13 @@ def table_filters():
         FilterParam(
             name="search",
             label="Kỳ báo cáo",
-            placeholder="01/2026 - 03/2026",
-            type=FilterParam.Type.TEXT,
-            query=lambda value: Q(),
+            placeholder="Tất cả",
+            type=FilterParam.Type.MULTISELECT,
+            inner_type=FilterParam.Type.NUMBER,
+            extra_attributes={
+                "options_url": reverse("period_options"),
+            },
+            query=lambda value: Q(period_id__in=value),
         ),
         FilterParam(
             name="code",
@@ -152,6 +156,7 @@ def get_common_context(request):
         columns=COLUMNS,
         filters=table_filters(),
         partial_url=reverse("public_document_list_partial"),
+        show_ordinal=True,
     )
 
     context = table_context.to_response_context(queryset)

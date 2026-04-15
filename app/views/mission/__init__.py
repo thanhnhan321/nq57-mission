@@ -37,6 +37,7 @@ from .excel_import import (
 from .run_task import (
     mission_run_task_api,
     mission_run_overdue_status_task_api,
+    mission_run_update_report_period_task_api
 )
 
 @require_GET
@@ -237,4 +238,5 @@ urlpatterns = [
     path("missions/<str:mission_id>/report/submit/", mission_report_submit, name="mission_report_submit"),
     path("run-task/", mission_run_task_api, name="mission_run_task"),
     path("run-overdue-status-task/", mission_run_overdue_status_task_api, name="mission_run_overdue_status_task"),
+    path("run-update-report-period-task/", mission_run_update_report_period_task_api, name="mission_run_update_report_period_task"),
 ]

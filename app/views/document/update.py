@@ -12,7 +12,6 @@ from django.contrib.auth.decorators import permission_required
 
 from ...models import Document, DocumentType, Period, Department
 
-
 @method_decorator(permission_required("app.change_document"), name="dispatch")
 class DocumentUpdateView(View):
     template_name = "document/update.html"

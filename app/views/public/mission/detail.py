@@ -36,7 +36,7 @@ def _build_public_mission_reports(mission: Mission) -> list[SimpleNamespace]:
         if not content_stripped and not locked and not no_work:
             continue
 
-        show_no_submit = r.status == MissionReport.Status.NO_REPORT
+        show_no_submit = r.status == MissionReport.Status.NOT_SENT#NO_REPORT
         has_report_activity = bool(content_stripped) or no_work
 
         who = ""

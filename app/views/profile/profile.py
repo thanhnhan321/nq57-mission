@@ -7,11 +7,16 @@ from django.http import JsonResponse
 from django.views import View
 from django.views.generic.base import TemplateView
 import json
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.views import method_decorator
 
+@method_decorator(permission_required('auth.view_user'), name='dispatch')
+@method_decorator(permission_required('app.view_userprofile'), name='dispatch')
 class ProfilePageView(TemplateView):
     template_name = "profile/profile.html"
 
-
+@method_decorator(permission_required('auth.change_user'), name='dispatch')
+@method_decorator(permission_required('app.change_userprofile'), name='dispatch')
 class ProfileApiView(View):
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -83,7 +88,7 @@ class ProfileApiView(View):
         messages.success(request, "Đã lưu thay đổi thông tin cá nhân.")
         return JsonResponse({"ok": True})
 
-
+@method_decorator(permission_required('auth.change_user'), name='dispatch')
 class ChangePasswordApiView(View):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

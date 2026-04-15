@@ -124,7 +124,7 @@ def mission_excel_validate(request):
     excel_file = request.FILES.get("excel_file")
     if not excel_file:
         return HttpResponse(
-            "<div class='mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>"
+            "<div class='mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-[#940001]'>"
             "Chưa có file Excel để kiểm tra."
             "</div>"
         )
@@ -134,7 +134,7 @@ def mission_excel_validate(request):
         from openpyxl.utils.datetime import from_excel
     except ImportError:
         return HttpResponse(
-            "<div class='mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>"
+            "<div class='mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-[#940001]'>"
             "Server chưa cài `openpyxl` để đọc file Excel."
             "</div>"
         )
@@ -145,7 +145,7 @@ def mission_excel_validate(request):
         ws = wb.active
     except Exception:
         return HttpResponse(
-            "<div class='mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>"
+            "<div class='mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-[#940001]'>"
             "File Excel không hợp lệ hoặc không đọc được."
             "</div>"
         )
@@ -274,7 +274,7 @@ def mission_excel_validate(request):
                 "col_d": _format_date_display(d_date, d),
                 "col_e": ", ".join(e_parts),
                 "errors": (
-                    f"<span class='text-red-700 font-medium'>{html_escape(' ; '.join(row_errors))}</span>"
+                    f"<span class='text-[#940001] font-medium'>{html_escape(' ; '.join(row_errors))}</span>"
                     if row_errors
                     else ""
                 ),

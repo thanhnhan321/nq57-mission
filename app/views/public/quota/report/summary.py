@@ -1,5 +1,4 @@
-from django.db.models import Sum
-from django.db.models.functions import TruncMonth
+from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -21,7 +20,6 @@ COLUMNS = [
     TableColumn(
         name='month',
         label='Kỳ báo cáo',
-        formatter=lambda value: value.strftime('Tháng %m/%Y'),
     ),
     TableColumn(
         name='expected_value',
@@ -54,25 +52,24 @@ COLUMNS = [
 ]
 
 def get_common_context(request):
-    quota_id = int(request.GET.get('quota_id', '').strip())
+    quota_id = request.GET.get('quota_id', '').strip()
     queryset = QuotaReport.objects.select_related('quota').filter(quota_id=quota_id)
-    group_by_fields = ['month', 'quota__target_percent']
+    group_by_fields = ['period__year', 'period__month', 'quota__target_percent']
     
-    queryset = queryset.annotate(
-        month=TruncMonth('created_at')
-    ).values(*group_by_fields).annotate(
-        expected_value=Sum('expected_value'),
-        actual_value=Sum('actual_value'),
-    )
+    queryset = queryset.values(*group_by_fields).annotate(
+        expected_value=Sum(F('expected_value')),
+        actual_value=Sum(F('actual_value')),
+    ).order_by('-period_id')
 
     def transformer(row):
-        row['completion_percent'] = row['actual_value'] / row['expected_value'] if row['expected_value'] else 0
-        row['evaluation_result'] = row['completion_percent'] >= row['quota__target_percent']
+        row['month'] = f'Tháng {row['period__month']}/{row['period__year']}'
+        row['completion_percent'] = row['actual_value'] / row['expected_value'] if row['expected_value'] and row['actual_value'] else 0
+        row['evaluation_result'] = True if row['expected_value'] and row['completion_percent'] >= row['quota__target_percent'] else False
         return row
 
     table_context = TableContext(
         request=request,
-        reload_event='quota-report:success',
+        reload_event='quota:success',
         columns=COLUMNS,
         partial_url=reverse('public_quota_report_summary_partial', query={"quota_id": quota_id}),
     )
@@ -88,7 +85,7 @@ class PublicQuotaReportSummaryView(View):
 
     def get(self, request, *args, **kwargs):
         quota_id = request.GET.get('quota_id', '').strip()
-        if not quota_id.isdigit():
+        if not quota_id:
             response = HttpResponse()
             response['HX-Redirect'] = reverse('public_quota_list')
             return response

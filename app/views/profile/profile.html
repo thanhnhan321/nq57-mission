@@ -72,7 +72,7 @@
           <button
             id="basic-profile-save-btn"
             type="button"
-            class="h-11 rounded-lg bg-red-700 px-6 text-white disabled:cursor-not-allowed disabled:opacity-50"
+            class="h-11 rounded-lg bg-[#940001] px-6 text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled
           >
             Lưu thay đổi
@@ -81,7 +81,7 @@
           <button
             id="basic-profile-cancel-btn"
             type="button"
-            class="h-11 rounded-lg border border-red-300 px-6 text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            class="h-11 rounded-lg border border-red-300 px-6 text-[#940001] disabled:cursor-not-allowed disabled:opacity-50"
             disabled
           >
             Hủy
@@ -173,7 +173,7 @@
           <button
             type="submit"
             :disabled="!canSubmit"
-            class="h-11 rounded-lg bg-red-700 px-6 text-white disabled:cursor-not-allowed disabled:opacity-50"
+            class="h-11 rounded-lg bg-[#940001] px-6 text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span x-show="!loading">Đổi mật khẩu</span>
             <span x-show="loading">Đang xử lý...</span>
@@ -183,7 +183,7 @@
             type="button"
             @click="resetForm"
             :disabled="loading"
-            class="h-11 rounded-lg border border-red-300 px-6 text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            class="h-11 rounded-lg border border-red-300 px-6 text-[#940001] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Hủy
           </button>
@@ -299,6 +299,36 @@ document.addEventListener('DOMContentLoaded', () => {
       is_active: false,
     },
 
+    validate(values) {
+      const errors = [];
+
+      /* // ===== EMAIL =====
+      if (!values.email) {
+        errors.push('Vui lòng nhập email');
+        return errors;
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(values.email)) {
+          errors.push('Email không đúng định dạng');
+          return errors;
+        }
+      } */
+
+      // ===== PHONE =====
+      if (!values.phone) {
+        errors.push('Vui lòng nhập số điện thoại');
+        return errors;
+      } else {
+        const phoneRegex = /^[0-9]{9,11}$/;
+        if (!phoneRegex.test(values.phone)) {
+          errors.push('Số điện thoại phải gồm 9-11 chữ số');
+          return errors;
+        }
+      }
+
+      return errors;
+    },
+
     fields: ['full_name', 'email', 'phone'],
 
     getValues(source = 'dom') {
@@ -367,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const items = this.state.roles?.length ? this.state.roles : ['Thành viên'];
         roles.innerHTML = items.map((role, i) => `
           <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-            i === 0 ? 'bg-red-700 text-white' : 'bg-slate-200 text-slate-600'
+            i === 0 ? 'bg-[#940001] text-white' : 'bg-slate-200 text-slate-600'
           }">${role}</span>
         `).join('');
       }
@@ -439,6 +469,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const payload = this.getValues();
+        const errors = this.validate(payload);
+        if (errors.length) {
+          errors.forEach(e => toast('danger', e));
+          return;
+        }
+
         const res = await fetch("{{ url('profile_api') }}", {
           method: 'PUT',
           headers: {

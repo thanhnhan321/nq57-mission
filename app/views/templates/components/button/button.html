@@ -22,11 +22,11 @@
 {% set title_classes = 'w-9' %}
 {% endif %}
 {% if variant == 'filled' %}
-{% set variant_classes = 'border border-transparent bg-red-700 text-white hover:bg-red-800 active:bg-red-800' %}
+{% set variant_classes = 'border border-transparent bg-[#940001] text-white hover:bg-red-700 active:bg-red-700' %}
 {% elif variant == 'transparent' %}
 {% set variant_classes = 'border border-transparent bg-transparent text-gray-800 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-100 active:text-gray-900' %}
 {% else %}
-{% set variant_classes = 'border border-gray-400 bg-white text-red-700 hover:bg-gray-100 hover:text-red-800 active:bg-gray-100 active:text-red-800' %}
+{% set variant_classes = 'border border-gray-400 bg-white text-[#940001] hover:bg-gray-100 hover:text-red-700 active:bg-gray-100 active:text-red-700' %}
 {% endif %}
 {% set disabled_classes = 'disabled:bg-gray-200! disabled:text-gray-400! disabled:cursor-not-allowed! disabled:border-transparent!' %}
 {% set icon_loading = 'spinner.svg' %}

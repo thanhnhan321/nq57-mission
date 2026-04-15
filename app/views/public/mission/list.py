@@ -193,7 +193,6 @@ def _parse_multi_values(request, key: str) -> list[str]:
 
 
 def get_public_mission_table_context(request):
-    directive_level = request.GET.get("directive_level", "")
     directive_document = request.GET.get("directive_document", "")
     department_values = _parse_multi_values(request, "department")
     status_values = _parse_multi_values(request, "status")
@@ -292,7 +291,7 @@ def get_public_mission_table_context(request):
                 label="Cấp chỉ đạo",
                 placeholder="Tất cả",
                 type=FilterParam.Type.SELECT,
-                value=directive_level,
+                inner_type=FilterParam.Type.NUMBER,
                 extra_attributes={
                     "options_url": reverse("directive_level_options"),
                     "@change": (
@@ -358,18 +357,12 @@ def get_public_mission_table_context(request):
         **table_ctx.to_response_context(queryset, transformer=transformer)
     }
 
-
-class MissionReportListView(ListView):
-    model = Mission
-    template_name = "public/mission/list.html"
-
-    def get_context_data(self, **kwargs):
-        return get_public_mission_table_context(self.request)
-
-
 class MissionReportListPartialView(ListView):
     model = Mission
     template_name = "public/mission/partial.html"
 
     def get_context_data(self, **kwargs):
         return get_public_mission_table_context(self.request)
+
+class MissionReportListView(MissionReportListPartialView):
+    template_name = "public/mission/list.html"

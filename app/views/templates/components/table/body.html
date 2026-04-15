@@ -37,10 +37,10 @@ statistics_block=''
     x-init="$watch('anyChecked', (value) => $dispatch('bulk-actions', value)); $dispatch('bulk-actions', anyChecked);"
     @htmx:after-swap.document="if ($event.target.id === $id('table')) { $data.allChecked = false; $data.tick = 0;}"
 >
+  {% if statistics_block %}
+  {{ statistics_block | safe}}
+  {% endif %}
   <div class="overflow-auto max-h-130">
-    {% if statistics_block %}
-    {{ statistics_block | safe}}
-    {% endif %}
     <table class="w-full"
       >
       <thead
@@ -168,7 +168,7 @@ statistics_block=''
 
   <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
     <div class="flex items-center space-x-2">
-      <p class="text-sm text-red-700">
+      <p class="text-sm text-[#940001]">
         Hiển thị
         <span class="font-medium">{{ (page_index * page_size + 1) if rows else 0 }}</span> -
         <span class="font-medium">{{ page_index * page_size + [page_size, rows|length]|min }}</span> trong tổng số

@@ -1,0 +1,27 @@
+
+{% from 'templates/components/button/button.html' import button %}
+<div class="w-fit min-w-md">
+    {% include 'quota/report/bulk_update_form.html' %}
+    <div class="mt-2 text-right gap-2">
+        {{ button(
+            text='Hủy',
+            variant='outlined',
+            disabled=false,
+            extra_attributes={
+                '@click': '$dispatch("modal:close-top");',
+            }
+        ) }}
+        {{ button(
+            text='Xác nhận',
+            variant='filled',
+            disabled=false,
+            htmx_event_prefix='quota',
+            extra_attributes={
+                'hx-post': url('quota_report_bulk_update'),
+                'hx-target': "#quota-report-bulk-update-form",
+                'hx-include': "#quota-report-bulk-update-form",
+                'hx-swap': 'outerHTML',
+            }
+        ) }}
+    </div>
+</div>

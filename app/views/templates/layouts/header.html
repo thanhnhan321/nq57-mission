@@ -5,7 +5,9 @@
     {# Bố cục 3 phần: trái (trống) - giữa (logo + tên hệ thống) - phải (User Menu) #}
     <div class="flex items-center justify-between w-full">
         {# Trái: Breadcrumbs #}
-        <div class="w-10 lg:w-20"></div>
+        <div class="px-3 font-semibold text-lg">
+            {{ (breadcrumbs or '')|safe }}
+        </div>
 
         {# Giữa: logo + tên hệ thống (chiếm nhiều nhất) #}
         <div class="flex-1 flex items-center justify-center pointer-events-none select-none">

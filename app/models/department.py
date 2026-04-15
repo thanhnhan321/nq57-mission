@@ -4,12 +4,13 @@ from django.contrib.auth.models import User
 from .base import AuditModel
 class Department(AuditModel):
     class Type(models.TextChoices):
-        CAP = "CAP"
-        CAX = "CAX"
+        CAP = "CAP", "CAP"
+        CAX = "CAX", "CAX"
 
     short_name = models.CharField(max_length=100, blank=True, null=True)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255, choices=Type.choices, default=Type.CAX)
+    is_active = models.BooleanField(default=True)
     parent = models.ForeignKey(
         'self',
         on_delete=models.PROTECT,
@@ -17,6 +18,7 @@ class Department(AuditModel):
         related_name='children',
         db_column='parent_id'
     )
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'department'

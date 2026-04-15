@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.views.generic import ListView
 from django.utils.html import format_html
 from django.utils import timezone
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.views import method_decorator
 
 from ...handlers.period import get_department_report_deadline
 from ...models import DepartmentReport, Department, Period
@@ -26,44 +28,13 @@ def build_deadline_alert():
     if not deadline:
         return {
             "show": False,
-            "deadline_text": "",
-            "remaining_text": "",
-            "is_overdue": False,
+            "deadline": None,
         }
 
     local_deadline = timezone.localtime(deadline)
-    now = timezone.localtime()
-
-    deadline_text = local_deadline.strftime("%H:%M %d/%m/%Y")
-
-    diff = local_deadline - now
-    is_overdue = diff.total_seconds() <= 0
-
-    if is_overdue:
-        remaining_text = ""
-    else:
-        total_seconds = int(diff.total_seconds())
-        days = total_seconds // 86400
-        remain = total_seconds % 86400
-        hours = remain // 3600
-        remain %= 3600
-        minutes = remain // 60
-
-        parts = []
-        if days > 0:
-            parts.append(f"{days} ngày")
-        if hours > 0:
-            parts.append(f"{hours} giờ")
-        if minutes > 0:
-            parts.append(f"{minutes} phút")
-
-        remaining_text = " ".join(parts) if parts else "0 phút"
-
     return {
         "show": True,
-        "deadline_text": deadline_text,
-        "remaining_text": remaining_text,
-        "is_overdue": is_overdue,
+        "deadline": local_deadline.isoformat(),
     }
 
 
@@ -102,7 +73,7 @@ def normalize_status(value: str) -> str:
         "SENT": "SENT",
         "NO_REPORT": "NO_REPORT",
         "Đã gửi": "SENT",
-        "Không gửi": "NO_REPORT",
+        "Chưa gửi": "NO_REPORT",
         "Chưa gửi": "NO_REPORT",
     }
     return mapping.get(value, value)
@@ -153,10 +124,6 @@ def resolve_period_ids_from_values(values):
     return unique_ids
 
 
-def _is_report_admin(user) -> bool:
-    return bool(getattr(user, "is_superuser", False))
-
-
 def _get_user_department_id(user):
     profile = getattr(user, "profile", None)
     department_id = getattr(profile, "department_id", None)
@@ -199,7 +166,7 @@ def table_filters(request):
         ),
     ]
 
-    if _is_report_admin(request.user):
+    if request.user.is_superuser:
         filters.insert(
             1,
             FilterParam(
@@ -241,7 +208,7 @@ def _get_department_value_from_request(request) -> str:
 def table_actions(request):
     selected_period = _get_first_period_value_from_request(request)
 
-    is_admin = _is_report_admin(request.user)
+    is_admin = bool(getattr(request.user, "is_superuser", False))
     user_department_id = _get_user_department_id(request.user)
 
     if is_admin:
@@ -261,7 +228,7 @@ def table_actions(request):
             variant=Button.Variant.OUTLINED,
             disabled=False,
             loading_text="Đang xuất...",
-            klass="!border-red-700 !bg-white !text-red-800 hover:!border-red-800 hover:!bg-red-50 hover:!text-red-900 active:!bg-red-100",
+            klass="!border-[#940001] !bg-white !text-red-700 hover:!border-red-700 hover:!bg-red-50 hover:!text-red-900 active:!bg-red-100",
             extra_attributes={
                 "menu": {
                     "groups": [
@@ -348,9 +315,11 @@ def row_actions(request):
             disabled=False,
             htmx_event_prefix="department-report",
             key="id",
+            render_predicate=lambda row: row.get("status") != "NO_REPORT",
             extra_attributes={
                 "hx-get": reverse("department_report_download") + "?id=__ROW_ID__",
                 "hx-swap": "none",
+                "title": "Tải xuống",
             },
         ),
         TableRowAction(
@@ -360,6 +329,7 @@ def row_actions(request):
             disabled=False,
             htmx_event_prefix="department-report",
             key="id",
+            render_predicate=lambda row: row.get("status") != "NO_REPORT",
             extra_attributes={
                 "@click": f"""
                     (() => {{
@@ -374,6 +344,7 @@ def row_actions(request):
                         }}));
                     }})()
                 """,
+                "title": "Chỉnh sửa",
             },
         ),
     ]
@@ -402,12 +373,12 @@ def build_file_html(file_name: str):
 def build_status_html(status: str):
     mapping = {
         "SENT": ("Đã gửi", "bg-[#2878f0] text-white"),
-        "NO_REPORT": ("Không gửi", "bg-[#e5e5e5] text-[#c62828]"),
+        "NO_REPORT": ("Chưa gửi", "bg-orange-100 text-orange-500"),
     }
 
     label, classes = mapping.get(
         status,
-        ("Không gửi", "bg-[#e5e5e5] text-[#c62828]")
+        ("Chưa gửi", "bg-orange-100 text-orange-500")
     )
 
     return format_html(
@@ -452,7 +423,7 @@ def get_base_queryset():
 
 
 def apply_filters(queryset, request):
-    is_admin = _is_report_admin(request.user)
+    is_admin = bool(getattr(request.user, "is_superuser", False))
     user_department_id = _get_user_department_id(request.user)
 
     if not is_admin and user_department_id:
@@ -526,17 +497,20 @@ def build_table_context(request, include_filters=True, include_actions=True):
     return context
 
 
-class DepartmentReportListView(ListView):
-    model = DepartmentReport
-    template_name = "report/list.html"
-
-    def get_context_data(self, **kwargs):
-        return build_table_context(self.request, include_filters=True, include_actions=True)
-
-
+@method_decorator(permission_required('app.view_departmentreport'), name='dispatch')
 class DepartmentReportListPartialView(ListView):
     model = DepartmentReport
     template_name = "report/partial.html"
 
     def get_context_data(self, **kwargs):
-        return build_table_context(self.request)
+        return build_table_context(self.request, include_filters=True, include_actions=True)
+
+
+@method_decorator(permission_required('app.view_departmentreport'), name='dispatch')
+class DepartmentReportListView(DepartmentReportListPartialView):
+    template_name = "report/list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['breadcrumbs'] = f'<a href="{reverse("department_report_list")}" class="hover:underline">Báo cáo</a>'
+        return context

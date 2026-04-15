@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Q, Sum
 from django.db.models.base import Coalesce
 from django.http import HttpResponse
 from django.utils import timezone
@@ -14,7 +14,7 @@ from django.views import View
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side
 
-from ...models import Period, Quota, QuotaAssignment, QuotaReport
+from ...models import Period, Quota, QuotaReport
 
 
 def _parse_period_ids(request) -> list[int]:
@@ -85,7 +85,7 @@ class ExportSummaryDepartmentView(View):
         if evaluation_result_raw in {"true", "false"}:
             evaluation_filter = evaluation_result_raw == "true"
 
-        quota_qs = Quota.objects.all()
+        quota_qs = Quota.objects.prefetch_related('department').all()
 
         # Luôn giới hạn theo các tháng đã chọn để tránh kéo dữ liệu không liên quan.
         if period_ids:
@@ -95,7 +95,7 @@ class ExportSummaryDepartmentView(View):
         if not request.user.is_superuser:
             dept_id = request.user.profile.department_id
             quota_qs = quota_qs.filter(
-                Q(department_assignments__department_id=dept_id, department_assignments__is_leader=True)
+                Q(department_id=dept_id)
                 | Q(
                     department_reports__department_id=dept_id,
                     department_reports__period_id__in=period_ids,
@@ -107,8 +107,7 @@ class ExportSummaryDepartmentView(View):
 
         if lead_department_id.isdigit():
             quota_qs = quota_qs.filter(
-                department_assignments__department_id=lead_department_id,
-                department_assignments__is_leader=True,
+                department_id=lead_department_id,
             )
 
         if report_statuses:
@@ -149,22 +148,28 @@ class ExportSummaryDepartmentView(View):
                 },
             )
 
-        leader_by_quota: dict[int, dict[str, Any]] = {}
-        leader_rows = (
-            QuotaAssignment.objects.filter(is_leader=True, quota_id__in=quota_ids)
-            .values("quota_id", "department_id", "department__short_name")
-            .distinct()
-        )
-        for r in leader_rows:
-            # Nếu có dữ liệu bất thường nhiều hơn 1 dv chủ trì cho cùng quota,
-            # lấy cái đầu tiên để tránh đếm trùng.
-            leader_by_quota.setdefault(
-                int(r["quota_id"]),
-                {
-                    "lead_department_id": int(r["department_id"]),
-                    "lead_department_name": r["department__short_name"] or "",
-                },
-            )
+        leader_by_quota: dict[int, dict[str, Any]] = {
+            quota.id: {
+                "lead_department_id": quota.department_id,
+                "lead_department_name": quota.department.short_name or "",
+            }
+            for quota in quota_qs
+        }
+        # leader_rows = (
+        #     QuotaAssignment.objects.filter(is_leader=True, quota_id__in=quota_ids)
+        #     .values("quota_id", "department_id", "department__short_name")
+        #     .distinct()
+        # )
+        # for r in leader_rows:
+        #     # Nếu có dữ liệu bất thường nhiều hơn 1 dv chủ trì cho cùng quota,
+        #     # lấy cái đầu tiên để tránh đếm trùng.
+        #     leader_by_quota.setdefault(
+        #         int(r["quota_id"]),
+        #         {
+        #             "lead_department_id": int(r["department_id"]),
+        #             "lead_department_name": r["department__short_name"] or "",
+        #         },
+        #     )
 
         if not leader_by_quota:
             wb = load_workbook(self.TEMPLATE_PATH)

@@ -5,6 +5,8 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.views.generic import ListView
 from django.utils.html import format_html
+from django.contrib.auth.decorators import permission_required
+from django.utils.decorators import method_decorator
 
 from ...models import Document, Department
 from ..templates.components.button import Button
@@ -84,39 +86,38 @@ def table_filters():
 
 
 def table_actions(request):
-    actions = [
-        TableAction(
-            label="Xuất báo cáo",
-            icon="download.svg",
-            icon_position=Button.IconPosition.LEFT,
-            variant=Button.Variant.OUTLINED,
-            disabled=False,
-            extra_attributes={
-                "hx-get": reverse("document_export"),
-                "hx-swap": "none",
-            },
-        ),
-    ]
-
+    actions = []
     if request.user.is_superuser:
-        actions.append(
-            TableAction(
-                label="Thêm mới",
-                icon="plus.svg",
-                icon_position=Button.IconPosition.LEFT,
-                variant=Button.Variant.FILLED,
-                disabled=False,
-                extra_attributes={
-                    '@click': f'''$dispatch("modal:open", {{
-                        url: "{reverse("document_create")}",
-                        title: "Thêm mới văn bản",
-                        ariaLabel: "Thêm mới văn bản",
-                        closeEvent: "document:success",
-                    }});'''
-                },
-            )
+        actions.extend(
+            [
+                TableAction(
+                    label="Xuất báo cáo",
+                    icon="download.svg",
+                    icon_position=Button.IconPosition.LEFT,
+                    variant=Button.Variant.OUTLINED,
+                    disabled=False,
+                    extra_attributes={
+                        "hx-get": reverse("document_export"),
+                        "hx-swap": "none",
+                    },
+                ),
+                TableAction(
+                    label="Thêm mới",
+                    icon="plus.svg",
+                    icon_position=Button.IconPosition.LEFT,
+                    variant=Button.Variant.FILLED,
+                    disabled=False,
+                    extra_attributes={
+                        '@click': f'''$dispatch("modal:open", {{
+                            url: "{reverse("document_create")}",
+                            title: "Thêm mới văn bản",
+                            ariaLabel: "Thêm mới văn bản",
+                            closeEvent: "document:success",
+                        }});'''
+                    },
+                )
+            ]
         )
-
     return actions
 
 
@@ -132,6 +133,7 @@ def row_actions(request):
             extra_attributes={
                 "hx-get": f'{reverse("document_download", query={"code": "__ROW_ID__"})}',
                 "hx-swap": "none",
+                "title": "Tải xuống",
             },
         ),
     ]
@@ -151,7 +153,8 @@ def row_actions(request):
                         title: "Cập nhật văn bản",
                         ariaLabel: "Cập nhật văn bản",
                         closeEvent: "document:success",
-                    }});'''
+                    }});''',
+                    "title": "Chỉnh sửa",
                 },
             ),
             TableRowAction(
@@ -167,7 +170,8 @@ def row_actions(request):
                         title: "Xác nhận xóa văn bản",
                         ariaLabel: "Xác nhận xóa văn bản",
                         closeEvent: "document:success",
-                    }});'''
+                    }});''',
+                    "title": "Xóa",
                 },
             ),
         ])
@@ -281,18 +285,20 @@ def get_common_context(request):
     context["summary_cards"] = build_summary_cards(filtered_queryset)
     return context
 
-
-class DocumentListView(ListView):
-    model = Document
-    template_name = "document/list.html"
-
-    def get_context_data(self, **kwargs):
-        return get_common_context(self.request)
-
-
+@method_decorator(permission_required('app.view_document'), name='dispatch')
 class DocumentListPartialView(ListView):
     model = Document
     template_name = "document/partial.html"
 
     def get_context_data(self, **kwargs):
         return get_common_context(self.request)
+
+@method_decorator(permission_required('app.view_document'), name='dispatch')
+class DocumentListView(DocumentListPartialView):
+    template_name = "document/list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['breadcrumbs'] = f'<a href="{reverse("document_list")}" class="hover:underline">Văn bản</a>'
+        return context
+

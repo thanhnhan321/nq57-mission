@@ -215,7 +215,7 @@ LANGUAGES = [
 
 # Authentication settings
 # https://docs.djangoproject.com/en/5.2/ref/settings/#login-url
-LOGIN_URL = f'{env.CONTEXT_ROOT}/sign-in'  # URL để redirect khi user chưa đăng nhập
+LOGIN_URL = f'/{env.CONTEXT_ROOT}/sign-in'  # URL để redirect khi user chưa đăng nhập
 
 
 #datnd 

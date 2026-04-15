@@ -4,10 +4,10 @@ from django.contrib import messages
 from django.db import transaction
 from django.db import IntegrityError
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.views import method_decorator
+from django.contrib.auth.decorators import permission_required
 from pydantic_core import from_json
 
 from app.models.mission import Mission, Department, MissionReport
@@ -15,7 +15,7 @@ from app.models.document import DirectiveDocument
 from app.models.period import Period
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(permission_required('app.add_mission'), name='dispatch')
 class MissionCreateView(View):
     def _generate_mission_code(self, *, department: Department) -> str:
         short = (getattr(department, "short_name", "") or "").strip()
@@ -178,7 +178,6 @@ class MissionCreateView(View):
         # return periods
         return [(int(start_date.year), int(start_date.month))]
 
-    @transaction.atomic
     def post(self, request, *args, **kwargs):
         try:
             directive_level_id = self._parse_required_int(
@@ -271,30 +270,18 @@ class MissionCreateView(View):
                 )
             }
 
-            missing_periods = []
             for year, month in report_periods:
                 period = periods_map.get((year, month))
+
                 if period is None:
                     period = Period.objects.filter(year=year, month=month).first()
-                    if period:
-                        periods_map[(year, month)] = period
-                    else:
-                        missing_periods.append(f"{month:02d}/{year}")
 
-            if missing_periods:
-                raise ValueError(
-                    "Chưa có kỳ báo cáo tương ứng trong hệ thống cho các tháng: "
-                    + ", ".join(missing_periods)
-                )
-
-            for year, month in report_periods:
-                period = periods_map[(year, month)]
                 MissionReport.objects.get_or_create(
                     mission=mission,
                     report_year=year,
                     report_month=month,
                     defaults={
-                        "period": period,
+                        "period": period,  # có thì gán, không thì None
                         "content": "",
                         "is_sent": False,
                         "sent_at": None,
@@ -318,6 +305,7 @@ class MissionCreateView(View):
             return response
 
         except ValueError as e:
+            transaction.set_rollback(True)
             messages.error(request, str(e))
             return JsonResponse(
                 {

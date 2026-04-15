@@ -70,7 +70,7 @@ class FilterParam(BaseModel):
                 return parse_datetime(data) or MISSING
             except ValueError:
                 return MISSING
-        return data
+        return data if data else MISSING
 
     def extract_value(self, request: HttpRequest, **kwargs):
         if self.value is not MISSING:
@@ -79,7 +79,7 @@ class FilterParam(BaseModel):
             data = request.GET.getlist(self.name, [])
         else:
             data = request.GET.get(self.name, '').strip()
-        value = self.__parse_value(self.inner_type or self.type, data) 
+        value = self.__parse_value(self.inner_type or self.type, data)
         self.value = value if value is not MISSING else None
         return value
 
@@ -95,7 +95,7 @@ class PaginationParam(BaseModel):
     filters: list[Any]
 
     @classmethod
-    def from_table_context(cls, ctx: 'TableContext', source_type: type):
+    def from_table_context(cls, ctx: 'TableContext'):
         params = {
             'page_index': int(ctx.request.GET.get('page_index', '0') or 0),
             'page_size': int(ctx.request.GET.get('page_size', '10') or 10),
@@ -176,7 +176,15 @@ class TableContext(BaseModel):
     statistics_builder: Callable[..., str] | None = None
     show_ordinal: bool = False
 
-    def __create_data_context(self, data_set: QuerySet | list[Any], params: PaginationParam, transformer = None, statistics_fields: dict | None = None):
+    def __create_data_context(
+        self,
+        data_set: QuerySet | list[Any],
+        params: PaginationParam,
+        transformer=None,
+        statistics_fields: dict | None = None,
+        statistics_queryset: QuerySet | None = None,
+        statistics_fn: Callable[[QuerySet], dict] | None = None,
+    ):
         statistics_block = None
         if isinstance(data_set, QuerySet):
             and_filter = Q()
@@ -187,14 +195,28 @@ class TableContext(BaseModel):
             default_sort = []
             # Kiểm tra xem query_set có ordering không
             if hasattr(data_set.query, 'order_by') and data_set.query.order_by:
-                default_sort = list(data_set.query.order_by)
-
+                default_sort = list((
+                    exp if isinstance(exp, str) else 
+                    f"{'-' if exp.descending else ''}{exp.expression.name}"
+                    for exp in data_set.query.order_by 
+                ))
             data_set = data_set.filter(and_filter)
-            if env.IS_LOCAL:
-                print(data_set.query.sql_with_params())
-            
-            if statistics_fields:
-                statistics = data_set.aggregate(**statistics_fields)
+
+            if statistics_fn is not None:
+                stats_qs = (
+                    statistics_queryset.filter(and_filter)
+                    if statistics_queryset is not None
+                    else data_set
+                )
+                statistics = statistics_fn(stats_qs)
+                statistics_block = self.statistics_builder(statistics) if self.statistics_builder else None
+            elif statistics_fields:
+                stats_qs = (
+                    statistics_queryset.filter(and_filter)
+                    if statistics_queryset is not None
+                    else data_set
+                )
+                statistics = stats_qs.aggregate(**statistics_fields)
                 statistics_block = self.statistics_builder(statistics) if self.statistics_builder else None
 
             if params.sort:
@@ -247,9 +269,18 @@ class TableContext(BaseModel):
         data_set: QuerySet | list[Any],
         transformer: Callable[[Any], Any] | None = None,
         statistics_fields: dict | None = None,
+        statistics_queryset: QuerySet | None = None,
+        statistics_fn: Callable[[QuerySet], dict] | None = None,
     ):
-        params = PaginationParam.from_table_context(self, data_set.__class__)
-        data_context = self.__create_data_context(data_set, params, transformer, statistics_fields)
+        params = PaginationParam.from_table_context(self)
+        data_context = self.__create_data_context(
+            data_set,
+            params,
+            transformer,
+            statistics_fields,
+            statistics_queryset=statistics_queryset,
+            statistics_fn=statistics_fn,
+        )
         if self.show_ordinal:
             self.columns.insert(0, TableColumn(name="ordinal", label="STT", type=TableColumn.Type.NUMBER))
         build_context = {

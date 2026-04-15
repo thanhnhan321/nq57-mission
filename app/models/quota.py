@@ -23,6 +23,11 @@ class Quota(AuditModel):
     target_percent = models.FloatField()
     issued_at = models.DateField()
     expired_at = models.DateField()
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.PROTECT,
+        related_name="quotas",
+    )
 
     class Meta:
         db_table = "quota"
@@ -42,13 +47,12 @@ class QuotaAssignment(AuditModel):
         on_delete=models.PROTECT,
         related_name="quota_assignments",
     )
-    is_leader = models.BooleanField(db_index=True)
 
     class Meta:
         db_table = "quota_assignment"
 
     def __str__(self):
-        return f"{self.quota.name} - {self.department.short_name} - {'Lãnh đạo' if self.is_leader else 'Thực hiện'}"
+        return f"{self.quota.name} - {self.department.short_name}"
 
 class QuotaReport(AuditModel):
     class Status(models.TextChoices):
@@ -85,6 +89,11 @@ class QuotaReport(AuditModel):
     )
     expected_value = models.BigIntegerField(null=True)
     actual_value = models.BigIntegerField(null=True)
+    previous_report = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
     note = models.TextField(null=True)
     status = models.CharField(
         max_length=20,
@@ -106,6 +115,7 @@ class QuotaReport(AuditModel):
                 name="uq_quota_report",
             ),
         ]
+        ordering = ["-period_id"]
 
     def __str__(self):
         return f"{self.quota.name} - {self.department.short_name} - {self.status}"
